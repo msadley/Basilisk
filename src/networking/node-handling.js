@@ -7,6 +7,36 @@ import { noise } from '@chainsafe/libp2p-noise';
 import { yamux } from '@chainsafe/libp2p-yamux';
 import { multiaddr } from '@multiformats/multiaddr';
 import { ping } from '@libp2p/ping';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+async function readJsonFile(fileName) {
+  try {
+    // Construct the file path relative to the current module's directory
+    const filePath = path.join(__dirname, fileName);
+
+    // Read the file asynchronously using fs/promises
+    const jsonString = await fs.readFile(filePath, 'utf8');
+
+    // Parse the JSON string
+    const data = JSON.parse(jsonString);
+
+    // Now you have the JavaScript object
+    console.log(data);
+    return data;
+    
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      console.error(`Error: The file '${fileName}' was not found.`);
+    } else {
+      console.error("An error occurred:", err);
+    }
+  }
+}
 
 const node = await createLibp2p({
   addresses: {
