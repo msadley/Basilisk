@@ -1,0 +1,5 @@
+# npm local packages
+node_modules
+
+# VSCode stuff
+.vscode
