@@ -14,30 +14,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function readJsonFile(fileName) {
-  try {
-    // Construct the file path relative to the current module's directory
-    const filePath = path.join(__dirname, fileName);
-
-    // Read the file asynchronously using fs/promises
-    const jsonString = await fs.readFile(filePath, 'utf8');
-
-    // Parse the JSON string
-    const data = JSON.parse(jsonString);
-
-    // Now you have the JavaScript object
-    console.log(data);
-    return data;
-    
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      console.error(`Error: The file '${fileName}' was not found.`);
-    } else {
-      console.error("An error occurred:", err);
-    }
-  }
-}
-
 const node = await createLibp2p({
   addresses: {
     listen: ['/ip4/0.0.0.0/tcp/0'],
@@ -54,41 +30,38 @@ const node = await createLibp2p({
   },
   peerDiscovery: [
     bootstrap({
-      list: [
-        // a list of bootstrap peer multiaddrs to connect to on node startup
-        '/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
-        '/dnsaddr/bootstrap.libp2p.io/ipfs/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-        '/dnsaddr/bootstrap.libp2p.io/ipfs/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa'
-      ]
+      list: readJsonFile('data.json').then(data => data['saved-addresses'] || []),
     })
   ]
 });
 
-// Start libp2p
-await node.start();
-console.log('libp2p has started');
+async function readJsonFile(fileName) {
 
-// Print peer ID and listening addresses
-console.log('Listening on addresses:');
-node.getMultiaddrs().forEach((addr) => {
-  console.log(addr.toString());
-});
-
-// Ping peer if multiaddr is provided
-if (process.argv.length >= 3) {
   try {
-    const maString = process.argv[2].trim();
-    const ma = multiaddr(maString); // IMPORTANT
-    console.log(`Pinging remote peer at ${maString}`);
-    while (true) {
-      const latency = await node.services.ping.ping(ma);
-      console.log(`Pinged ${maString} in ${latency}ms`);
+    const filePath = path.join(__dirname, fileName);
+
+    const jsonString = await fs.readFile(filePath, 'utf8');
+
+    const data = JSON.parse(jsonString);
+
+    return data;
+
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      console.error(`Error: The file '${fileName}' was not found.`);
+    } else {
+      console.error("An error occurred:", err);
     }
+  }
+}
+
+async function pingRemotePeer(ma) {
+  try {
+    const latency = await node.services.ping.ping(ma);
+    console.log(`Pinged ${maString} in ${latency}ms`);
   } catch (error) {
     console.error('Ping failed:', error.message);
   }
-} else {
-  console.log('No remote peer address given, skipping ping');
 }
 
 const stop = async () => {
@@ -97,5 +70,26 @@ const stop = async () => {
   process.exit(0);
 };
 
-process.on('SIGTERM', stop);
-process.on('SIGINT', stop);
+async function main() {
+  await node.start();
+  console.log('libp2p has started');
+
+  // Print peer ID and listening addresses
+  console.log('Listening on addresses:');
+  node.getMultiaddrs().forEach((addr) => {
+    console.log(addr.toString());
+  });
+
+  const maString = prompt("Insert the remote node address: ").trim();
+  const ma = multiaddr(maString); // IMPORTANT
+
+  pingRemotePeer(ma);
+
+  process.on('SIGTERM', stop);
+  process.on('SIGINT', stop);
+
+}
+
+main().catch((error) => {
+  console.error("An error ocurred: ", error)
+});
