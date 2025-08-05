@@ -10,20 +10,29 @@ import { yamux } from '@chainsafe/libp2p-yamux';
 import { multiaddr } from '@multiformats/multiaddr';
 import { identify } from '@libp2p/identify';
 import type { Multiaddr } from '@multiformats/multiaddr';
+import { peerIdFromString } from '@libp2p/peer-id'
 
 // Miscellaneous imports
 import { ping } from '@libp2p/ping';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import process from 'process';
-import promptSync from 'prompt-sync';
+import process from 'process'; // TODO NEEDS TO BE GONE WHEN FINISHING ALPHA TESTING
 import fs from 'fs'
  
 // Local imports
 import { absolutePath, readJsonFile } from '../util/util.js';
+import type { PeerId } from '@libp2p/interface';
+import MultiaddrInput from '@multiformats/multiaddr';
 
-const __filename : string = fileURLToPath(import.meta.url);
-const __dirname : string = path.dirname(__filename);
+
+function getPeerId(stringId : string){
+  return peerIdFromString(stringId);
+}
+
+async function getPeerInfo(peerId: PeerId) {
+  await node.peerRouting.findPeer(peerId);
+}
+
 
 async function bootstrapAddresses() {
   try {
@@ -49,8 +58,11 @@ const node = await createLibp2p({
   streamMuxers: [yamux()],
   services: {
     ping: ping(),
-    identify: identify()
-  },
+    identify: identify(),
+    dht: kadDHT({
+      clientMode: true,
+      }),
+    },
   peerDiscovery: [
     bootstrap({
       list: await bootstrapAddresses(),

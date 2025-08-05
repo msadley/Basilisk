@@ -1,18 +1,17 @@
 {
-  "name": "jslearning",
-  "version": "1.0.0",
+  "name": "ccchat",
+  "version": "0.0.1",
   "main": "src/networking/node-handling.js",
   "type": "module",
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/networking/node-handling.js",
     "dev": "npm run build && npm run start",
-    "watch": "npx tsc --watch",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "watch": "npx tsc --watch"
   },
-  "author": "",
+  "author": "Adley Silva Mendes",
   "license": "ISC",
-  "description": "",
+  "description": "A chat app built on top of libp2p, using TypeScript.",
   "dependencies": {
     "@chainsafe/libp2p-noise": "^16.1.4",
     "@chainsafe/libp2p-yamux": "^7.0.4",
@@ -29,11 +28,7 @@
     "typescript": "^5.9.2"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
     "@types/node": "^24.2.0",
-    "@types/prompt-sync": "^4.2.3",
-    "jest": "^30.0.5",
-    "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2"
   }
 }
