@@ -14,15 +14,12 @@ import { peerIdFromString } from '@libp2p/peer-id'
 
 // Miscellaneous imports
 import { ping } from '@libp2p/ping';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import process from 'process'; // TODO NEEDS TO BE GONE WHEN FINISHING ALPHA TESTING
 import fs from 'fs'
  
 // Local imports
 import { absolutePath, readJsonFile } from '../util/util.js';
 import type { PeerId } from '@libp2p/interface';
-import MultiaddrInput from '@multiformats/multiaddr';
 
 
 function getPeerId(stringId : string){
