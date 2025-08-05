@@ -1,9 +1,23 @@
 // src/interface/tui.ts
 
-import promptSync from 'prompt-sync';
+import readline from 'readline';
 import { pingTest, stop } from '../networking/node-handling.js';
+import { transpileModule } from 'typescript';
 
-function displayMenu() : void {
+export async function menu() {
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  function prompt(query: string): Promise<string> {
+    return new Promise((resolve) => {
+      rl.question(query, (answer) => {
+        resolve(answer.trim());
+      });
+    });
+  }
 
   while (true) {
     // Setting up the prompt
@@ -14,7 +28,8 @@ function displayMenu() : void {
     console.log(`${count++}. Ping Test`);
     console.log(`${count++}. Exit`);
 
-    const answer = promptSync()("Option: ");
+    const answer : string = await prompt("Please select an option: ");
+    console.log('\n');
 
     switch (answer) {
       case '1':

@@ -1,11 +1,11 @@
 {
   "name": "ccchat",
   "version": "0.0.1",
-  "main": "src/app/app.ts",
+  "main": "src/app/index.ts",
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/app/app.js",
+    "start": "node dist/app/index.js",
     "dev": "npm run build && npm run start",
     "watch": "npx tsc --watch"
   },

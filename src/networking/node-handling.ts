@@ -20,7 +20,7 @@ import fs from 'fs'
 // Local imports
 import { absolutePath, readJsonFile } from '../util/util.js';
 
-const node = await createLibp2p({
+export const node = await createLibp2p({
   addresses: {
     listen: ['/ip4/127.0.0.1/tcp/0'],
   },
