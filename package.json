@@ -1,10 +1,14 @@
 {
   "name": "jslearning",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "src/networking/node-handling.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx tsc",
+    "start": "node dist/networking/node-handling.js",
+    "dev": "npm run build && npm run start",
+    "watch": "npx tsc --watch",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,7 +21,18 @@
     "@libp2p/kad-dht": "^15.1.10",
     "@libp2p/ping": "^2.0.36",
     "@libp2p/tcp": "^10.1.18",
+    "@libp2p/websockets": "^9.2.18",
     "libp2p": "^2.9.0",
-    "multiaddr": "^10.0.1"
+    "multiaddr": "^10.0.1",
+    "prompt-sync": "^4.2.0",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.2.0",
+    "@types/prompt-sync": "^4.2.3",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2"
   }
 }
