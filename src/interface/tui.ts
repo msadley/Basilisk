@@ -2,7 +2,6 @@
 
 import readline from 'readline';
 import { pingTest, stop } from '../networking/node-handling.js';
-import { transpileModule } from 'typescript';
 
 export async function menu() {
 

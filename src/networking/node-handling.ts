@@ -9,39 +9,69 @@ import { noise } from '@chainsafe/libp2p-noise';
 import { yamux } from '@chainsafe/libp2p-yamux';
 import { multiaddr, type Multiaddr } from '@multiformats/multiaddr';
 import { identify } from '@libp2p/identify';
-import { peerIdFromString } from '@libp2p/peer-id'
 import type { PeerId } from '@libp2p/interface';
 
 // Miscellaneous imports
 import { ping } from '@libp2p/ping';
 import process from 'process'; // TODO NEEDS TO BE GONE WHEN FINISHING ALPHA TESTING
-import fs from 'fs'
+import fs, { read } from 'fs'
  
 // Local imports
-import { absolutePath, readJsonFile } from '../util/util.js';
+import { absolutePath, readJsonFile, writeJsonFile } from '../util/util.js';
+import { CONFIG_FILE } from '../app/app.js';
 
-export const node = await createLibp2p({
-  addresses: {
-    listen: ['/ip4/127.0.0.1/tcp/0'],
-  },
-  transports: [
-    tcp(),
-  ],
-  connectionEncrypters: [noise()],
-  streamMuxers: [yamux()],
-  services: {
-    ping: ping(),
-    identify: identify(),
-    dht: kadDHT({
-      clientMode: true,
-      }),
-    },
-  peerDiscovery: [
-    bootstrap({
-      list: await bootstrapAddresses(),
-    })
-  ],
-});
+export class Node {
+  private node;
+
+  private constructor(nodeInstance: any) {
+    this.node = nodeInstance;
+  }
+
+  static async create() {
+    const data = await readJsonFile(CONFIG_FILE) || {};
+    const peerIdData = data['peerId'];
+    const nodeInstance = await createLibp2p({,
+      addresses: {
+        listen: ['/ip4/127.0.0.1/tcp/0'],
+      },
+      transports: [
+        tcp(),
+      ],
+      connectionEncrypters: [noise()],
+      streamMuxers: [yamux()],
+      services: {
+        ping: ping(),
+        identify: identify(),
+        dht: kadDHT({}),
+      },
+      peerDiscovery: [
+        bootstrap({
+          list: await bootstrapAddresses(),
+        })
+      ],
+      start: false,
+      
+    });
+
+    return new Node(nodeInstance);
+  }
+
+  async start() {
+    await (await this.node).start();
+  }
+
+  async stop() {
+    await (await this.node).stop();
+  }
+
+  async generatePeerId() {
+    const peerId = await createEd25519PeerId();
+    const data = await readJsonFile(CONFIG_FILE) || {};
+    data['peerId'] = peerId.privateKey ? Buffer.from(peerId.privateKey).toString('hex') : "";
+    await writeJsonFile(CONFIG_FILE, data);
+  }
+
+}
 
 function getPeerId(stringId : string){
   return peerIdFromString(stringId);
@@ -51,14 +81,14 @@ async function getPeerInfo(peerId: PeerId) {
   await node.peerRouting.findPeer(peerId);
 }
 
-async function bootstrapAddresses() {
+function bootstrapAddresses() {
   try {
-    const data = await readJsonFile('data/data.json');
+    const data = await readJsonFile(CONFIG_FILE);
     return data['saved-addresses'];
   } catch (error : any) {
     if (error.code === 'ENOENT') {
       const defaultData = { "saved-addresses": [] };
-      fs.writeFileSync(absolutePath('data/data.json'), JSON.stringify(defaultData, null, 2));
+      fs.writeFileSync(absolutePath(CONFIG_FILE), JSON.stringify(defaultData, null, 2));
       return [];
     }
   }
@@ -75,9 +105,6 @@ async function pingPeer(ma : Multiaddr) {
 
 export async function stop() {
   await node.stop();
-  console.log('libp2p has stopped');
-  process.exit(0);
-
 }
 
 export async function pingTest() {

@@ -20,6 +20,7 @@
     "@libp2p/interface": "^2.10.5",
     "@libp2p/kad-dht": "^15.1.10",
     "@libp2p/peer-id": "^5.1.8",
+    "@libp2p/peer-id-factory": "^4.2.4",
     "@libp2p/ping": "^2.0.36",
     "@libp2p/tcp": "^10.1.18",
     "@multiformats/multiaddr": "^12.5.1",
