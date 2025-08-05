@@ -1,4 +1,4 @@
-// src/app/app.ts
+// src/index.ts
 
 import { menu } from "./interface/tui.js";
 
