@@ -22,6 +22,7 @@
     "@libp2p/ping": "^2.0.36",
     "@libp2p/tcp": "^10.1.18",
     "@libp2p/websockets": "^9.2.18",
+    "app-root-path": "^3.1.0",
     "libp2p": "^2.9.0",
     "multiaddr": "^10.0.1",
     "prompt-sync": "^4.2.0",

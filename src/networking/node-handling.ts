@@ -9,7 +9,7 @@ import { noise } from '@chainsafe/libp2p-noise';
 import { yamux } from '@chainsafe/libp2p-yamux';
 import { multiaddr } from '@multiformats/multiaddr';
 import { identify } from '@libp2p/identify';
-import type { Multiaddr, MultiaddrInput } from '@multiformats/multiaddr';
+import type { Multiaddr } from '@multiformats/multiaddr';
 
 // Miscellaneous imports
 import { ping } from '@libp2p/ping';
@@ -17,22 +17,23 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import process from 'process';
 import promptSync from 'prompt-sync';
-import { readJsonFile } from '../util/util.js';
 import fs from 'fs'
  
+// Local imports
+import { absolutePath, readJsonFile } from '../util/util.js';
+
 const __filename : string = fileURLToPath(import.meta.url);
 const __dirname : string = path.dirname(__filename);
 
 async function bootstrapAddresses() {
   try {
-    const data = await readJsonFile('dist/network/data/data.json');
+    const data = await readJsonFile('data/data.json');
     return data['saved-addresses'];
   } catch (error : any) {
     if (error.code === 'ENOENT') {
-      const data = await readJsonFile('default/data.json');
-      fs.writeFileSync(path.join(__dirname, 'data/data.json'), JSON.stringify(data, null, 2));
-      console.error(`Error: The file 'data/data.json' was not found. Created a new one.`);
-      return data['saved-addresses'];
+      const defaultData = { "saved-addresses": [] };
+      fs.writeFileSync(absolutePath('data/data.json'), JSON.stringify(defaultData, null, 2));
+      return [];
     }
   }
 }
@@ -81,17 +82,10 @@ async function main() {
     console.log(addr.toString());
   });
 
-  try {
-    const maString : string = promptSync()("Insert the remote node address: ").trim();
-    if (maString) {
-      await pingPeer(multiaddr(maString));
-    } else {
-      console.log('No address provided. Exiting.');
-    }
-  } catch (error : any) {
-    console.error('Invalid multiaddress provided:', error.message);
-  } finally {
-    await stop();
+  if (process.argv.length > 2) {
+    await pingPeer(multiaddr(process.argv[2]));
+  } else {
+    console.log('No peer address provided as argument.');
   }
 
   process.on('SIGTERM', stop);

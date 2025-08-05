@@ -1,10 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import appRootPath  from 'app-root-path';
 
 export async function readJsonFile(file : string) {
   try {
-    file = path.join('../../', file)
+    file = absolutePath(file);
     const jsonString = await fs.readFile(file, 'utf8');
     const data = JSON.parse(jsonString);
     return data;
@@ -15,5 +15,9 @@ export async function readJsonFile(file : string) {
       console.error("An error occurred:", err);
     }
   }
+}
+
+export function absolutePath(file : string) {
+  return path.join(appRootPath.path, file);
 }
 
