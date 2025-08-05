@@ -1,11 +1,11 @@
 {
   "name": "ccchat",
   "version": "0.0.1",
-  "main": "src/networking/node-handling.js",
+  "main": "src/app/app.ts",
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/networking/node-handling.js",
+    "start": "node dist/app/app.js",
     "dev": "npm run build && npm run start",
     "watch": "npx tsc --watch"
   },
@@ -17,18 +17,19 @@
     "@chainsafe/libp2p-yamux": "^7.0.4",
     "@libp2p/bootstrap": "^11.0.46",
     "@libp2p/identify": "^3.0.38",
+    "@libp2p/interface": "^2.10.5",
     "@libp2p/kad-dht": "^15.1.10",
+    "@libp2p/peer-id": "^5.1.8",
     "@libp2p/ping": "^2.0.36",
     "@libp2p/tcp": "^10.1.18",
-    "@libp2p/websockets": "^9.2.18",
+    "@multiformats/multiaddr": "^12.5.1",
     "app-root-path": "^3.1.0",
     "libp2p": "^2.9.0",
-    "multiaddr": "^10.0.1",
     "prompt-sync": "^4.2.0",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@types/node": "^24.2.0",
-    "ts-node": "^10.9.2"
+    "@types/prompt-sync": "^4.2.3"
   }
 }

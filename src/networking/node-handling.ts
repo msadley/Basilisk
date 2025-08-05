@@ -1,4 +1,4 @@
-// src/networking/node-handling.js
+// src/networking/node-handling.ts
 
 // Networking imports
 import { kadDHT } from '@libp2p/kad-dht'
@@ -7,10 +7,10 @@ import { createLibp2p } from 'libp2p';
 import { tcp } from '@libp2p/tcp';
 import { noise } from '@chainsafe/libp2p-noise';
 import { yamux } from '@chainsafe/libp2p-yamux';
-import { multiaddr } from '@multiformats/multiaddr';
+import { multiaddr, type Multiaddr } from '@multiformats/multiaddr';
 import { identify } from '@libp2p/identify';
-import type { Multiaddr } from '@multiformats/multiaddr';
 import { peerIdFromString } from '@libp2p/peer-id'
+import type { PeerId } from '@libp2p/interface';
 
 // Miscellaneous imports
 import { ping } from '@libp2p/ping';
@@ -19,30 +19,6 @@ import fs from 'fs'
  
 // Local imports
 import { absolutePath, readJsonFile } from '../util/util.js';
-import type { PeerId } from '@libp2p/interface';
-
-
-function getPeerId(stringId : string){
-  return peerIdFromString(stringId);
-}
-
-async function getPeerInfo(peerId: PeerId) {
-  await node.peerRouting.findPeer(peerId);
-}
-
-
-async function bootstrapAddresses() {
-  try {
-    const data = await readJsonFile('data/data.json');
-    return data['saved-addresses'];
-  } catch (error : any) {
-    if (error.code === 'ENOENT') {
-      const defaultData = { "saved-addresses": [] };
-      fs.writeFileSync(absolutePath('data/data.json'), JSON.stringify(defaultData, null, 2));
-      return [];
-    }
-  }
-}
 
 const node = await createLibp2p({
   addresses: {
@@ -67,6 +43,27 @@ const node = await createLibp2p({
   ],
 });
 
+function getPeerId(stringId : string){
+  return peerIdFromString(stringId);
+}
+
+async function getPeerInfo(peerId: PeerId) {
+  await node.peerRouting.findPeer(peerId);
+}
+
+async function bootstrapAddresses() {
+  try {
+    const data = await readJsonFile('data/data.json');
+    return data['saved-addresses'];
+  } catch (error : any) {
+    if (error.code === 'ENOENT') {
+      const defaultData = { "saved-addresses": [] };
+      fs.writeFileSync(absolutePath('data/data.json'), JSON.stringify(defaultData, null, 2));
+      return [];
+    }
+  }
+}
+
 async function pingPeer(ma : Multiaddr) {
   try {
     const latency = await node.services.ping.ping(ma);
@@ -76,13 +73,14 @@ async function pingPeer(ma : Multiaddr) {
   }
 }
 
-const stop = async () => {
+export async function stop() {
   await node.stop();
   console.log('libp2p has stopped');
   process.exit(0);
-};
 
-async function main() {
+}
+
+export async function pingTest() {
   await node.start();
   console.log('libp2p has started');
 
@@ -100,8 +98,3 @@ async function main() {
   process.on('SIGTERM', stop);
   process.on('SIGINT', stop);
 }
-
-main().catch((error) => {
-  console.error("An error ocurred: ", error)
-  process.exit(1);
-});
