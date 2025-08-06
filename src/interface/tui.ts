@@ -1,8 +1,11 @@
 // src/interface/tui.ts
 
 import readline from "readline";
+import { App } from "../app/app.js";
 
-export async function menu() {
+const entries = ["ping address", "print addresses", "exit"];
+
+export async function menu(app: App) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -18,38 +21,42 @@ export async function menu() {
 
   while (true) {
     // Setting up the prompt
-    let count = 1;
-
     console.clear();
-    console.log("Welcome to CCChat!");
-    console.log(`${count++}. Ping Test`);
-    console.log(`${count++}. Exit`);
 
-    const answer: string = await prompt("Please select an option: ");
+    console.log(`------------------------------------------------------------------------------
+--------------------------Welcome to the CCChat CLI!--------------------------
+------------------------------------------------------------------------------`);
+
+    for (let i = 0; i < entries.length; i++)
+      console.log(`${i + 1}. ` + entries[i]);
+
+    const answer: string = await prompt("\nPlease select an option: ");
     console.log("\n");
 
     switch (answer) {
       case "1":
-        pingTest()
-          .then(() => {
-            console.log("Ping test completed.");
-          })
-          .catch((error) => {
-            console.error("An error occurred during the ping test:", error);
-          });
+        const multiaddr = await prompt("Enter the multiaddress to ping: ");
+        if (!multiaddr) {
+          console.log("No multiaddress provided.");
+          await prompt("\nPress Enter to continue...");
+          continue;
+        }
+        app.pingTest(multiaddr);
+        await prompt("\nPress Enter to continue...");
         break;
+
       case "2":
-        console.log("Exiting...");
-        stop()
-          .then(() => {
-            console.log("Node stopped successfully.");
-            process.exit(0);
-          })
-          .catch((error) => {
-            console.error("An error occurred while stopping the node:", error);
-            process.exit(1);
-          });
+        app.printAddresses().forEach((addr: string) => {
+          console.log(addr);
+        });
+        await prompt("\nPress Enter to continue...");
         break;
+
+      case "3":
+        console.log("Exiting...");
+        app.stop();
+        rl.close();
+        return;
     }
   }
 }

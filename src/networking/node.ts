@@ -8,7 +8,9 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
-import { getBootstrapAddresses, getPrivateKeyRaw } from "../util/json.js";
+import { getBootstrapAddresses } from "../util/json.js";
+import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { getPrivateKey } from "../util/util.js";
 
 /**
  * Represents a libp2p node.
@@ -29,9 +31,9 @@ export class Node {
    * Creates a new libp2p node.
    * @returns {Promise<Node>} A promise that resolves to a new Node instance.
    */
-  static async create() {
+  static async create(): Promise<Node> {
     const nodeInstance = await createLibp2p({
-      privateKey: await getPrivateKeyRaw(),
+      privateKey: await getPrivateKey(),
       addresses: {
         listen: ["/ip4/127.0.0.1/tcp/0"],
       },
@@ -65,5 +67,25 @@ export class Node {
    */
   async stop() {
     await (await this.node).stop();
+  }
+
+  getMultiaddrs(): Multiaddr[] {
+    return this.node.getMultiaddrs();
+  }
+
+  printAddresses(): string[] {
+    const multiaddrs = this.getMultiaddrs();
+    return multiaddrs.map((addr: Multiaddr) => addr.toString());
+  }
+
+  async pingTest(maString: string) {
+    try {
+      const latency: number = await this.node.services.ping.ping(
+        multiaddr(maString)
+      );
+      console.log(`Pinged ${maString} in ${latency}ms`);
+    } catch (error: any) {
+      throw new Error(`Ping failed: ${error.message}`);
+    }
   }
 }

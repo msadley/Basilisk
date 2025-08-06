@@ -9,12 +9,9 @@ import fs from "fs";
  * @returns {Promise<string[]>} A promise that resolves to an array of bootstrap addresses.
  * @throws {Error} If the 'saved-addresses' field is not found in the config file.
  */
-export async function getBootstrapAddresses() { 
-    const data = await readJsonFile(CONFIG_FILE);
-    if (data['saved-addresses'] === undefined) {
-        throw new Error("No saved addresses found in config file.");
-    return data["saved-addresses"];
-  }
+export async function getBootstrapAddresses(): Promise<string[]> {
+  const data = await readJsonFile(CONFIG_FILE);
+  return data["saved-addresses"] || [];
 }
 
 /**
@@ -37,10 +34,11 @@ async function writeJsonFile(file: string, data: any) {
  * @param {string} file - The path to the file.
  * @returns {Promise<any>} A promise that resolves to the data from the file.
  */
-async function readJsonFile(file: string) {
+async function readJsonFile(file: string): Promise<any> {
   try {
     file = absolutePath(file);
     const jsonString = await fs.promises.readFile(file, "utf-8");
+
     const data = JSON.parse(jsonString);
     return data;
   } catch (err: any) {
@@ -72,7 +70,7 @@ export async function overrideConfig(field: string, value: any) {
  * @returns {Promise<string>} A promise that resolves to the raw private key.
  * @throws {Error} If the 'privateKey' field is not found in the config file.
  */
-export async function getPrivateKeyRaw() {
+export async function getPrivateKeyRaw(): Promise<string> {
   const data = await readJsonFile(CONFIG_FILE);
   if (data["privateKey"] === undefined)
     throw new Error("Private key not found in config file.");

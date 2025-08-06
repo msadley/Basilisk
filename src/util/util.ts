@@ -2,7 +2,6 @@
 
 import path from "path";
 import appRootPath from "app-root-path";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import { getPrivateKeyRaw, overrideConfig } from "./json.js";
 import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
 
@@ -11,61 +10,24 @@ import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
  * @param {string} file - The file to get the absolute path of.
  * @returns {string} The absolute path of the file.
  */
-export function absolutePath(file: string) {
+export function absolutePath(file: string): string {
   return path.join(appRootPath.path, file);
-}
-
-/**
- * Pings a peer to test the connection.
- * @param {any} node - The libp2p node.
- */
-export async function pingTest(node: any) {
-  await node.start();
-  console.log("libp2p has started");
-
-  console.log("Listening on addresses:");
-  (node.getMultiaddrs() as Multiaddr[]).forEach((addr: Multiaddr) => {
-    console.log(addr.toString());
-  });
-
-  if (process.argv.length > 2) {
-    await pingPeer(node, multiaddr(process.argv[2]));
-  } else {
-    console.log("No peer address provided as argument.");
-  }
-
-  process.on("SIGTERM", node.stop());
-  process.on("SIGINT", node.stop());
-}
-
-/**
- * Pings a peer.
- * @param {any} node - The libp2p node.
- * @param {Multiaddr} ma - The multiaddress of the peer to ping.
- */
-async function pingPeer(node: any, ma: Multiaddr) {
-  try {
-    const latency = await node.services.ping.ping(ma);
-    console.log(`Pinged ${ma} in ${latency}ms`);
-  } catch (error: any) {
-    console.error("Ping failed:", error.message);
-  }
 }
 
 /**
  * Gets the private key from the config file, or generates a new one if it doesn't exist.
  * @returns {Promise<any>} A promise that resolves to the private key.
  */
-export async function getPrivateKey() {
+export async function getPrivateKey(): Promise<any> {
   let data;
   try {
     data = await getPrivateKeyRaw();
   } catch (error) {
-    generatePrivateKey();
+    await generatePrivateKey();
     data = await getPrivateKeyRaw();
   }
 
-  return privateKeyFromRaw(Buffer.from(data, "hex"));
+  return privateKeyFromRaw(new Uint8Array(Buffer.from(data, "hex")));
 }
 
 /**
@@ -73,9 +35,12 @@ export async function getPrivateKey() {
  */
 async function generatePrivateKey() {
   const privateKey = await generateKeyPair("Ed25519");
-  overrideConfig(
+  console.log(
+    "Generated new private key:",
+    Buffer.from(privateKey.raw).toString("hex")
+  );
+  await overrideConfig(
     "privateKey",
-    Buffer.from(privateKey.raw).toString("hex") +
-      Buffer.from(privateKey.publicKey.raw).toString("hex")
+    Buffer.from(privateKey.raw).toString("hex")
   );
 }
