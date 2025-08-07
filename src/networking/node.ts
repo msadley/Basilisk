@@ -11,7 +11,7 @@ import { ping } from "@libp2p/ping";
 import { getBootstrapAddresses } from "../util/json.js";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import { getPrivateKey } from "../util/util.js";
-import { webSockets } from '@libp2p/websockets'
+import { webSockets } from "@libp2p/websockets";
 
 /**
  * Represents a libp2p node.
@@ -36,12 +36,9 @@ export class Node {
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/0"],
+        listen: ["/ip4/0.0.0.0/tcp/0", "/ip4/0.0.0.0/tcp/0/ws"],
       },
-      transports: [
-        tcp(),
-        webSockets(),
-      ],
+      transports: [tcp(), webSockets()],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
@@ -62,15 +59,15 @@ export class Node {
   /**
    * Starts the libp2p node.
    */
-  async start() {
-    await (await this.node).start();
+  start() {
+    this.node.start();
   }
 
   /**
    * Stops the libp2p node.
    */
-  async stop() {
-    await (await this.node).stop();
+  stop() {
+    this.node.stop();
   }
 
   getMultiaddrs(): Multiaddr[] {
@@ -89,7 +86,8 @@ export class Node {
       );
       console.log(`Pinged ${maString} in ${latency}ms`);
     } catch (error: any) {
-      throw new Error(`Ping failed: ${error.message}`);
+      // throw new Error(`Ping failed: ${error.message}`); //FIXME change this
+      console.log("Ping failed: ", error.message);
     }
   }
 }

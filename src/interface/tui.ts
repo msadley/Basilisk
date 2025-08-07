@@ -41,8 +41,13 @@ export async function menu(app: App) {
           await prompt("\nPress Enter to continue...");
           continue;
         }
-        app.pingTest(multiaddr);
-        await prompt("\nPress Enter to continue...");
+        try {
+          app.pingTest(multiaddr);
+        } catch (error : any) {
+          console.log(error.message)
+        } finally {
+          await prompt("\nPress Enter to continue...");
+        }
         break;
 
       case "2":
