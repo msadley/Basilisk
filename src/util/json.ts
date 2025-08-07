@@ -4,7 +4,6 @@ import { CONFIG_FILE } from "../app/app.js";
 import { absolutePath, generatePrivateKey } from "./util.js";
 import { defaultConfig } from "../config/config.js";
 import fs from "fs";
-import path from "path";
 
 export async function validateConfigFile() {
   try {
