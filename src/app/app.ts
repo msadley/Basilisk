@@ -15,7 +15,7 @@ export class App {
   static async init(): Promise<App> {
     await validateConfigFile();
     const node = await Node.create();
-    await node.start();
+    node.start();
     return new App(node);
   }
 
@@ -27,16 +27,7 @@ export class App {
     this.node.pingTest(multiaddr);
   }
 
-  async stop() {
-    return this.node
-      .stop()
-      .then(() => {
-        console.log("Node stopped successfully.");
-        process.exit(0);
-      })
-      .catch((error) => {
-        console.error("An error occurred while stopping the node:", error);
-        process.exit(1);
-      });
+  stop() {
+    return this.node.stop()
   }
 }
