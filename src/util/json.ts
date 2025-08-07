@@ -7,8 +7,8 @@ import fs from "fs";
 
 export async function validateConfigFile() {
   try {
-    fs.promises.access(absolutePath(CONFIG_FILE));
-    readJsonFile(CONFIG_FILE);
+    await fs.promises.access(absolutePath(CONFIG_FILE));
+    await readJsonFile(CONFIG_FILE);
   } catch (error) {
     // File does not exist or is empty
     await setDefaultConfig();
