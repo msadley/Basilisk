@@ -23,6 +23,7 @@
     "@libp2p/peer-id-factory": "^4.2.4",
     "@libp2p/ping": "^2.0.36",
     "@libp2p/tcp": "^10.1.18",
+    "@libp2p/websockets": "^9.2.18",
     "@multiformats/multiaddr": "^12.5.1",
     "app-root-path": "^3.1.0",
     "libp2p": "^2.9.0",

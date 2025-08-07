@@ -11,6 +11,7 @@ import { ping } from "@libp2p/ping";
 import { getBootstrapAddresses } from "../util/json.js";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import { getPrivateKey } from "../util/util.js";
+import { webSockets } from '@libp2p/websockets'
 
 /**
  * Represents a libp2p node.
@@ -37,7 +38,10 @@ export class Node {
       addresses: {
         listen: ["/ip4/0.0.0.0/tcp/0"],
       },
-      transports: [tcp()],
+      transports: [
+        tcp(),
+        webSockets(),
+      ],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
