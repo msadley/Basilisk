@@ -12,6 +12,9 @@ import { getBootstrapAddresses } from "../util/json.js";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import { getPrivateKey } from "../util/util.js";
 import { webSockets } from "@libp2p/websockets";
+import { autoNAT } from "@libp2p/autonat";
+import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
+import { dcutr } from "@libp2p/dcutr";
 
 /**
  * Represents a libp2p node.
@@ -38,13 +41,15 @@ export class Node {
       addresses: {
         listen: ["/ip4/0.0.0.0/tcp/0", "/ip4/0.0.0.0/tcp/0/ws"],
       },
-      transports: [tcp(), webSockets()],
+      transports: [tcp(), webSockets(), circuitRelayTransport({})],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
         ping: ping(),
         identify: identify(),
         dht: kadDHT({}),
+        autoNAT: autoNAT(),
+        dcutr: dcutr(),
       },
       peerDiscovery: [
         bootstrap({
