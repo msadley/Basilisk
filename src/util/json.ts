@@ -4,6 +4,7 @@ import { CONFIG_FILE } from "../app/app.js";
 import { absolutePath, generatePrivateKey } from "./util.js";
 import { defaultConfig } from "../config/config.js";
 import fs from "fs";
+import path from "path";
 
 export async function validateConfigFile() {
   try {
@@ -31,7 +32,7 @@ export async function validateConfigFile() {
 
 async function setDefaultConfig() {
   try {
-    await writeJsonFile(CONFIG_FILE, await defaultConfig());
+    await writeJsonFile(CONFIG_FILE, defaultConfig());
   } catch (error: any) {
     console.error("An error occurred: ", error);
   }
@@ -45,6 +46,7 @@ export async function getBootstrapAddresses(): Promise<string[]> {
 async function writeJsonFile(file: string, data: any) {
   file = absolutePath(file);
   const jsonString = JSON.stringify(data, null, 2);
+  await fs.promises.mkdir(absolutePath("config/"), { recursive: true });
   await fs.promises.writeFile(file, jsonString, "utf-8");
 }
 
