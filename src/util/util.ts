@@ -19,26 +19,21 @@ export function absolutePath(file: string): string {
  * @returns {Promise<any>} A promise that resolves to the private key.
  */
 export async function getPrivateKey(): Promise<any> {
-  let data;
+  let data: string;
   try {
     data = await getPrivateKeyRaw();
-  } catch (error) {
+  } catch (error: any) {
     await generatePrivateKey();
     data = await getPrivateKeyRaw();
   }
-
   return privateKeyFromRaw(new Uint8Array(Buffer.from(data, "hex")));
 }
 
 /**
  * Generates a new private key and saves it to the config file.
  */
-async function generatePrivateKey() {
+export async function generatePrivateKey() {
   const privateKey = await generateKeyPair("Ed25519");
-  console.log(
-    "Generated new private key:",
-    Buffer.from(privateKey.raw).toString("hex")
-  );
   await overrideConfig(
     "privateKey",
     Buffer.from(privateKey.raw).toString("hex")

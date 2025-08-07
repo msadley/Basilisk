@@ -1,6 +1,7 @@
 // src/app/app.ts
 
 import { Node } from "../networking/node.js";
+import { validateConfigFile } from "../util/json.js";
 
 export const CONFIG_FILE = "config/config.json";
 
@@ -12,6 +13,7 @@ export class App {
   }
 
   static async init(): Promise<App> {
+    await validateConfigFile();
     const node = await Node.create();
     await node.start();
     return new App(node);
