@@ -10,6 +10,7 @@ export class App {
 
   private constructor(nodeInstance: Node) {
     this.node = nodeInstance;
+    
   }
 
   static async init(): Promise<App> {

@@ -10,10 +10,10 @@ import { identify } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
 import { getBootstrapAddresses } from "../util/json.js";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { getPrivateKey } from "../util/util.js";
 import { webSockets } from "@libp2p/websockets";
 import { autoNAT } from "@libp2p/autonat";
-import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { dcutr } from "@libp2p/dcutr";
 
 /**
@@ -29,6 +29,15 @@ export class Node {
    */
   private constructor(nodeInstance: any) {
     this.node = nodeInstance;
+    // Event listener for when the node finds a new peer
+    this.node.addEventListener("peer:discovery", (evt: { detail: { id: { toString: () => any; }; }; }) => {
+      console.log("Discovered:", evt.detail.id.toString());
+    });
+
+    // Event listener for when a connection is established
+    this.node.addEventListener("connection:establish", (evt: { detail: { remoteAddr: { toString: () => any; }; }; }) => {
+      console.log("Connection established:", evt.detail.remoteAddr.toString());
+    });
   }
 
   /**
@@ -41,7 +50,11 @@ export class Node {
       addresses: {
         listen: ["/ip4/0.0.0.0/tcp/0", "/ip4/0.0.0.0/tcp/0/ws"],
       },
-      transports: [tcp(), webSockets(), circuitRelayTransport({})],
+      transports: [
+        tcp(),
+        webSockets(),
+        circuitRelayTransport(),
+      ],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
