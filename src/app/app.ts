@@ -1,11 +1,15 @@
 // src/app/app.ts
 
-import { Node } from "../networking/node.js";
-import { validateConfigFile } from "../util/json.js";
+import { Node } from "../network/node.js";
+import { validateConfigFile } from "../config/config.js";
 
 export const CONFIG_FILE = "config/config.json";
 
 export class App {
+  
+  dial(ma: string) {
+    this.node.dial(ma);
+  }
   private node: Node;
 
   private constructor(nodeInstance: Node) {

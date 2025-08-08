@@ -2,7 +2,7 @@
 
 import { kadDHT } from "@libp2p/kad-dht";
 import { bootstrap } from "@libp2p/bootstrap";
-import { createLibp2p } from "libp2p";
+import { createLibp2p, type Libp2p } from "libp2p";
 import { tcp } from "@libp2p/tcp";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
@@ -30,14 +30,30 @@ export class Node {
   private constructor(nodeInstance: any) {
     this.node = nodeInstance;
     // Event listener for when the node finds a new peer
-    this.node.addEventListener("peer:discovery", (evt: { detail: { id: { toString: () => any; }; }; }) => {
-      console.log("Discovered:", evt.detail.id.toString());
-    });
+    this.node.addEventListener(
+      "peer:discovery",
+      (evt: { detail: { id: { toString: () => any } } }) => {
+        console.log("Discovered:", evt.detail.id.toString());
+      }
+    );
 
     // Event listener for when a connection is established
-    this.node.addEventListener("connection:establish", (evt: { detail: { remoteAddr: { toString: () => any; }; }; }) => {
-      console.log("Connection established:", evt.detail.remoteAddr.toString());
-    });
+    this.node.addEventListener(
+      "connection:establish",
+      (evt: { detail: { remoteAddr: { toString: () => any } } }) => {
+        const remoteAddr = evt.detail.remoteAddr.toString();
+        console.log(`Connection established with: ${remoteAddr}`);
+
+        // Check if the connection is relayed
+        if (remoteAddr.includes("p2p-circuit")) {
+          console.log(
+            "✅ SUCCESS: Connection is being relayed. Waiting for hole punch..."
+          );
+        } else {
+          console.log("✨ UPGRADE COMPLETE: Connection is now direct!");
+        }
+      }
+    );
   }
 
   /**
@@ -50,11 +66,7 @@ export class Node {
       addresses: {
         listen: ["/ip4/0.0.0.0/tcp/0", "/ip4/0.0.0.0/tcp/0/ws"],
       },
-      transports: [
-        tcp(),
-        webSockets(),
-        circuitRelayTransport(),
-      ],
+      transports: [tcp(), webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
@@ -97,6 +109,39 @@ export class Node {
     return multiaddrs.map((addr: Multiaddr) => addr.toString());
   }
 
+  async printRelayedAddresses(): Promise<string[]> {
+    const selfMultiaddrs = this.getMultiaddrs();
+    const relayServerMultiAddress = (await getBootstrapAddresses())[0];
+    if (!relayServerMultiAddress) {
+      throw new Error("No relay server multiaddress found in bootstrap addresses.");
+    }
+    return selfMultiaddrs
+      .map((addr: Multiaddr) => this.createRelayCircuitAddress(relayServerMultiAddress, addr.toString()))
+      .filter((addr): addr is string => addr !== null);
+  }
+
+  createRelayCircuitAddress(
+    relayMultiaddr: string,
+    targetPeerMultiaddr: string
+  ) {
+    try {
+      // Find the /p2p/ part and get the PeerId
+      const relayPeerId = relayMultiaddr.split("/p2p/")[1];
+      const targetPeerId = targetPeerMultiaddr.split("/p2p/")[1];
+
+      if (!relayPeerId || !targetPeerId) {
+        console.error("Could not find PeerId in one of the addresses.");
+        return null;
+      }
+
+      // Construct the final circuit address
+      return `/p2p/${relayPeerId}/p2p-circuit/p2p/${targetPeerId}`;
+    } catch (error) {
+      console.error("Failed to parse multiaddresses:", error);
+      return null;
+    }
+  }
+
   async pingTest(maString: string) {
     try {
       const latency: number = await this.node.services.ping.ping(
@@ -106,6 +151,15 @@ export class Node {
     } catch (error: any) {
       // throw new Error(`Ping failed: ${error.message}`); //FIXME change this
       console.log("Ping failed: ", error.message);
+    }
+  }
+
+  async dial(ma: string) {
+    try {
+      await this.node.dial(multiaddr(ma));
+      console.log("Dial successful!");
+    } catch (err) {
+      console.error("Dial failed:", err);
     }
   }
 }
