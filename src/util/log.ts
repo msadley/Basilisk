@@ -1,6 +1,6 @@
 // src/util/log.ts
 
-import { absolutePath } from "./util.js";
+import { absolutePath, validateFile } from "./util.js";
 import fs from "fs";
 
 const LOG_FILE = "/log/log.txt";
@@ -22,7 +22,8 @@ function getCurrentTimestamp() : string {
 };
 
 export async function log(level: "INFO" | "WARN" | "ERROR", message: string) {
-  
+  validateFile(LOG_FILE);
+
   await fs.promises.appendFile(
     absolutePath(LOG_FILE),
     `[${getCurrentTimestamp}] [${level}] ${message}`
