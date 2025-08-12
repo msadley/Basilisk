@@ -3,8 +3,6 @@
 import { Node } from "../network/node.js";
 import { validateConfigFile } from "../config/config.js";
 
-export const CONFIG_FILE = "config/config.json";
-
 export class App {
   
   dial(ma: string) {

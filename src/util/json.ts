@@ -1,6 +1,6 @@
 // src/util/json.ts
 
-import { CONFIG_FILE } from "../app/app.js";
+import { CONFIG_FILE } from "../config/config.js";
 import { absolutePath } from "./util.js";
 import fs from "fs";
 

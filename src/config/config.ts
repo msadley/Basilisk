@@ -2,8 +2,9 @@
 
 import { absolutePath, generatePrivateKey } from "../util/util.js";
 import { overrideConfig, readJson, writeJson } from "../util/json.js";
-import { CONFIG_FILE } from "../app/app.js";
 import fs from "fs";
+
+export const CONFIG_FILE = "config/config.json";
 
 interface Config {
   privateKey: string;
