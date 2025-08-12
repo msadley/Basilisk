@@ -14,7 +14,7 @@ export const defaultConfig = (): Config => ({
 });
 
 export async function validateConfigFile() {
-  if (!validateFile(CONFIG_FILE)) await setDefaultConfig();
+  if (!(await validateFile(CONFIG_FILE))) await setDefaultConfig();
 
   const data = await readJson(CONFIG_FILE);
   if (

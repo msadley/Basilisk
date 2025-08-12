@@ -6,31 +6,30 @@ import appRootPath from "app-root-path";
 import { getPrivateKeyRaw, overrideConfig } from "./json.js";
 import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
 
-/**
- * Returns the absolute path of a file.
- * @param {string} file - The file to get the absolute path of.
- * @returns {string} The absolute path of the file.
- */
 export function absolutePath(file: string): string {
   return path.join(appRootPath.path, file);
 }
 
-// Returns false if the file wasn't valid else returns true
+/**
+ * Returns false if the file wasn't valid else returns true
+ */
 export async function validateFile(filePath: string): Promise<boolean> {
   try {
     await fs.promises.access(absolutePath(filePath));
-  } catch (error : any) {
-    await fs.promises.mkdir(absolutePath("config/"), { recursive: true });
-    await fs.promises.writeFile(path.dirname(absolutePath(filePath)), "");
+  } catch (error: any) {
+    await createFile(filePath);
     return false;
   }
   return true;
 }
 
-/**
- * Gets the private key from the config file, or generates a new one if it doesn't exist.
- * @returns {Promise<any>} A promise that resolves to the private key.
- */
+export async function createFile(filePath: string) {
+  await fs.promises.mkdir(absolutePath(path.dirname(filePath)), {
+    recursive: true,
+  });
+  await fs.promises.writeFile(absolutePath(filePath), "");
+}
+
 export async function getPrivateKey(): Promise<any> {
   let data: string;
   try {
