@@ -54,6 +54,11 @@ export class Node {
         }
       }
     );
+
+    this.node.addEventListener("self:peer:update", () => {
+      // Updated self multiaddrs?
+      this.printAddresses();
+    });
   }
 
   /**
@@ -64,7 +69,7 @@ export class Node {
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/0", "/ip4/0.0.0.0/tcp/0/ws"],
+        listen: ["/ip4/0.0.0.0/tcp/0", "/ip4/0.0.0.0/tcp/0/ws", "/p2p-circuit"],
       },
       transports: [tcp(), webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
@@ -113,10 +118,14 @@ export class Node {
     const selfMultiaddrs = this.getMultiaddrs();
     const relayServerMultiAddress = (await getBootstrapAddresses())[0];
     if (!relayServerMultiAddress) {
-      throw new Error("No relay server multiaddress found in bootstrap addresses.");
+      throw new Error(
+        "No relay server multiaddress found in bootstrap addresses."
+      );
     }
     return selfMultiaddrs
-      .map((addr: Multiaddr) => this.createRelayCircuitAddress(relayServerMultiAddress, addr.toString()))
+      .map((addr: Multiaddr) =>
+        this.createRelayCircuitAddress(relayServerMultiAddress, addr.toString())
+      )
       .filter((addr): addr is string => addr !== null);
   }
 
