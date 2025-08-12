@@ -4,11 +4,6 @@ import { CONFIG_FILE } from "../config/config.js";
 import { absolutePath } from "./util.js";
 import fs from "fs";
 
-export async function getBootstrapAddresses(): Promise<string[]> {
-  const data = await readJson(CONFIG_FILE);
-  return data["bootstrapAddresses"];
-}
-
 export async function writeJson(file: string, data: any) {
   file = absolutePath(file);
   const jsonString = JSON.stringify(data, null, 2);

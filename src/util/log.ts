@@ -22,6 +22,7 @@ function getCurrentTimestamp() : string {
 };
 
 export async function log(level: "INFO" | "WARN" | "ERROR", message: string) {
+  
   await fs.promises.appendFile(
     absolutePath(LOG_FILE),
     `[${getCurrentTimestamp}] [${level}] ${message}`

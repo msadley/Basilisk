@@ -1,6 +1,7 @@
 // src/util/util.ts
 
 import path from "path";
+import fs from "fs";
 import appRootPath from "app-root-path";
 import { getPrivateKeyRaw, overrideConfig } from "./json.js";
 import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
@@ -12,6 +13,18 @@ import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
  */
 export function absolutePath(file: string): string {
   return path.join(appRootPath.path, file);
+}
+
+// Returns false if the file wasn't valid else returns true
+export async function validateFile(filePath: string): Promise<boolean> {
+  try {
+    await fs.promises.access(absolutePath(filePath));
+  } catch (error : any) {
+    await fs.promises.mkdir(absolutePath("config/"), { recursive: true });
+    await fs.promises.writeFile(path.dirname(absolutePath(filePath)), "");
+    return false;
+  }
+  return true;
 }
 
 /**

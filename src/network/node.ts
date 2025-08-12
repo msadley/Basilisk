@@ -1,6 +1,5 @@
 // src/networking/node.ts
 
-import { kadDHT } from "@libp2p/kad-dht";
 import { bootstrap } from "@libp2p/bootstrap";
 import { createLibp2p, type Libp2p } from "libp2p";
 import { tcp } from "@libp2p/tcp";
@@ -8,41 +7,41 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
-import { getBootstrapAddresses } from "../util/json.js";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { getPrivateKey } from "../util/util.js";
 import { webSockets } from "@libp2p/websockets";
-import { autoNAT } from "@libp2p/autonat";
-import { dcutr } from "@libp2p/dcutr";
+import { log } from "../util/log.js";
+
+const bootstrapNodes = [
+  // Some public available nodes for managing discovery and NAT hole-punching
+  "/dns4/auto-relay.libp2p.io/tcp/443/wss/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+  "/dns4/auto-relay.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+  "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+  "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+  "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+];
 
 export class Node {
   private node: Libp2p;
 
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
-    // Event listener for when the node finds a new peer
+
     this.node.addEventListener("peer:discovery", (evt) => {
-      console.log("Discovered:", evt.detail.id.toString());
+      log("INFO", `Discovered: ${evt.detail.id.toString()}`);
     });
 
-    // Event listener for when a connection is established
     this.node.addEventListener("connection:open", (evt) => {
       const remoteAddr = evt.detail.remoteAddr.toString();
-      console.log(`Connection established with: ${remoteAddr}`);
+      log("INFO", `Connection established with: ${remoteAddr}`);
 
       // Check if the connection is relayed
       if (remoteAddr.includes("p2p-circuit")) {
-        console.log(
-          "✅ SUCCESS: Connection is being relayed. Waiting for hole punch..."
-        );
+        log("INFO", "Connection is being relayed. Waiting for hole punch...");
       } else {
-        console.log("✨ UPGRADE COMPLETE: Connection is now direct!");
+        log("INFO", "Connection is now direct");
       }
-    });
-
-    this.node.addEventListener("self:peer:update", () => {
-      this.printAddresses();
     });
   }
 
@@ -58,13 +57,10 @@ export class Node {
       services: {
         ping: ping(),
         identify: identify(),
-        dht: kadDHT({}),
-        autoNAT: autoNAT(),
-        dcutr: dcutr(),
       },
       peerDiscovery: [
         bootstrap({
-          list: await getBootstrapAddresses(),
+          list: bootstrapNodes,
         }),
       ],
       start: false,
