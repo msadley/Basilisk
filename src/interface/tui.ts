@@ -6,7 +6,6 @@ import { App } from "../app/app.js";
 const entries = [
   "ping address",
   "print addresses",
-  "dial relayed address",
   "exit",
 ];
 
@@ -63,22 +62,6 @@ export async function menu(app: App) {
         break;
 
       case "3":
-        const ma = await prompt("Enter the multiaddress to dial: ");
-        if (!ma) {
-          console.log("No multiaddress provided.");
-          await prompt("\nPress Enter to continue...");
-          continue;
-        }
-        try {
-          app.dial(ma);
-        } catch (error: any) {
-          console.log(error.message);
-        } finally {
-          await prompt("\nPress Enter to continue...");
-        }
-        break;
-
-      case "4":
         console.log("Exiting...");
         app.stop();
         rl.close();
