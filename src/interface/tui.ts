@@ -35,14 +35,14 @@ export async function menu(app: App) {
       console.log(`${i + 1}. ` + entries[i]);
 
     const answer: string = await prompt("\nPlease select an option: ");
-    console.log("\n");
+    // console.log("\n");
 
     switch (answer) {
       case "1":
         const multiaddr = await prompt("Enter the multiaddress to ping: ");
         if (!multiaddr) {
           console.log("No multiaddress provided.");
-          await prompt("\nPress Enter to continue...");
+          await prompt("Press Enter to continue...");
           continue;
         }
         try {
@@ -50,7 +50,7 @@ export async function menu(app: App) {
         } catch (error: any) {
           console.log(error.message);
         } finally {
-          await prompt("\nPress Enter to continue...");
+          await prompt("Press Enter to continue...");
         }
         break;
 
@@ -58,7 +58,7 @@ export async function menu(app: App) {
         app.printAddresses().forEach((addr: string) => {
           console.log(addr);
         });
-        await prompt("\nPress Enter to continue...");
+        await prompt("Press Enter to continue...");
         break;
 
       case "3":
@@ -66,6 +66,10 @@ export async function menu(app: App) {
         app.stop();
         rl.close();
         return;
+
+      default:
+        await prompt("Invalid option!\nPress Enter to continue...");
+        break;
     }
   }
 }
