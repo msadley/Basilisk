@@ -2,17 +2,14 @@
 
 import { Node } from "../network/node.js";
 import { validateConfigFile } from "../config/config.js";
+import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { log } from "../util/log.js";
 
 export class App {
-  
-  dial(ma: string) {
-    this.node.dial(ma);
-  }
   private node: Node;
 
   private constructor(nodeInstance: Node) {
     this.node = nodeInstance;
-    
   }
 
   static async init(): Promise<App> {
@@ -26,11 +23,17 @@ export class App {
     return this.node.printAddresses();
   }
 
-  pingTest(multiaddr: string) {
-    this.node.pingTest(multiaddr);
+  pingTest(ma: string) {
+    try {
+      const multiAddress: Multiaddr = multiaddr(ma);
+      return this.node.pingTest(multiAddress);
+    } catch (error: any) {
+      log("ERROR", "Error parsing multiaddress: " + error.message);
+      console.log("Error parsing multiaddress: ", error.message);
+    }
   }
 
   stop() {
-    return this.node.stop()
+    return this.node.stop();
   }
 }

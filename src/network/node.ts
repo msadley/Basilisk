@@ -7,7 +7,7 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { type Multiaddr } from "@multiformats/multiaddr";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { getPrivateKey } from "../util/util.js";
 import { webSockets } from "@libp2p/websockets";
@@ -85,21 +85,17 @@ export class Node {
     return multiaddrs.map((addr: Multiaddr) => addr.toString());
   }
 
-  async pingTest(maString: string) {
-    try {
-      const pingService = this.node.services.ping as {
-        ping: (addr: Multiaddr) => Promise<number>;
-      };
-      const latency: number = await pingService.ping(multiaddr(maString));
-      console.log(`Pinged ${maString} in ${latency}ms`);
-    } catch (error: any) {
-      console.log("Ping failed: ", error.message);
-    }
+  async pingTest(multiAddress: Multiaddr): Promise<string> {
+    const pingService = this.node.services.ping as {
+      ping: (addr: Multiaddr) => Promise<number>;
+    };
+    const latency: number = await pingService.ping(multiAddress);
+    return `Pinged ${multiAddress.toString()} in ${latency}ms`;
   }
 
-  async dial(ma: string) {
+  async dial(multiAddress: Multiaddr) {
     try {
-      await this.node.dial(multiaddr(ma));
+      await this.node.dial(multiAddress);
       console.log("Dial successful!");
     } catch (err) {
       console.error("Dial failed:", err);

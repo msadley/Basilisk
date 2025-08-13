@@ -2,12 +2,10 @@
 
 import readline from "readline";
 import { App } from "../app/app.js";
+import { log } from "../util/log.js";
+import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
-const entries = [
-  "ping address",
-  "print addresses",
-  "exit",
-];
+const entries = ["ping address", "print addresses", "exit"];
 
 export async function menu(app: App) {
   const rl = readline.createInterface({
@@ -35,23 +33,10 @@ export async function menu(app: App) {
       console.log(`${i + 1}. ` + entries[i]);
 
     const answer: string = await prompt("\nPlease select an option: ");
-    // console.log("\n");
 
     switch (answer) {
       case "1":
-        const multiaddr = await prompt("Enter the multiaddress to ping: ");
-        if (!multiaddr) {
-          console.log("No multiaddress provided.");
-          await prompt("Press Enter to continue...");
-          continue;
-        }
-        try {
-          app.pingTest(multiaddr);
-        } catch (error: any) {
-          console.log(error.message);
-        } finally {
-          await prompt("Press Enter to continue...");
-        }
+        await pingTest();
         break;
 
       case "2":
@@ -70,6 +55,31 @@ export async function menu(app: App) {
       default:
         await prompt("Invalid option!\nPress Enter to continue...");
         break;
+    }
+  }
+
+  async function pingTest() {
+    const multiAddress : string = await prompt("Enter the multiaddress to ping: ");
+
+    if (!multiAddress) {
+      console.log("No multiaddress provided.");
+      await prompt("Press Enter to continue...");
+      return;
+    }
+
+    try {
+      const pingPromise = app.pingTest(multiAddress);
+      if (pingPromise) {
+        const result = await pingPromise;
+        console.log(result);
+        await log("INFO", result);
+      }
+    } catch (error: any) {
+      const errorMessage = "Ping failed: " + error.message;
+      await log("ERROR", errorMessage);
+      console.log(errorMessage);
+    } finally {
+      await prompt("Press Enter to continue...");
     }
   }
 }
