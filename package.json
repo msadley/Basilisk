@@ -7,7 +7,9 @@
     "build": "npx tsc --build",
     "start": "node dist/index.js",
     "dev": "npm install && npm run build && npm run start",
-    "watch": "npx tsc --watch"
+    "watch": "npx tsc --watch",
+    "clean": "rimraf dist && rimraf log",
+    "reset": "npm run clean && rimraf config"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",
@@ -36,6 +38,7 @@
   "devDependencies": {
     "@types/node": "^24.2.0",
     "@types/prompt-sync": "^4.2.3",
+    "rimraf": "^6.0.1",
     "typescript": "^5.9.2"
   }
 }
