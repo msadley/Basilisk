@@ -9,7 +9,8 @@
     "dev": "npm install && npm run build && npm run start",
     "watch": "npx tsc --watch",
     "clean": "rimraf dist && rimraf log",
-    "reset": "npm run clean && rimraf config"
+    "reset": "npm run clean && rimraf config",
+    "debug": "cross-env DEBUG=libp2p* && npm run build && node dist/index.js"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@types/node": "^24.2.0",
     "@types/prompt-sync": "^4.2.3",
+    "cross-env": "^10.0.0",
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2"
   }
