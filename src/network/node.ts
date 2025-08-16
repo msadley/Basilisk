@@ -13,12 +13,6 @@ import { getPrivateKey } from "../util/util.js";
 import { webSockets } from "@libp2p/websockets";
 import { log } from "../util/log.js";
 
-const bootstrapNodes = [
-  // Some public available nodes for managing discovery and NAT hole-punching
-  "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", // Community server
-  "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt", // Community server
-];
-
 export class Node {
   private node: Libp2p;
 
@@ -51,7 +45,9 @@ export class Node {
       },
       peerDiscovery: [
         bootstrap({
-          list: bootstrapNodes,
+          list: process.env.BOOTSTRAP_MULTIADDR?.split("|") || [
+            "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
+          ],
         }),
       ],
       start: true,

@@ -1,5 +1,6 @@
 // src/index.ts
 
+import 'dotenv/config'
 import { menu } from "./interface/tui.js";
 import { App } from "./app/app.js";
 
