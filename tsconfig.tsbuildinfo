@@ -1,1 +1,0 @@
-{"root":["./src/index.ts","./src/app/app.ts","./src/config/config.ts","./src/interface/tui.ts","./src/network/node.ts","./src/util/json.ts","./src/util/log.ts","./src/util/util.ts"],"version":"5.9.2"}
