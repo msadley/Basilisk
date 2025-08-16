@@ -34,7 +34,7 @@ export class Node {
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/0/wss", "/p2p-circuit"],
+        listen: ["/p2p-circuit"],
       },
       transports: [tcp(), webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
