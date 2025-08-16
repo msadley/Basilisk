@@ -3,7 +3,6 @@
 import readline from "readline";
 import { App } from "../app/app.js";
 import { log } from "../util/log.js";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
 const entries = ["ping address", "print addresses", "exit"];
 
