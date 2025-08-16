@@ -25,31 +25,22 @@ export class Node {
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
 
-    this.node.addEventListener("peer:discovery", async (evt) => {
-      await log("INFO", `Discovered: ${evt.detail.id.toString()}`);
+    this.node.addEventListener("peer:discovery", (evt) => {
+      log("INFO", `Discovered: ${evt.detail.id.toString()}`);
     });
 
-    this.node.addEventListener("connection:open", async (evt) => {
+    this.node.addEventListener("connection:open", (evt) => {
       const remoteAddr = evt.detail.remoteAddr.toString();
-      await log("INFO", `Connection established with: ${remoteAddr}`);
-
-      // Check if the connection is relayed
-      if (remoteAddr.includes("p2p-circuit")) {
-        await log("INFO", "Connection is being relayed. Waiting for hole punch...");
-      } else {
-        await log("INFO", "Connection is now direct");
-      }
+      log("INFO", `Connection established with: ${remoteAddr}`);
     });
   }
 
   static async create(): Promise<Node> {
+    await log("INFO", "Creating node...");
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: [
-          // "/ip4/0.0.0.0/tcp/0", Disabled for testing
-          "/ip4/0.0.0.0/tcp/0/wss", 
-          "/p2p-circuit"],
+        listen: ["/ip4/0.0.0.0/tcp/0/wss", "/p2p-circuit"],
       },
       transports: [tcp(), webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
@@ -63,17 +54,16 @@ export class Node {
           list: bootstrapNodes,
         }),
       ],
-      start: false,
+      start: true,
     });
+    await log("INFO", "Node created.");
     return new Node(nodeInstance);
   }
 
-  start() {
-    this.node.start();
-  }
-
-  stop() {
+  async stop() {
+    await log("INFO", "Stopping node...");
     this.node.stop();
+    await log("INFO", "Node stopped.");
   }
 
   getMultiaddrs(): Multiaddr[] {

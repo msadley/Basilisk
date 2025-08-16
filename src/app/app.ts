@@ -13,9 +13,10 @@ export class App {
   }
 
   static async init(): Promise<App> {
+    await log("INFO", "Initializing node...");
     await validateConfigFile();
     const node = await Node.create();
-    node.start();
+    await log("INFO", "Node initialized.");
     return new App(node);
   }
 
@@ -26,14 +27,19 @@ export class App {
   pingTest(ma: string) {
     try {
       const multiAddress: Multiaddr = multiaddr(ma);
-      return this.node.pingTest(multiAddress);
+      try {
+        return this.node.pingTest(multiAddress);
+      } catch (error: any) {
+        log("ERROR", "Error pinging node: " + error.message);
+        console.log("Error pinging node: ", error.message);
+      }
     } catch (error: any) {
       log("ERROR", "Error parsing multiaddress: " + error.message);
       console.log("Error parsing multiaddress: ", error.message);
     }
   }
 
-  stop() {
-    return this.node.stop();
+  async stop() {
+    return await this.node.stop();
   }
 }
