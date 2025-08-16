@@ -5,12 +5,12 @@ node_modules
 .vscode
 
 # TypeScript build artifacts
-dist
-lib
+/dist
+/lib
 
 # Lock files
 package-lock.json
 
-# Ignore user-specific directories
+# User-specific directories
 /config
 /log

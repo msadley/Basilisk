@@ -1,6 +1,5 @@
 // src/networking/node.ts
 
-import { kadDHT } from "@libp2p/kad-dht";
 import { bootstrap } from "@libp2p/bootstrap";
 import { createLibp2p, type Libp2p } from "libp2p";
 import { tcp } from "@libp2p/tcp";
@@ -8,68 +7,40 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
-import { getBootstrapAddresses } from "../util/json.js";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { type Multiaddr } from "@multiformats/multiaddr";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { getPrivateKey } from "../util/util.js";
 import { webSockets } from "@libp2p/websockets";
-import { autoNAT } from "@libp2p/autonat";
-import { dcutr } from "@libp2p/dcutr";
+import { log } from "../util/log.js";
 
-/**
- * Represents a libp2p node.
- */
+const bootstrapNodes = [
+  // Some public available nodes for managing discovery and NAT hole-punching
+  "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa", // Community server
+  "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt", // Community server
+];
+
 export class Node {
-  private node;
+  private node: Libp2p;
 
-  /**
-   * Creates a new Node instance.
-   * @param {any} nodeInstance - The libp2p node instance.
-   * @private
-   */
-  private constructor(nodeInstance: any) {
+  private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
-    // Event listener for when the node finds a new peer
-    this.node.addEventListener(
-      "peer:discovery",
-      (evt: { detail: { id: { toString: () => any } } }) => {
-        console.log("Discovered:", evt.detail.id.toString());
-      }
-    );
 
-    // Event listener for when a connection is established
-    this.node.addEventListener(
-      "connection:establish",
-      (evt: { detail: { remoteAddr: { toString: () => any } } }) => {
-        const remoteAddr = evt.detail.remoteAddr.toString();
-        console.log(`Connection established with: ${remoteAddr}`);
+    this.node.addEventListener("peer:discovery", (evt) => {
+      log("INFO", `Discovered: ${evt.detail.id.toString()}`);
+    });
 
-        // Check if the connection is relayed
-        if (remoteAddr.includes("p2p-circuit")) {
-          console.log(
-            "✅ SUCCESS: Connection is being relayed. Waiting for hole punch..."
-          );
-        } else {
-          console.log("✨ UPGRADE COMPLETE: Connection is now direct!");
-        }
-      }
-    );
-
-    this.node.addEventListener("self:peer:update", () => {
-      // Updated self multiaddrs?
-      this.printAddresses();
+    this.node.addEventListener("connection:open", (evt) => {
+      const remoteAddr = evt.detail.remoteAddr.toString();
+      log("INFO", `Connection established with: ${remoteAddr}`);
     });
   }
 
-  /**
-   * Creates a new libp2p node.
-   * @returns {Promise<Node>} A promise that resolves to a new Node instance.
-   */
   static async create(): Promise<Node> {
+    await log("INFO", "Creating node...");
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/0", "/ip4/0.0.0.0/tcp/0/ws", "/p2p-circuit"],
+        listen: ["/ip4/0.0.0.0/tcp/0/wss", "/p2p-circuit"],
       },
       transports: [tcp(), webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
@@ -77,32 +48,22 @@ export class Node {
       services: {
         ping: ping(),
         identify: identify(),
-        dht: kadDHT({}),
-        autoNAT: autoNAT(),
-        dcutr: dcutr(),
       },
       peerDiscovery: [
         bootstrap({
-          list: await getBootstrapAddresses(),
+          list: bootstrapNodes,
         }),
       ],
-      start: false,
+      start: true,
     });
+    await log("INFO", "Node created.");
     return new Node(nodeInstance);
   }
 
-  /**
-   * Starts the libp2p node.
-   */
-  start() {
-    this.node.start();
-  }
-
-  /**
-   * Stops the libp2p node.
-   */
-  stop() {
+  async stop() {
+    await log("INFO", "Stopping node...");
     this.node.stop();
+    await log("INFO", "Node stopped.");
   }
 
   getMultiaddrs(): Multiaddr[] {
@@ -114,58 +75,17 @@ export class Node {
     return multiaddrs.map((addr: Multiaddr) => addr.toString());
   }
 
-  async printRelayedAddresses(): Promise<string[]> {
-    const selfMultiaddrs = this.getMultiaddrs();
-    const relayServerMultiAddress = (await getBootstrapAddresses())[0];
-    if (!relayServerMultiAddress) {
-      throw new Error(
-        "No relay server multiaddress found in bootstrap addresses."
-      );
-    }
-    return selfMultiaddrs
-      .map((addr: Multiaddr) =>
-        this.createRelayCircuitAddress(relayServerMultiAddress, addr.toString())
-      )
-      .filter((addr): addr is string => addr !== null);
+  async pingTest(multiAddress: Multiaddr): Promise<string> {
+    const pingService = this.node.services.ping as {
+      ping: (addr: Multiaddr) => Promise<number>;
+    };
+    const latency: number = await pingService.ping(multiAddress);
+    return `Pinged ${multiAddress.toString()} in ${latency}ms`;
   }
 
-  createRelayCircuitAddress(
-    relayMultiaddr: string,
-    targetPeerMultiaddr: string
-  ) {
+  async dial(multiAddress: Multiaddr) {
     try {
-      // Find the /p2p/ part and get the PeerId
-      const relayPeerId = relayMultiaddr.split("/p2p/")[1];
-      const targetPeerId = targetPeerMultiaddr.split("/p2p/")[1];
-
-      if (!relayPeerId || !targetPeerId) {
-        console.error("Could not find PeerId in one of the addresses.");
-        return null;
-      }
-
-      // Construct the final circuit address
-      return `/p2p/${relayPeerId}/p2p-circuit/p2p/${targetPeerId}`;
-    } catch (error) {
-      console.error("Failed to parse multiaddresses:", error);
-      return null;
-    }
-  }
-
-  async pingTest(maString: string) {
-    try {
-      const latency: number = await this.node.services.ping.ping(
-        multiaddr(maString)
-      );
-      console.log(`Pinged ${maString} in ${latency}ms`);
-    } catch (error: any) {
-      // throw new Error(`Ping failed: ${error.message}`); //FIXME change this
-      console.log("Ping failed: ", error.message);
-    }
-  }
-
-  async dial(ma: string) {
-    try {
-      await this.node.dial(multiaddr(ma));
+      await this.node.dial(multiAddress);
       console.log("Dial successful!");
     } catch (err) {
       console.error("Dial failed:", err);
