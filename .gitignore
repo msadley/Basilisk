@@ -11,5 +11,6 @@ lib
 # Lock files
 package-lock.json
 
-# Ignore specific directories
+# Ignore user-specific directories
 /config
+/log
