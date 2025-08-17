@@ -9,9 +9,10 @@ import { identify } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
 import { type Multiaddr } from "@multiformats/multiaddr";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
-import { getPrivateKey } from "../util/util.js";
+import { getPrivateKey } from "./keys.js";
 import { webSockets } from "@libp2p/websockets";
-import { log } from "../util/log.js";
+import { log } from "@basilisk/utils";
+import { validateConfigFile } from "./config.js";
 
 export class Node {
   private node: Libp2p;
@@ -29,8 +30,11 @@ export class Node {
     });
   }
 
-  static async create(): Promise<Node> {
-    await log("INFO", "Creating node...");
+  static async init(): Promise<Node> {
+    await log("INFO", "Initializing node...");
+
+    await validateConfigFile();
+
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
@@ -52,7 +56,7 @@ export class Node {
       ],
       start: true,
     });
-    await log("INFO", "Node created.");
+    await log("INFO", "Node initialized.");
     return new Node(nodeInstance);
   }
 

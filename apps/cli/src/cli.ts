@@ -1,12 +1,14 @@
-// src/interface/tui.ts
+// apps/cli/index.ts
 
+import "dotenv/config";
 import readline from "readline";
-import { App } from "../app/app.js";
-import { log } from "../util/log.js";
+import { log } from "@basilisk/utils";
+import { Node } from "@basilisk/core";
+import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
 const entries = ["ping address", "print addresses", "exit"];
+const node : Node = await Node.init();
 
-export async function menu(app: App) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -25,7 +27,7 @@ export async function menu(app: App) {
     console.clear();
 
     console.log(`------------------------------------------------------------------------------
---------------------------Welcome to the CCChat CLI!--------------------------
+----------------------------Welcome to Basilisk CLI----------------------------
 ------------------------------------------------------------------------------`);
 
     for (let i = 0; i < entries.length; i++)
@@ -39,7 +41,7 @@ export async function menu(app: App) {
         break;
 
       case "2":
-        app.printAddresses().forEach((addr: string) => {
+        node.printAddresses().forEach((addr: string) => {
           console.log(addr);
         });
         await prompt("Press Enter to continue...");
@@ -47,7 +49,7 @@ export async function menu(app: App) {
 
       case "3":
         console.log("Exiting...");
-        app.stop();
+        node.stop();
         rl.close();
         return;
 
@@ -58,27 +60,28 @@ export async function menu(app: App) {
   }
 
   async function pingTest() {
-    const multiAddress : string = await prompt("Enter the multiaddress to ping: ");
+    const maString: string = await prompt("Enter the multiaddress to ping: ");
 
-    if (!multiAddress) {
+    if (!maString) {
       console.log("No multiaddress provided.");
       await prompt("Press Enter to continue...");
       return;
     }
 
     try {
-      const pingPromise = app.pingTest(multiAddress);
-      if (pingPromise) {
-        const result = await pingPromise;
-        console.log(result);
-        await log("INFO", result);
+      const multiAddress: Multiaddr = multiaddr(maString);
+      try {
+        const result = await node.pingTest(multiAddress);
+        if (result) {
+          console.log(result);
+          await log("INFO", result);
+        }
+      } catch (error: any) {
+        log("ERROR", "Error pinging node: " + error.message);
       }
     } catch (error: any) {
-      const errorMessage = "Ping failed: " + error.message;
-      await log("ERROR", errorMessage);
-      console.log(errorMessage);
+      log("ERROR", "Error parsing multiaddress: " + error.message);
     } finally {
       await prompt("Press Enter to continue...");
     }
   }
-}
