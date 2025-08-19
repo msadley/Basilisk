@@ -3,10 +3,10 @@
 import "dotenv/config";
 import readline from "readline";
 import { log } from "@basilisk/utils";
-import { Node } from "@basilisk/core";
+import { Node, stdinToStream, streamToConsole } from "@basilisk/core";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
-const entries = ["ping address", "print addresses", "exit"];
+const entries = ["ping address", "print addresses", "chat address", "exit"];
 const node: Node = await Node.init();
 
 const rl = readline.createInterface({
@@ -48,6 +48,10 @@ while (true) {
       break;
 
     case "3":
+      await chat();
+      break;
+
+    case "4":
       console.log("Exiting...");
       node.stop();
       rl.close();
@@ -78,6 +82,35 @@ async function pingTest() {
       }
     } catch (error: any) {
       log("ERROR", "Error pinging node: " + error.message);
+    }
+  } catch (error: any) {
+    log("ERROR", "Error parsing multiaddress: " + error.message);
+  } finally {
+    await prompt("Press Enter to continue...");
+  }
+}
+
+async function chat() {
+  const maString: string = await prompt(
+    "Enter the multiaddress to start the chat: "
+  );
+
+  if (!maString) {
+    console.log("No multiaddress provided.");
+    await prompt("Press Enter to continue...");
+    return;
+  }
+
+  try {
+    const multiAddress: Multiaddr = multiaddr(maString);
+    try {
+      const chatStream = await node.startChatStream(multiAddress);
+      console.log("Chat stream started with " + maString);
+      stdinToStream(chatStream);
+      streamToConsole(chatStream);
+    } catch (error: any) {
+      log("ERROR", `Error when chatting ${maString}: ` + error.message);
+      console.log(`Error when chatting ${maString}: ` + error.message);
     }
   } catch (error: any) {
     log("ERROR", "Error parsing multiaddress: " + error.message);

@@ -13,6 +13,8 @@ import { getPrivateKey } from "./keys.js";
 import { webSockets } from "@libp2p/websockets";
 import { log } from "@basilisk/utils";
 import { validateConfigFile } from "./config.js";
+import { stdinToStream, streamToConsole } from "./stream.js";
+import type { Stream } from "@libp2p/interface";
 
 export class Node {
   private node: Libp2p;
@@ -56,6 +58,14 @@ export class Node {
       ],
       start: true,
     });
+
+    await log("INFO", "Creating chat protocol...");
+    await nodeInstance.handle("/chat/0.1.0", async ({ stream }) => {
+      stdinToStream(stream);
+      streamToConsole(stream);
+    });
+    await log("INFO", "Chat protocol created.");
+
     await log("INFO", "Node initialized.");
     return new Node(nodeInstance);
   }
@@ -81,6 +91,10 @@ export class Node {
     };
     const latency: number = await pingService.ping(multiAddress);
     return `Pinged ${multiAddress.toString()} in ${latency}ms`;
+  }
+
+  async startChatStream(ma: Multiaddr) : Promise<Stream> {
+    return await this.node.dialProtocol(ma, "chat/0.1.0");
   }
 
   async dial(multiAddress: Multiaddr) {
