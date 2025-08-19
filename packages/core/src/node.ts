@@ -8,7 +8,7 @@ import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import { type Multiaddr } from "@multiformats/multiaddr";
-import type { Connection, Stream } from "@libp2p/interface";
+import type { Connection, PeerId, Stream } from "@libp2p/interface";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
@@ -87,6 +87,10 @@ export class Node {
 
   getMultiaddrs(): Multiaddr[] {
     return this.node.getMultiaddrs();
+  }
+
+  getConnections(peerId: PeerId): Connection[] {
+    return this.node.getConnections(peerId);
   }
 
   printAddresses(): string[] {

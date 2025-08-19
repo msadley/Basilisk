@@ -5,6 +5,7 @@ import readline from "readline";
 import { log } from "@basilisk/utils";
 import { Node, stdinToStream, streamToConsole } from "@basilisk/core";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { peerIdFromString } from "@libp2p/peer-id";
 
 const entries = [
   "ping address",
@@ -144,6 +145,27 @@ async function dial() {
       console.log("Starting dial to" + maString);
       await node.dial(multiAddress);
       console.log("Succesfully dialed " + maString);
+
+      const checkInterval = setInterval(() => {
+        const connections = node.getConnections(peerIdFromString(maString));
+
+        const directConnection = connections.find(
+          (conn) => !conn.remoteAddr.toString().includes("/p2p-circuit")
+        );
+
+        if (directConnection) {
+          console.log("Found direct (hole-punched) connection:");
+          console.log(
+            "Remote Address:",
+            directConnection.remoteAddr.toString()
+          );
+          clearInterval(checkInterval);
+        } else {
+          console.log(
+            "Still on a relayed connection or connecting, checking again in 5 seconds..."
+          );
+        }
+      }, 5000);
     } catch (error: any) {
       await log("ERROR", "Error dialing node: " + error.message);
     }
