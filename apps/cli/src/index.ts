@@ -6,7 +6,13 @@ import { log } from "@basilisk/utils";
 import { Node, stdinToStream, streamToConsole } from "@basilisk/core";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
-const entries = ["ping address", "print addresses", "chat address", "exit"];
+const entries = [
+  "ping address",
+  "print addresses",
+  "chat address",
+  "dial address",
+  "exit",
+];
 const node: Node = await Node.init();
 
 const rl = readline.createInterface({
