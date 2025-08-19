@@ -35,10 +35,10 @@ export class Node {
     const node = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/wss"],
+        listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
         announce: [
           `/dns4/${announceDns}/tcp/4001`,
-          `/dns4/${announceDns}/tcp/4002/wss`,
+          `/dns4/${announceDns}/tcp/4002/ws`,
         ],
       },
       transports: [webSockets()],
