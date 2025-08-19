@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "esnext",
+    "types": ["node"],
+    "lib": ["esnext"],
+
+    // Other Outputs
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // Stricter Typechecking Options
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Style Options
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "strict": true,
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "composite": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@basilisk/cli": ["apps/cli/src"],
+      "@basilisk/relay": ["apps/relay/src"],
+      "@basilisk/utils": ["packages/utils/src"],
+      "@basilisk/core": ["packages/core/src"]
+    }
+  }
+}

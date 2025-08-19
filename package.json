@@ -1,43 +1,43 @@
 {
-  "name": "ccchat",
-  "version": "0.0.1",
-  "main": "src/index.ts",
-  "type": "module",
+  "name": "basilisk",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "build": "npx tsc --build",
-    "start": "node dist/index.js",
-    "dev": "npm install && npm run build && npm run start",
-    "watch": "npx tsc --watch",
-    "clean": "rimraf dist && rimraf log",
-    "reset": "npm run clean && rimraf config"
+    "build": "npx tsc -b",
+    "prep": "npm install && npm run build",
+    "cli": "npm run prep && node apps/cli/dist/index.js",
+    "relay": "npm run prep && node apps/relay/dist/index.js",
+    "debug-cli": "npm run prep && cross-env DEBUG=libp2p* node apps/cli/dist/index.js",
+    "debug-relay": "npm run prep && cross-env DEBUG=libp2p* node apps/relay/dist/index.js"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",
   "description": "A chat app built on top of libp2p, using TypeScript.",
   "dependencies": {
+    "core": "file:packages/core",
+    "utils": "file:packages/utils",
     "@chainsafe/libp2p-noise": "^16.1.4",
     "@chainsafe/libp2p-yamux": "^7.0.4",
     "@libp2p/autonat": "^2.0.37",
     "@libp2p/bootstrap": "^11.0.46",
     "@libp2p/circuit-relay-v2": "^3.2.23",
-    "@libp2p/dcutr": "^2.0.37",
     "@libp2p/identify": "^3.0.38",
     "@libp2p/interface": "^2.10.5",
-    "@libp2p/kad-dht": "^15.1.10",
-    "@libp2p/peer-id": "^5.1.8",
-    "@libp2p/peer-id-factory": "^4.2.4",
     "@libp2p/ping": "^2.0.36",
     "@libp2p/tcp": "^10.1.18",
     "@libp2p/websockets": "^9.2.18",
     "@multiformats/multiaddr": "^12.5.1",
     "app-root-path": "^3.1.0",
     "dotenv": "^17.2.1",
-    "libp2p": "^2.9.0",
-    "prompt-sync": "^4.2.0"
+    "libp2p": "^2.9.0"
   },
   "devDependencies": {
     "@types/node": "^24.2.0",
-    "@types/prompt-sync": "^4.2.3",
+    "cross-env": "^10.0.0",
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2"
   }

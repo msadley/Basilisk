@@ -1,12 +1,12 @@
-// src/config/config.ts
+// packages/core/src/config.ts
 
-import { generatePrivateKey, validateFile } from "../util/util.js";
-import { readJson, writeJson } from "../util/json.js";
-import { log } from "../util/log.js";
+import { validateFile } from "@basilisk/utils";
+import { readJson, writeJson, log } from "@basilisk/utils";
+import { generatePrivateKey } from "./keys.js";
 
 export const CONFIG_FILE = "config/config.json";
 
-interface Config {
+export interface Config {
   privateKey: string;
 }
 
@@ -43,5 +43,15 @@ async function setDefaultConfig() {
       "An error occurred while setting the default config: ",
       error
     );
+  }
+}
+
+export async function overrideConfig(field: string, value: any) {
+  try {
+    const data = await readJson(CONFIG_FILE);
+    data[field] = value;
+    await writeJson(CONFIG_FILE, data);
+  } catch (error: any) {
+    console.error("An error occurred: ", error);
   }
 }

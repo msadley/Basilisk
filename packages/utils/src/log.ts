@@ -1,6 +1,6 @@
-// src/util/log.ts
+// packages/utils/src/log.ts
 
-import { absolutePath, validateFile } from "./util.js";
+import { absolutePath, validateFile } from "./file.js";
 import fs from "fs";
 
 const LOG_FILE = `/log/${getCurrentTimestamp("COMPACT")}.log`;
@@ -18,8 +18,7 @@ function getCurrentTimestamp(mode: "FULL" | "COMPACT"): string {
 
   if (mode === "FULL")
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  else
-    return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+  else return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
 }
 
 export async function log(level: "INFO" | "WARN" | "ERROR", message: string) {

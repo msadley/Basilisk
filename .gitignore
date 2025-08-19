@@ -5,8 +5,7 @@ node_modules
 .vscode
 
 # TypeScript build artifacts
-/dist
-/lib
+dist
 tsconfig.tsbuildinfo
 
 # Lock files
@@ -14,7 +13,7 @@ package-lock.json
 
 # User-specific directories
 /config
-/log
+log
 
 # Environment variables
 .env
