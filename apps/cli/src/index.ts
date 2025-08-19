@@ -5,7 +5,6 @@ import readline from "readline";
 import { log } from "@basilisk/utils";
 import { Node, stdinToStream, streamToConsole } from "@basilisk/core";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-import { peerIdFromString } from "@libp2p/peer-id";
 
 const entries = [
   "ping address",
@@ -143,23 +142,13 @@ async function dial() {
     const multiAddress: Multiaddr = multiaddr(maString);
     try {
       console.log("Starting dial to" + maString);
-      await node.dial(multiAddress);
+      const conn = await node.dial(multiAddress);
       console.log("Succesfully dialed " + maString);
 
       const checkInterval = setInterval(() => {
-        const peerIdString: string = extractPeerId(maString) || "";
-        const connections = node.getConnections(peerIdFromString(peerIdString));
-
-        const directConnection = connections.find(
-          (conn) => !conn.remoteAddr.toString().includes("/p2p-circuit")
-        );
-
-        if (directConnection) {
+        if (!conn.remoteAddr.toString().includes("/p2p-circuit")) {
           console.log("Found direct (hole-punched) connection:");
-          console.log(
-            "Remote Address:",
-            directConnection.remoteAddr.toString()
-          );
+          console.log("Remote Address:", conn.remoteAddr.toString());
           clearInterval(checkInterval);
         } else {
           console.log(
@@ -175,20 +164,4 @@ async function dial() {
   } finally {
     await prompt("Press Enter to continue...");
   }
-}
-
-function extractPeerId(maString: string) {
-  if (!maString || typeof maString !== "string") {
-    return null;
-  }
-  // Find the '/p2p/' separator.
-  const p2pIndex = maString.lastIndexOf("/p2p/");
-
-  // If the separator is not found, there's no PeerId to extract.
-  if (p2pIndex === -1) {
-    return null;
-  }
-
-  // The PeerId is the substring that comes after '/p2p/'.
-  return maString.substring(p2pIndex + 5); // 5 is the length of '/p2p/'
 }

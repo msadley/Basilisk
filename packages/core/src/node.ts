@@ -14,7 +14,6 @@ import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
 import { autoNAT } from "@libp2p/autonat";
 import { dcutr } from "@libp2p/dcutr";
-import { kadDHT } from "@libp2p/kad-dht";
 
 // Local packages imports
 import { getPrivateKey } from "./keys.js";
@@ -46,7 +45,7 @@ export class Node {
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: ["/p2p-circuit"],
+        listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws", "/p2p-circuit"],
       },
       transports: [tcp(), webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
@@ -55,7 +54,6 @@ export class Node {
         ping: ping(),
         identify: identify(),
         autoNAT: autoNAT(),
-        kadDHT: kadDHT(),
         dcutr: dcutr(),
       },
       peerDiscovery: [

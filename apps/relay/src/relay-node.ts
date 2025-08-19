@@ -49,7 +49,12 @@ export class Node {
       streamMuxers: [yamux()],
       services: {
         identify: identify(),
-        relay: circuitRelayServer(),
+        relay: circuitRelayServer({
+          reservations: {
+            maxReservations: 15,
+            reservationTtl: 7200000,
+          },
+        }),
         autoNAT: autoNAT(),
         dcutr: dcutr(),
       },
