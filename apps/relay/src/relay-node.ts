@@ -32,7 +32,7 @@ export class Node {
 
     await validateConfigFile();
 
-    const announceDns: string = process.env["PUBLIC_DNS"] || "locahost";
+    const announceDns: string = process.env["PUBLIC_DNS"] || "localhost";
 
     const node = await createLibp2p({
       privateKey: await getPrivateKey(),
