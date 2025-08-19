@@ -1,4 +1,4 @@
-// src/util/util.ts
+// packages/utils/src/file.ts
 
 import path from "path";
 import fs from "fs";

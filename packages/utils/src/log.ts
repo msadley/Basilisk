@@ -1,4 +1,4 @@
-// src/util/log.ts
+// packages/utils/src/log.ts
 
 import { absolutePath, validateFile } from "./file.js";
 import fs from "fs";

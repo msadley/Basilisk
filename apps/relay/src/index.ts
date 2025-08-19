@@ -1,4 +1,4 @@
-// src/index.ts
+// apps/relay/src/index.ts
 
 import "dotenv/config";
 import { Node } from "./relay-node.js";

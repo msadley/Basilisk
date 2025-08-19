@@ -1,4 +1,4 @@
-// src/networking/node.ts
+// packages/core/src/node.ts
 
 import { bootstrap } from "@libp2p/bootstrap";
 import { createLibp2p, type Libp2p } from "libp2p";

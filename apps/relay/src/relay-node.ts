@@ -1,4 +1,4 @@
-// apps/relay/src/network/relay-node.ts
+// apps/relay/src/relay-node.ts
 
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";

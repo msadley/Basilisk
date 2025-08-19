@@ -1,4 +1,4 @@
-// src/config/config.ts
+// packages/core/src/config.ts
 
 import { validateFile } from "@basilisk/utils";
 import { readJson, writeJson, log } from "@basilisk/utils";
