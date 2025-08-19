@@ -7,7 +7,7 @@ import { identify } from "@libp2p/identify";
 import { webSockets } from "@libp2p/websockets";
 import { createLibp2p, type Libp2p } from "libp2p";
 import { autoNAT } from "@libp2p/autonat";
-import { getPrivateKey } from "@basilisk/core";
+import { getPrivateKey, validateConfigFile } from "@basilisk/core";
 import type { Multiaddr } from "@multiformats/multiaddr";
 import { log } from "@basilisk/utils";
 
@@ -29,6 +29,8 @@ export class Node {
 
   static async init() {
     await log("INFO", "Initializing node...");
+
+    await validateConfigFile();
 
     const announceDns: string = process.env["PUBLIC_DNS"] || "locahost";
 
