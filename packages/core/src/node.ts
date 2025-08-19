@@ -2,7 +2,6 @@
 
 // Libp2p-related imports
 import { createLibp2p, type Libp2p } from "libp2p";
-import { tcp } from "@libp2p/tcp";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
@@ -45,9 +44,9 @@ export class Node {
     const nodeInstance = await createLibp2p({
       privateKey: await getPrivateKey(),
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws", "/p2p-circuit"],
+        listen: ["/p2p-circuit"],
       },
-      transports: [tcp(), webSockets(), circuitRelayTransport()],
+      transports: [webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
