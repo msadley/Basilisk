@@ -1,20 +1,26 @@
 // packages/core/src/node.ts
 
-import { bootstrap } from "@libp2p/bootstrap";
+// Libp2p-related imports
 import { createLibp2p, type Libp2p } from "libp2p";
 import { tcp } from "@libp2p/tcp";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
-import { ping } from "@libp2p/ping";
+import { bootstrap } from "@libp2p/bootstrap";
 import { type Multiaddr } from "@multiformats/multiaddr";
+import type { Stream } from "@libp2p/interface";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
-import { getPrivateKey } from "./keys.js";
+import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
+import { autoNAT } from "@libp2p/autonat";
+import { dcutr } from "@libp2p/dcutr";
+import { kadDHT } from "@libp2p/kad-dht";
+
+// Local packages imports
+import { getPrivateKey } from "./keys.js";
 import { log } from "@basilisk/utils";
 import { validateConfigFile } from "./config.js";
 import { stdinToStream, streamToConsole } from "./stream.js";
-import type { Stream } from "@libp2p/interface";
 
 export class Node {
   private node: Libp2p;
@@ -48,6 +54,9 @@ export class Node {
       services: {
         ping: ping(),
         identify: identify(),
+        autoNAT: autoNAT(),
+        kadDHT: kadDHT(),
+        dcutr: dcutr(),
       },
       peerDiscovery: [
         bootstrap({
@@ -93,7 +102,7 @@ export class Node {
     return `Pinged ${multiAddress.toString()} in ${latency}ms`;
   }
 
-  async startChatStream(ma: Multiaddr) : Promise<Stream> {
+  async startChatStream(ma: Multiaddr): Promise<Stream> {
     return await this.node.dialProtocol(ma, "chat/0.1.0");
   }
 
