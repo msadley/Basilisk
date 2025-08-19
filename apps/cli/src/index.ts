@@ -52,6 +52,10 @@ while (true) {
       break;
 
     case "4":
+      await dial();
+      break;
+
+    case "5":
       console.log("Exiting...");
       node.stop();
       rl.close();
@@ -111,6 +115,31 @@ async function chat() {
     } catch (error: any) {
       log("ERROR", `Error when chatting ${maString}: ` + error.message);
       console.log(`Error when chatting ${maString}: ` + error.message);
+    }
+  } catch (error: any) {
+    log("ERROR", "Error parsing multiaddress: " + error.message);
+  } finally {
+    await prompt("Press Enter to continue...");
+  }
+}
+
+async function dial() {
+  const maString: string = await prompt("Enter the multiaddress to dial: ");
+
+  if (!maString) {
+    console.log("No multiaddress provided.");
+    await prompt("Press Enter to continue...");
+    return;
+  }
+
+  try {
+    const multiAddress: Multiaddr = multiaddr(maString);
+    try {
+      console.log("Starting dial to" + maString);
+      await node.dial(multiAddress);
+      console.log("Succesfully dialed " + maString);
+    } catch (error: any) {
+      await log("ERROR", "Error dialing node: " + error.message);
     }
   } catch (error: any) {
     log("ERROR", "Error parsing multiaddress: " + error.message);

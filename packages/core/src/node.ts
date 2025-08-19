@@ -8,7 +8,7 @@ import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import { type Multiaddr } from "@multiformats/multiaddr";
-import type { Stream } from "@libp2p/interface";
+import type { Connection, Stream } from "@libp2p/interface";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
@@ -106,12 +106,14 @@ export class Node {
     return await this.node.dialProtocol(ma, "chat/0.1.0");
   }
 
-  async dial(multiAddress: Multiaddr) {
+  async dial(multiAddress: Multiaddr): Promise<Connection> {
+    await log("INFO", `Dialing ${multiAddress.toString()}...`);
     try {
-      await this.node.dial(multiAddress);
-      console.log("Dial successful!");
+      const conn = await this.node.dial(multiAddress);
+      await log("INFO", `Succesfully dialed ${multiAddress.toString()}`);
+      return conn;
     } catch (err) {
-      console.error("Dial failed:", err);
+      throw new Error("Dial failed: " + err);
     }
   }
 }
