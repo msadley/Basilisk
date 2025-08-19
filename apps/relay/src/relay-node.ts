@@ -10,6 +10,7 @@ import { autoNAT } from "@libp2p/autonat";
 import { getPrivateKey, validateConfigFile } from "@basilisk/core";
 import type { Multiaddr } from "@multiformats/multiaddr";
 import { log } from "@basilisk/utils";
+import { dcutr } from "@libp2p/dcutr";
 
 export class Node {
   private node: Libp2p;
@@ -50,6 +51,7 @@ export class Node {
         identify: identify(),
         relay: circuitRelayServer(),
         autoNAT: autoNAT(),
+        dcutr: dcutr(),
       },
     });
     await log("INFO", "Node initialized.");
