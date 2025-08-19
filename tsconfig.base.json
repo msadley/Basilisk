@@ -36,6 +36,8 @@
 
     "baseUrl": ".",
     "paths": {
+      "@basilisk/cli": ["apps/cli/src"],
+      "@basilisk/relay": ["apps/relay/src"],
       "@basilisk/utils": ["packages/utils/src"],
       "@basilisk/core": ["packages/core/src"]
     }

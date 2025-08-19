@@ -8,15 +8,17 @@
   ],
   "scripts": {
     "build": "npx tsc -b",
-    "start-peer": "npm install && npm run build",
-    "clean": "rimraf dist && rimraf log",
-    "reset": "npm run clean && rimraf config"
+    "prep": "npm install && npm run build",
+    "cli": "npm run prep && node apps/cli/dist/index.js",
+    "relay": "npm run prep && node apps/relay/dist/index.js",
+    "debug-cli": "npm run prep && cross-env DEBUG=libp2p* node apps/cli/dist/index.js",
+    "debug-relay": "npm run prep && cross-env DEBUG=libp2p* node apps/relay/dist/index.js"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",
   "description": "A chat app built on top of libp2p, using TypeScript.",
   "dependencies": {
-            "core": "file:packages/core",
+    "core": "file:packages/core",
     "utils": "file:packages/utils",
     "@chainsafe/libp2p-noise": "^16.1.4",
     "@chainsafe/libp2p-yamux": "^7.0.4",
