@@ -12,7 +12,9 @@
     "cli": "npm run prep && node apps/cli/dist/index.js",
     "relay": "npm run prep && node apps/relay/dist/index.js",
     "debug-cli": "npm run prep && cross-env DEBUG=libp2p* node apps/cli/dist/index.js",
-    "debug-relay": "npm run prep && cross-env DEBUG=libp2p* node apps/relay/dist/index.js"
+    "debug-relay": "npm run prep && cross-env DEBUG=libp2p* node apps/relay/dist/index.js",
+    "clean": "rimraf log",
+    "reset": "rimraf config"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",
