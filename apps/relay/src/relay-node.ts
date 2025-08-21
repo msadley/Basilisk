@@ -11,6 +11,7 @@ import { getPrivateKey, validateConfigFile } from "@basilisk/core";
 import type { Multiaddr } from "@multiformats/multiaddr";
 import { log } from "@basilisk/utils";
 import { dcutr } from "@libp2p/dcutr";
+import { tcp } from "@libp2p/tcp"
 
 export class Node {
   private node: Libp2p;
@@ -44,7 +45,7 @@ export class Node {
           `/dns4/${announceDns}/tcp/4002/ws`,
         ],
       },
-      transports: [webSockets()],
+      transports: [tcp(), webSockets()],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
