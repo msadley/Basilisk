@@ -1,14 +1,17 @@
 // packages/core/src/node.ts
 
 // Libp2p-related imports
-import { createLibp2p, type Libp2p } from "libp2p";
+import { createLibp2p, type Libp2p, type Libp2pOptions } from "libp2p";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import { type Multiaddr } from "@multiformats/multiaddr";
 import type { Connection, PeerId, Stream } from "@libp2p/interface";
-import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
+import {
+  circuitRelayServer,
+  circuitRelayTransport,
+} from "@libp2p/circuit-relay-v2";
 import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
 import { autoNAT } from "@libp2p/autonat";
@@ -22,16 +25,52 @@ import { stdinToStream, streamToConsole } from "./stream.js";
 import { kadDHT } from "@libp2p/kad-dht";
 import { tcp } from "@libp2p/tcp";
 
+const bootstrapNodes = process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
+  "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
+];
+
+const publicDns = process.env.PUBLIC_DNS || "localhost";
+
+const baseConfig: Partial<Libp2pOptions> = {
+  connectionEncrypters: [noise()],
+  streamMuxers: [yamux()],
+  services: {
+    ping: ping(),
+    dht: kadDHT(),
+    identify: identify(),
+    autoNAT: autoNAT(),
+    dcutr: dcutr(),
+  },
+};
+
+const clientConfig: Partial<Libp2pOptions> = {
+  addresses: {
+    listen: ["/p2p-circuit"],
+  },
+  transports: [tcp(), webSockets(), circuitRelayTransport()],
+  peerDiscovery: [
+    bootstrap({
+      list: bootstrapNodes,
+    }),
+  ],
+};
+
+const serverConfig: Partial<Libp2pOptions> = {
+  addresses: {
+    listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
+    announce: [`/dns4/${publicDns}/tcp/4001`, `/dns4/${publicDns}/tcp/4002/ws`],
+  },
+  transports: [tcp(), webSockets()],
+  services: {
+    relay: circuitRelayServer(),
+  },
+};
+
 export class Node {
   private node: Libp2p;
 
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
-
-    /*this.node.addEventListener("peer:discovery", (evt) => {
-      log("INFO", `Discovered: ${evt.detail.id.toString()}`);
-    });
-    */
 
     this.node.addEventListener("connection:open", (evt) => {
       const remoteAddr = evt.detail.remoteAddr.toString();
@@ -39,47 +78,36 @@ export class Node {
     });
   }
 
-  static async init(): Promise<Node> {
+  static async init(mode: "CLIENT" | "RELAY"): Promise<Node> {
     await log("INFO", "Initializing node...");
 
     await validateConfigFile();
 
-    const nodeInstance = await createLibp2p({
-      privateKey: await getPrivateKey(),
-      addresses: {
-        listen: ["/p2p-circuit"],
-      },
-      transports: [tcp(), webSockets(), circuitRelayTransport()],
-      connectionEncrypters: [noise()],
-      streamMuxers: [yamux()],
+    const modeConfig = mode === "CLIENT" ? clientConfig : serverConfig;
+
+    const config: Libp2pOptions = {
+      ...baseConfig,
+      ...modeConfig,
       services: {
-        ping: ping(),
-        identify: identify(),
-        autoNAT: autoNAT(),
-        dcutr: dcutr(),
-        dht: kadDHT({
-          clientMode: false,
-        }),
+        ...baseConfig.services,
+        ...modeConfig.services,
       },
-      peerDiscovery: [
-        bootstrap({
-          list: process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
-            "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
-          ],
-        }),
-      ],
+      privateKey: await getPrivateKey(),
       start: true,
-    });
+    };
+
+    const node = await createLibp2p(config);
 
     await log("INFO", "Creating chat protocol...");
-    await nodeInstance.handle("/chat/0.1.0", async ({ stream }) => {
+    await node.handle("/chat/0.1.0", async ({ stream }) => {
       stdinToStream(stream);
       streamToConsole(stream);
     });
     await log("INFO", "Chat protocol created.");
 
     await log("INFO", "Node initialized.");
-    return new Node(nodeInstance);
+
+    return new Node(node);
   }
 
   async stop() {
