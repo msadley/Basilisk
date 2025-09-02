@@ -40,7 +40,7 @@ const baseConfig: Partial<Libp2pOptions> = {
     identify: identify(),
     autoNAT: autoNAT(),
     dcutr: dcutr(),
-  },
+  } as any,
 };
 
 const clientConfig: Partial<Libp2pOptions> = {
