@@ -20,6 +20,7 @@ import { log } from "@basilisk/utils";
 import { validateConfigFile } from "./config.js";
 import { stdinToStream, streamToConsole } from "./stream.js";
 import { kadDHT } from "@libp2p/kad-dht";
+import { tcp } from "@libp2p/tcp";
 
 export class Node {
   private node: Libp2p;
@@ -48,7 +49,7 @@ export class Node {
       addresses: {
         listen: ["/p2p-circuit"],
       },
-      transports: [webSockets(), circuitRelayTransport()],
+      transports: [tcp(), webSockets(), circuitRelayTransport()],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       services: {
