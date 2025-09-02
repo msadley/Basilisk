@@ -19,6 +19,7 @@ import { getPrivateKey } from "./keys.js";
 import { log } from "@basilisk/utils";
 import { validateConfigFile } from "./config.js";
 import { stdinToStream, streamToConsole } from "./stream.js";
+import { kadDHT } from "@libp2p/kad-dht";
 
 export class Node {
   private node: Libp2p;
@@ -55,6 +56,9 @@ export class Node {
         identify: identify(),
         autoNAT: autoNAT(),
         dcutr: dcutr(),
+        dht: kadDHT({
+          clientMode: false,
+        }),
       },
       peerDiscovery: [
         bootstrap({
