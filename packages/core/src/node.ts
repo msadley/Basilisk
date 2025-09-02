@@ -26,9 +26,10 @@ export class Node {
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
 
-    this.node.addEventListener("peer:discovery", (evt) => {
+    /*this.node.addEventListener("peer:discovery", (evt) => {
       log("INFO", `Discovered: ${evt.detail.id.toString()}`);
     });
+    */
 
     this.node.addEventListener("connection:open", (evt) => {
       const remoteAddr = evt.detail.remoteAddr.toString();
