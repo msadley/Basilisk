@@ -58,7 +58,7 @@ export class Node {
       },
       peerDiscovery: [
         bootstrap({
-          list: process.env.BOOTSTRAP_MULTIADDR?.split("|") || [
+          list: process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
             "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
           ],
         }),
