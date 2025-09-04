@@ -42,7 +42,7 @@ export async function menu() {
       const data: string[] = answer.split(" ");
       switch (data[0]) {
         case "/ping":
-          pingTest(data[1]);
+          await pingTest(data[1]);
           break;
 
         case "/addresses":
