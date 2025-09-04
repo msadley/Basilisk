@@ -38,7 +38,6 @@ export async function menu() {
           node.printAddresses().forEach((addr: string) => {
             console.log(addr);
           });
-          await prompt("Press Enter to continue...");
           break;
 
         case "/chat":
@@ -71,7 +70,6 @@ async function pingTest(addr: string | undefined) {
   } catch (error: any) {
     log("ERROR", "Error pinging node: " + error.message);
   }
-  await prompt("Press Enter to continue...");
 }
 
 async function chat(addr: string | undefined) {
@@ -85,7 +83,6 @@ async function chat(addr: string | undefined) {
     log("ERROR", `Error when chatting ${addr}: ` + error.message);
     console.log(`Error when chatting ${addr}: ` + error.message);
   }
-  await prompt("Press Enter to continue...");
 }
 
 async function help() {
