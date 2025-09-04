@@ -7,7 +7,7 @@ import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-import type { Connection, Stream } from "@libp2p/interface";
+import type { Stream } from "@libp2p/interface";
 import {
   circuitRelayServer,
   circuitRelayTransport,
