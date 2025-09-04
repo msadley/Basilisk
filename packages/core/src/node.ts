@@ -146,9 +146,6 @@ export class Node {
     this.startChatStream(addr).then((stream) => {
       stdinToStream(stream);
       streamToConsole(stream);
-    } catch (err) {
-      log("ERROR", `Chat failed: ${err}`);
-      throw new Error("Chat failed: " + err);
-    }
+    });
   }
 }
