@@ -142,9 +142,8 @@ export class Node {
   }
 
   async chat(addr: string) {
-    try {
-      await log("INFO", `Chatting with ${addr}...`);
-      const stream = await this.startChatStream(addr);
+    await log("INFO", `Chatting with ${addr}...`);
+    this.startChatStream(addr).then((stream) => {
       stdinToStream(stream);
       streamToConsole(stream);
     } catch (err) {
