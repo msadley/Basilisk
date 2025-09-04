@@ -6,8 +6,8 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
-import { type Multiaddr } from "@multiformats/multiaddr";
-import type { Connection, PeerId, Stream } from "@libp2p/interface";
+import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import type { Connection, Stream } from "@libp2p/interface";
 import {
   circuitRelayServer,
   circuitRelayTransport,
@@ -120,35 +120,50 @@ export class Node {
     return this.node.getMultiaddrs();
   }
 
-  getConnections(peerId: PeerId): Connection[] {
-    return this.node.getConnections(peerId);
-  }
-
   printAddresses(): string[] {
     const multiaddrs = this.getMultiaddrs();
     return multiaddrs.map((addr: Multiaddr) => addr.toString());
   }
 
-  async pingTest(multiAddress: Multiaddr): Promise<string> {
+  async pingTest(addr: string): Promise<string> {
     const pingService = this.node.services.ping as {
       ping: (addr: Multiaddr) => Promise<number>;
     };
-    const latency: number = await pingService.ping(multiAddress);
-    return `Pinged ${multiAddress.toString()} in ${latency}ms`;
+    const latency: number = await pingService.ping(multiaddr(addr));
+    return `Pinged ${addr.toString()} in ${latency}ms`;
   }
 
-  async startChatStream(ma: Multiaddr): Promise<Stream> {
-    return await this.node.dialProtocol(ma, "chat/0.1.0");
+  async startChatStream(addr: string): Promise<Stream> {
+    return await this.node.dialProtocol(multiaddr(addr), "chat/0.1.0");
   }
 
-  async dial(multiAddress: Multiaddr): Promise<Connection> {
-    await log("INFO", `Dialing ${multiAddress.toString()}...`);
+  async dial(addr: string): Promise<Connection> {
     try {
-      const conn = await this.node.dial(multiAddress);
-      await log("INFO", `Succesfully dialed ${multiAddress.toString()}`);
-      return conn;
+      const address: Multiaddr = multiaddr(addr);
+      await log("INFO", `Dialing ${address.toString()}...`);
+      try {
+        const conn = await this.node.dial(address);
+        await log("INFO", `Succesfully dialed ${address.toString()}`);
+        return conn;
+      } catch (err) {
+        log("ERROR", `Dial failed: ${err}`);
+        throw new Error("Dial failed: " + err);
+      }
     } catch (err) {
-      throw new Error("Dial failed: " + err);
+      log("ERROR", `Error parsing multiaddress: ${err}`);
+      throw new Error("Error parsing multiaddress: " + err);
+    }
+  }
+
+  async chat(addr: string) {
+    try {
+      await log("INFO", `Chatting with ${addr}...`);
+      const stream = await this.startChatStream(addr);
+      stdinToStream(stream);
+      streamToConsole(stream);
+    } catch (err) {
+      log("ERROR", `Chat failed: ${err}`);
+      throw new Error("Chat failed: " + err);
     }
   }
 }
