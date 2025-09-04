@@ -103,7 +103,7 @@ export class Node {
     const node = await createLibp2p(config);
 
     await log("INFO", "Creating chat protocol...");
-    await node.handle("/chat/0.1.0", async ({ stream }) => {
+    await node.handle("/chat/1.0.0", async ({ stream }) => {
       stdinToStream(stream);
       streamToConsole(stream);
     });
@@ -138,25 +138,7 @@ export class Node {
   }
 
   async startChatStream(addr: string): Promise<Stream> {
-    return await this.node.dialProtocol(multiaddr(addr), "chat/0.1.0");
-  }
-
-  async dial(addr: string): Promise<Connection> {
-    try {
-      const address: Multiaddr = multiaddr(addr);
-      await log("INFO", `Dialing ${address.toString()}...`);
-      try {
-        const conn = await this.node.dial(address);
-        await log("INFO", `Succesfully dialed ${address.toString()}`);
-        return conn;
-      } catch (err) {
-        log("ERROR", `Dial failed: ${err}`);
-        throw new Error("Dial failed: " + err);
-      }
-    } catch (err) {
-      log("ERROR", `Error parsing multiaddress: ${err}`);
-      throw new Error("Error parsing multiaddress: " + err);
-    }
+    return await this.node.dialProtocol(multiaddr(addr), "chat/1.0.0");
   }
 
   async chat(addr: string) {
