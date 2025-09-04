@@ -4,7 +4,7 @@ import { readJson } from "@basilisk/utils";
 import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
 import type { PrivateKey } from "@libp2p/interface";
 import { CONFIG_FILE, overrideConfig } from "./config.js";
- 
+
 export async function getPrivateKeyRaw(): Promise<string> {
   const data = await readJson(CONFIG_FILE);
   if (data["privateKey"] === undefined || data["privateKey"] === "")
