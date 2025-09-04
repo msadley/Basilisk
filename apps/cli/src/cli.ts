@@ -24,6 +24,17 @@ export async function menu() {
   console.log(
     "Welcome to Basilisk! Enter /help for the list of commands available"
   );
+
+  process.on("SIGINT", async () => {
+    await stop();
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", async () => {
+    await stop();
+    process.exit(0);
+  });
+
   while (true) {
     const answer: string = await prompt("Basilisk> ");
 
@@ -45,10 +56,8 @@ export async function menu() {
           break;
 
         case "/exit":
-          console.log("Exiting...");
-          node.stop();
-          rl.close();
-          process.exit(0);
+          await stop();
+          break;
 
         default:
           help();
@@ -93,4 +102,11 @@ async function help() {
 /exit                           Exit the application
 /help                           Show this menu
           `);
+}
+
+async function stop() {
+  console.log("\nExiting...");
+  node.stop();
+  rl.close();
+  process.exit(0);
 }
