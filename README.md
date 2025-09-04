@@ -1,6 +1,7 @@
-# Basilisk
 
-A chat app built on top of libp2p, using TypeScript.
+![basilisk logo](assets/banner.jpeg)
+
+A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
 ## Getting Started
 
@@ -16,7 +17,7 @@ These instructions will get you a copy of the project up and running on your loc
 1. Clone the repo:
 
    ```sh
-   git clone https://github.com/your-username/basilisk.git
+   git clone https://github.com/msadley/basilisk.git
    ```
 
 2. Install NPM packages:
