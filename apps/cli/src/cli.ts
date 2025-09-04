@@ -2,16 +2,7 @@
 
 import readline from "readline";
 import { log } from "@basilisk/utils";
-import { Node, stdinToStream, streamToConsole } from "@basilisk/core";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-
-const entries = [
-  "ping address",
-  "print addresses",
-  "chat address",
-  "dial address",
-  "exit",
-];
+import { Node } from "@basilisk/core";
 
 const node: Node = await Node.init("CLIENT");
 
@@ -29,141 +20,80 @@ function prompt(query: string): Promise<string> {
 }
 
 export async function menu() {
-  while (true) {
-    // Setting up the prompt
-    console.clear();
-
-    console.log(`------------------------------------------------------------------------------
-----------------------------Welcome to Basilisk CLI----------------------------
-------------------------------------------------------------------------------`);
-
-    for (let i = 0; i < entries.length; i++)
-      console.log(`${i + 1}. ` + entries[i]);
-
-    const answer: string = await prompt("\nPlease select an option: ");
-
-    switch (answer) {
-      case "1":
-        await pingTest();
-        break;
-
-      case "2":
-        node.printAddresses().forEach((addr: string) => {
-          console.log(addr);
-        });
-        await prompt("Press Enter to continue...");
-        break;
-
-      case "3":
-        await chat();
-        break;
-
-      case "4":
-        await dial();
-        break;
-
-      case "5":
-        console.log("Exiting...");
-        node.stop();
-        rl.close();
-        process.exit(0);
-
-      default:
-        await prompt("Invalid option!\nPress Enter to continue...");
-        break;
-    }
-  }
-}
-
-async function pingTest() {
-  const maString: string = await prompt("Enter the multiaddress to ping: ");
-
-  if (!maString) {
-    console.log("No multiaddress provided.");
-    await prompt("Press Enter to continue...");
-    return;
-  }
-
-  try {
-    const multiAddress: Multiaddr = multiaddr(maString);
-    try {
-      const result = await node.pingTest(multiAddress);
-      if (result) {
-        console.log(result);
-        await log("INFO", result);
-      }
-    } catch (error: any) {
-      log("ERROR", "Error pinging node: " + error.message);
-    }
-  } catch (error: any) {
-    log("ERROR", "Error parsing multiaddress: " + error.message);
-  } finally {
-    await prompt("Press Enter to continue...");
-  }
-}
-
-async function chat() {
-  const maString: string = await prompt(
-    "Enter the multiaddress to start the chat: "
+  console.clear();
+  console.log(
+    "Welcome to Basilisk! Enter /help for the list of commands available"
   );
+  while (true) {
+    const answer: string = await prompt("Basilisk> ");
 
-  if (!maString) {
-    console.log("No multiaddress provided.");
-    await prompt("Press Enter to continue...");
-    return;
-  }
+    if (answer[0] === "/") {
+      const data: string[] = answer.split(" ");
+      switch (data[0]) {
+        case "/ping":
+          pingTest(data[1]);
+          break;
 
-  try {
-    const multiAddress: Multiaddr = multiaddr(maString);
-    try {
-      const chatStream = await node.startChatStream(multiAddress);
-      console.log("Chat stream started with " + maString);
-      stdinToStream(chatStream);
-      streamToConsole(chatStream);
-    } catch (error: any) {
-      log("ERROR", `Error when chatting ${maString}: ` + error.message);
-      console.log(`Error when chatting ${maString}: ` + error.message);
+        case "/addresses":
+          node.printAddresses().forEach((addr: string) => {
+            console.log(addr);
+          });
+          await prompt("Press Enter to continue...");
+          break;
+
+        case "/chat":
+          await chat(data[1]);
+          break;
+
+        case "/exit":
+          console.log("Exiting...");
+          node.stop();
+          rl.close();
+          process.exit(0);
+
+        default:
+          help();
+          break;
+      }
     }
-  } catch (error: any) {
-    log("ERROR", "Error parsing multiaddress: " + error.message);
-  } finally {
-    await prompt("Press Enter to continue...");
   }
 }
 
-async function dial() {
-  const maString: string = await prompt("Enter the multiaddress to dial: ");
-
-  if (!maString) {
-    console.log("No multiaddress provided.");
-    await prompt("Press Enter to continue...");
+async function pingTest(addr: string | undefined) {
+  if (addr === undefined) {
+    console.log("Usage: /ping <address>");
     return;
   }
-
   try {
-    const multiAddress: Multiaddr = multiaddr(maString);
-    try {
-      console.log("Starting dial to" + maString);
-      const conn = await node.dial(multiAddress);
-      console.log("Succesfully dialed " + maString);
-
-      const checkInterval = setInterval(() => {
-        if (!conn.remoteAddr.toString().includes("/p2p-circuit")) {
-          console.log("Found direct (hole-punched) connection:");
-          console.log("Remote Address:", conn.remoteAddr.toString());
-          clearInterval(checkInterval);
-        } else {
-          console.log(
-            "Still on a relayed connection or connecting, checking again in 5 seconds..."
-          );
-        }
-      }, 5000);
-    } catch (error: any) {
-      await log("ERROR", "Error dialing node: " + error.message);
-    }
+    const result = await node.pingTest(addr);
+    console.log(result);
+    await log("INFO", result);
   } catch (error: any) {
-    log("ERROR", "Error parsing multiaddress: " + error.message);
-  } finally {
-    await prompt("Press Enter to continue...");
+    log("ERROR", "Error pinging node: " + error.message);
   }
+  await prompt("Press Enter to continue...");
+}
+
+async function chat(addr: string | undefined) {
+  if (addr === undefined) {
+    console.log("Usage: /chat <address>");
+    return;
+  }
+  try {
+    node.chat(addr);
+  } catch (error: any) {
+    log("ERROR", `Error when chatting ${addr}: ` + error.message);
+    console.log(`Error when chatting ${addr}: ` + error.message);
+  }
+  await prompt("Press Enter to continue...");
+}
+
+async function help() {
+  console.log(`Commands available:
+/addresses                      List the addresses this node is listening on
+/ping <address>                 Ping a node listening on <address>
+/chat <address>                 Start a chat session with <address>
+/exit                           Exit the application
+/help                           Show this menu
+          `);
 }
