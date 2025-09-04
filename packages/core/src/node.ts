@@ -62,7 +62,11 @@ const serverConfig: Partial<Libp2pOptions> = {
   },
   transports: [tcp(), webSockets()],
   services: {
-    relay: circuitRelayServer(),
+    relay: circuitRelayServer({
+      reservations: {
+        applyDefaultLimit: false,
+      },
+    }),
   },
 };
 
