@@ -103,7 +103,7 @@ export class Node {
     const node = await createLibp2p(config);
 
     await log("INFO", "Creating chat protocol...");
-    await node.handle("/chat/1.0.0", ({ stream }) => {
+    await node.handle("/chat/1.0.0", async ({ stream }) => {
       stdinToStream(stream);
       streamToConsole(stream);
     });
@@ -138,15 +138,13 @@ export class Node {
     return `Pinged ${addr.toString()} in ${latency}ms`;
   }
 
-  async startChatStream(addr: string): Promise<Stream> {
-    return await this.node.dialProtocol(multiaddr(addr), "chat/1.0.0");
-  }
-
   async chat(addr: string) {
     await log("INFO", `Chatting with ${addr}...`);
-    this.startChatStream(addr).then((stream) => {
-      stdinToStream(stream);
-      streamToConsole(stream);
-    });
+    const stream: Stream = await this.node.dialProtocol(
+      multiaddr(addr),
+      "/chat/1.0.0"
+    );
+    stdinToStream(stream);
+    streamToConsole(stream);
   }
 }
