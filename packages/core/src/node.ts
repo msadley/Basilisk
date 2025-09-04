@@ -97,18 +97,19 @@ export class Node {
         ...modeConfig.services,
       },
       privateKey: await getPrivateKey(),
-      start: true,
+      start: false,
     };
 
     const node = await createLibp2p(config);
 
     await log("INFO", "Creating chat protocol...");
-    await node.handle("/chat/1.0.0", async ({ stream }) => {
+    await node.handle("/chat/1.0.0", ({ stream }) => {
       stdinToStream(stream);
       streamToConsole(stream);
     });
     await log("INFO", "Chat protocol created.");
 
+    await node.start();
     await log("INFO", "Node initialized.");
 
     return new Node(node);
