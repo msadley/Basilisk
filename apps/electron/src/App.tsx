@@ -1,14 +1,13 @@
 // App.js
 import "./App.css";
 import { Icon } from "@iconify/react";
-import "./assets/basilisk.svg"
 
 export default function App() {
   return (
     <div className="app">
       <div className="sidebar">
         <div className="sidebar-header">
-          <img src="/basilisk.svg" alt="logo"/>
+          <img src="/basilisk.svg" alt="logo" />
         </div>
         <div className="sidebar-body">
           <div className="contacts"></div>
@@ -27,11 +26,15 @@ export default function App() {
       <div className="chat">
         <div className="chat-header"></div>
         <div className="chat-body">
+          <div className="chat-sidebar"></div>
+          <div />
           <div />
         </div>
-        <div className="chat-input">
-          <input type="text" placeholder="Digite uma mensagem..." />
-          <button>Enviar</button>
+        <div className="chat-footer">
+          <div className="chat-input">
+            <input type="text" placeholder="Digite uma mensagem..." />
+            <button>Enviar</button>
+          </div>
         </div>
       </div>
     </div>
