@@ -19,7 +19,7 @@ function prompt(query: string): Promise<string> {
   });
 }
 
-export async function menu() {
+export async function cli() {
   console.clear();
   console.log(
     "Welcome to Basilisk! Enter /help for the list of commands available"
@@ -35,6 +35,10 @@ export async function menu() {
     process.exit(0);
   });
 
+  await menu();
+}
+
+async function menu() {
   while (true) {
     const answer: string = await prompt("Basilisk> ");
 
@@ -52,6 +56,10 @@ export async function menu() {
           break;
 
         case "/chat":
+          if (data[1] === undefined) {
+            console.log("Usage: /chat <address>");
+            break;
+          }
           await chat(data[1]);
           break;
 
@@ -63,6 +71,8 @@ export async function menu() {
           help();
           break;
       }
+    } else {
+      help();
     }
   }
 }
@@ -74,8 +84,7 @@ async function pingTest(addr: string | undefined) {
   }
   try {
     const result = await node.pingTest(addr);
-    console.log(result);
-    await log("INFO", result);
+    console.log("Latency: " + result + "ms");
   } catch (error: any) {
     log("ERROR", "Error pinging node: " + error.message);
   }
@@ -87,7 +96,17 @@ async function chat(addr: string | undefined) {
     return;
   }
   try {
-    node.chat(addr);
+    node.createChatStream(addr);
+    console.log("Chat started with " + addr);
+    console.log("Type /exit to exit");
+    
+    while (true) {
+      const message = await prompt("You> ");
+      if (message === "/exit") {
+        break;
+      }
+      await node.sendMessage(message, addr);
+    }
   } catch (error: any) {
     log("ERROR", `Error when chatting ${addr}: ` + error.message);
     console.log(`Error when chatting ${addr}: ` + error.message);
