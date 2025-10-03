@@ -1,5 +1,6 @@
+<img src="assets/banner.jpeg" alt="basilisk banner" align="center"/>
 
-![basilisk logo](assets/banner.jpeg)
+<br/>
 
 A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
@@ -9,8 +10,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-* Node.js (v18 or higher)
-* npm
+- Node.js (v23 or higher)
+- npm
 
 ### Installing
 
@@ -28,9 +29,9 @@ These instructions will get you a copy of the project up and running on your loc
 
 3. Build the project:
 
-    ```sh
-    npm run build
-    ```
+   ```sh
+   npm run build
+   ```
 
 ## Usage
 
@@ -52,24 +53,16 @@ npm run cli
 
 ## Available Scripts
 
-* `build`: Builds the project.
-* `prep`: Installs dependencies and builds the project.
-* `cli`: Runs the CLI app.
-* `relay`: Runs the relay.
-* `debug-cli`: Runs the CLI app with debug logs.
-* `debug-relay`: Runs the relay with debug logs.
-* `clean`: Removes the log files.
-* `reset`: Removes the config files.
-
-## Project Structure
-
-This project is a monorepo, with the following structure:
-
-* `apps`: Contains the `cli` and `relay` applications.
-* `packages`: Contains the `core` and `utils` packages.
-  * `core`: Contains the core logic of the application.
-  * `utils`: Contains utility functions used by the other packages.
+- `build`: Builds the project.
+- `prep`: Installs dependencies and builds the project.
+- `cli`: Runs the CLI app.
+- `relay`: Runs the relay.
+- `debug-cli`: Runs the CLI app with debug logs.
+- `debug-relay`: Runs the relay with debug logs.
+- `clean`: Removes the log files.
+- `reset`: Removes the config files.
 
 
 ## TODO List
+
 - [ ] Get rid of the old chat approach
