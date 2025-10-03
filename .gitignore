@@ -13,7 +13,7 @@ package-lock.json
 
 # User-specific directories
 /config
-log
+logs
 
 # Environment variables
 .env
