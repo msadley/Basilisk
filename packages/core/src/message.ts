@@ -1,4 +1,5 @@
 // packages/core/src/message.ts
+
 export interface Message {
   content: string | Buffer;
   timestamp: number;
