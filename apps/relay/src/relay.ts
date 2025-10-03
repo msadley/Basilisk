@@ -1,8 +1,9 @@
 // apps/relay/src/relay.ts
 
-import { Node } from "@basilisk/core";
+import { DEFAULT_HOME } from "@basilisk/core";
+import { type Multiaddr } from "@multiformats/multiaddr";
 
-const node: Node = await Node.init("RELAY");
+const basilisk = await DEFAULT_HOME.init("RELAY");
 
 export async function start() {
   await printAddresses();
@@ -19,11 +20,11 @@ export async function start() {
 }
 
 async function stop() {
-  await node.stop();
+  await basilisk.stop();
 }
 
 async function printAddresses() {
   console.log("Listening on: ");
-  const addresses = node.getMultiaddrs();
-  addresses.forEach((addr) => console.log(addr.toString()));
+  const addresses = basilisk.getMultiaddrs();
+  addresses.forEach((addr: Multiaddr) => console.log(addr.toString()));
 }

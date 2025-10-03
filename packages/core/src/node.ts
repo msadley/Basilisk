@@ -26,7 +26,7 @@ import { pipe } from "it-pipe";
 import * as lp from "it-length-prefixed";
 import { fromString } from "uint8arrays/from-string";
 import { toString } from "uint8arrays/to-string";
-import type { Packet } from "./packet.js";
+import type { Message } from "./message.js";
 
 // Local packages imports
 import { getPrivateKey } from "./keys.js";
@@ -124,8 +124,8 @@ export class Node {
     await log("INFO", "Creating chat protocol...");
     await node.handle("/chat/1.0.0", async ({ stream }) => {
       for await (const chunk of stream.source) {
-        const packet: Packet = JSON.parse(toString(chunk.subarray()));
-        chatEvents.emit("message:receive", packet);
+        const message: Message = JSON.parse(toString(chunk.subarray()));
+        chatEvents.emit("message:receive", message);
       }
     });
     await log("INFO", "Chat protocol created.");
@@ -142,13 +142,12 @@ export class Node {
     await log("INFO", "Node stopped.");
   }
 
-  getMultiaddrs(): Multiaddr[] {
-    return this.node.getMultiaddrs();
+  getId(): string {
+    return this.node.peerId.toString();
   }
 
-  printAddresses(): string[] {
-    const multiaddrs = this.getMultiaddrs();
-    return multiaddrs.map((addr: Multiaddr) => addr.toString());
+  getMultiaddrs(): Multiaddr[] {
+    return this.node.getMultiaddrs();
   }
 
   async pingTest(addr: string): Promise<number> {
@@ -170,23 +169,27 @@ export class Node {
     await log("INFO", `Chat stream created with ${addr}.`);
   }
 
-  async packetToStream(msg: Packet, stream: { sink: any }) {
+  async sendMessage(message: Message) {
+    this.messageToStream(message, this.chatStreams.get(multiaddr(message.to))!);
+  }
+
+  async messageToStream(message: Message, stream: Stream) {
     pipe(
-      [JSON.stringify(msg)],
+      [JSON.stringify(message)],
       (source) => map(source, (string) => fromString(string)),
       (source) => lp.encode(source),
       stream.sink
     );
   }
 
-  async streamToPacket(stream: { source: any }) {
+  async retrieveMessageFromStream(stream: Stream) {
     pipe(
       stream.source,
       (source) => lp.decode(source),
       (source) => map(source, (buffer) => toString(buffer.subarray())),
       (source) => map(source, (string) => JSON.parse(string)),
       (source) =>
-        map(source, (Packet) => chatEvents.emit("packet:receive", Packet))
+        map(source, (message) => chatEvents.emit("message:receive", message))
     );
   }
 }

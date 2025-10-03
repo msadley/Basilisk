@@ -8,9 +8,6 @@ export function absolutePath(file: string): string {
   return path.join(appRootPath.path, file);
 }
 
-/**
- * Returns false if the file wasn't valid else returns true
- */
 export async function validateFile(filePath: string): Promise<boolean> {
   try {
     await fs.promises.access(absolutePath(filePath));

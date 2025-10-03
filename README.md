@@ -69,3 +69,7 @@ This project is a monorepo, with the following structure:
 * `packages`: Contains the `core` and `utils` packages.
   * `core`: Contains the core logic of the application.
   * `utils`: Contains utility functions used by the other packages.
+
+
+## TODO List
+- [ ] Get rid of the old chat approach

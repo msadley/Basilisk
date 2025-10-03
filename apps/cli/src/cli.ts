@@ -2,9 +2,15 @@
 
 import readline from "readline";
 import { log } from "@basilisk/utils";
-import { Node } from "@basilisk/core";
+import { Basilisk } from "@basilisk/core";
+import type { Multiaddr } from "@multiformats/multiaddr";
 
-const node: Node = await Node.init("CLIENT");
+let configArg = process.argv.find((arg) => arg.startsWith("--home="));
+if (!configArg) {
+  configArg = "./.basilisk";
+}
+
+const basilisk: Basilisk = await Basilisk.init("CLIENT", configArg);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -50,17 +56,9 @@ async function menu() {
           break;
 
         case "/addresses":
-          node.printAddresses().forEach((addr: string) => {
-            console.log(addr);
+          basilisk.getMultiaddrs().forEach((addr: Multiaddr) => {
+            console.log(addr.toString);
           });
-          break;
-
-        case "/chat":
-          if (data[1] === undefined) {
-            console.log("Usage: /chat <address>");
-            break;
-          }
-          await chat(data[1]);
           break;
 
         case "/exit":
@@ -83,33 +81,10 @@ async function pingTest(addr: string | undefined) {
     return;
   }
   try {
-    const result = await node.pingTest(addr);
+    const result = await basilisk.ping(addr);
     console.log("Latency: " + result + "ms");
   } catch (error: any) {
     log("ERROR", "Error pinging node: " + error.message);
-  }
-}
-
-async function chat(addr: string | undefined) {
-  if (addr === undefined) {
-    console.log("Usage: /chat <address>");
-    return;
-  }
-  try {
-    node.createChatStream(addr);
-    console.log("Chat started with " + addr);
-    console.log("Type /exit to exit");
-    
-    while (true) {
-      const message = await prompt("You> ");
-      if (message === "/exit") {
-        break;
-      }
-      await node.sendMessage(message, addr);
-    }
-  } catch (error: any) {
-    log("ERROR", `Error when chatting ${addr}: ` + error.message);
-    console.log(`Error when chatting ${addr}: ` + error.message);
   }
 }
 
@@ -117,7 +92,6 @@ async function help() {
   console.log(`Commands available:
 /addresses                      List the addresses this node is listening on
 /ping <address>                 Ping a node listening on <address>
-/chat <address>                 Start a chat session with <address>
 /exit                           Exit the application
 /help                           Show this menu
           `);
@@ -125,7 +99,7 @@ async function help() {
 
 async function stop() {
   console.log("\nExiting...");
-  node.stop();
+  basilisk.stop();
   rl.close();
   process.exit(0);
 }

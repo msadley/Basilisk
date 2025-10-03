@@ -1,18 +1,16 @@
 // packages/core/src/message.ts
-export interface Packet {
-  type: string;
+export interface Message {
   content: string | Buffer;
   timestamp: number;
   from: string;
   to: string;
 }
 
-export function createPacket(
-  type: string,
+export function createMessage(
   content: string | Buffer,
   timestamp: number,
   from: string,
   to: string
-): Packet {
-  return { type, content, timestamp, from, to };
+): Message {
+  return { content, timestamp, from, to };
 }

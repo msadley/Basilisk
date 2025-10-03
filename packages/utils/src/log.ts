@@ -2,8 +2,14 @@
 
 import { absolutePath, validateFile } from "./file.js";
 import fs from "fs";
+import path from "path";
+import { getHomePath } from "./path.js";
 
-const LOG_FILE = `/log/${getCurrentTimestamp("COMPACT")}.log`;
+const LOG_FILE: string = `/logs/${getCurrentTimestamp("COMPACT")}.log`;
+
+function getLogFile() {
+  return path.join(getHomePath(), LOG_FILE);
+}
 
 function getCurrentTimestamp(mode: "FULL" | "COMPACT"): string {
   const now = new Date();
@@ -22,10 +28,10 @@ function getCurrentTimestamp(mode: "FULL" | "COMPACT"): string {
 }
 
 export async function log(level: "INFO" | "WARN" | "ERROR", message: string) {
-  await validateFile(LOG_FILE);
+  await validateFile(getLogFile());
 
   await fs.promises.appendFile(
-    absolutePath(LOG_FILE),
+    absolutePath(getLogFile()),
     `[${getCurrentTimestamp("FULL")}] [${level}] ${message}\n`
   );
 }
