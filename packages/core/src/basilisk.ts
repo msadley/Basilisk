@@ -36,7 +36,7 @@ export class Basilisk {
     this.node.pingTest(addr);
   }
 
-  async retrieveChat(addr: string) {
+  async retrieveChat(_addr: string) {
     // TODO
   }
 
@@ -50,7 +50,7 @@ export class Basilisk {
     await this.node.sendMessage(message);
   }
 
-  async sendMedia(addr: string, path: string) {
+  async sendMedia(_addr: string, _path: string) {
     // TODO
   }
 }
