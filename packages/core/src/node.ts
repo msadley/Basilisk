@@ -26,7 +26,7 @@ import { pipe } from "it-pipe";
 import * as lp from "it-length-prefixed";
 import { fromString } from "uint8arrays/from-string";
 import { toString } from "uint8arrays/to-string";
-import type { Message } from "./message.js";
+import type { Message } from "./database.js";
 
 // Local packages imports
 import { getPrivateKey } from "./keys.js";

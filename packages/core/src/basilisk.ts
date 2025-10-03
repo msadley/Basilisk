@@ -1,7 +1,7 @@
 // packages/core/src/basilisk.ts
 
 import { Node } from "./node.js";
-import type { Message } from "./message.js";
+import type { Message } from "./database.js";
 import { setHomePath } from "@basilisk/utils";
 
 const DEFAULT_HOME: string = "basilisk_data/";
