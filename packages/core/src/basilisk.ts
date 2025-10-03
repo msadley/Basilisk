@@ -4,7 +4,7 @@ import { Node } from "./node.js";
 import type { Message } from "./message.js";
 import { setHomePath } from "@basilisk/utils";
 
-export const DEFAULT_HOME: string = "basilisk_data/";
+const DEFAULT_HOME: string = "basilisk_data/";
 
 export class Basilisk {
   private node: Node;

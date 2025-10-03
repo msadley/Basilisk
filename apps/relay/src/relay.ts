@@ -1,9 +1,9 @@
 // apps/relay/src/relay.ts
 
-import { DEFAULT_HOME } from "@basilisk/core";
 import { type Multiaddr } from "@multiformats/multiaddr";
+import { Basilisk } from "@basilisk/core";
 
-const basilisk = await DEFAULT_HOME.init("RELAY");
+const basilisk = await Basilisk.init("RELAY");
 
 export async function start() {
   await printAddresses();
