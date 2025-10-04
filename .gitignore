@@ -12,8 +12,8 @@ tsconfig.tsbuildinfo
 package-lock.json
 
 # User-specific directories
-/config
-logs
+basilisk_data
+peer_data
 
 # Environment variables
 .env
