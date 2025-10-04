@@ -89,14 +89,8 @@ export class Node {
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
 
-    this.node.addEventListener("connection:open", (evt) => {
-      const remoteAddr = evt.detail.remoteAddr.toString();
-      log("INFO", `Connection established with: ${remoteAddr}`);
-    });
-
     this.node.addEventListener("connection:close", (evt) => {
       const remoteAddr = evt.detail.remoteAddr;
-      log("INFO", `Connection closed with: ${remoteAddr.toString()}`);
       this.chatStreams.delete(remoteAddr);
     });
   }
@@ -167,6 +161,12 @@ export class Node {
     );
     this.chatStreams.set(multiaddr(addr), stream);
     await log("INFO", `Chat stream created with ${addr}.`);
+  }
+
+  async closeChatStream(addr: string) {
+    await log("INFO", `Closing chat stream with ${addr}...`);
+    this.chatStreams.delete(multiaddr(addr));
+    await log("INFO", `Closed chat stream with ${addr}.`);
   }
 
   async sendMessage(message: Message) {

@@ -5,9 +5,9 @@ import { log } from "@basilisk/utils";
 import { Basilisk } from "@basilisk/core";
 import type { Multiaddr } from "@multiformats/multiaddr";
 
-let configArg = process.argv.find((arg) => arg.startsWith("--home="));
+let configArg = process.argv.find((arg) => arg.startsWith("--home="))?.split("=")[1];
 if (!configArg) {
-  configArg = "./.basilisk";
+  configArg = "./basilisk_data";
 }
 
 const basilisk: Basilisk = await Basilisk.init("CLIENT", configArg);
@@ -57,7 +57,7 @@ async function menu() {
 
         case "/addresses":
           basilisk.getMultiaddrs().forEach((addr: Multiaddr) => {
-            console.log(addr.toString);
+            console.log(addr.toString());
           });
           break;
 

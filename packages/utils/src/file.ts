@@ -26,13 +26,25 @@ export async function createFile(filePath: string) {
 }
 
 export async function writeJson(file: string, data: any) {
-  file = absolutePath(file);
+  file = absolutePath(file); 
   const jsonString = JSON.stringify(data, null, 2);
-  await fs.promises.mkdir(absolutePath("config/"), { recursive: true });
+  await fs.promises.mkdir(path.dirname(file), {
+    recursive: true,
+  });
   await fs.promises.writeFile(file, jsonString, "utf-8");
 }
 
-export async function readJson(file: string): Promise<any> {
+export async function overrideJsonField(
+  file: string,
+  field: string,
+  data: any
+) {
+  let jsonData = await readJson(file);
+  jsonData[field] = data;
+  await writeJson(file, jsonData);
+}
+
+export async function readJson(file: string): Promise<Record<string, any>> {
   file = absolutePath(file);
   const jsonString = await fs.promises.readFile(file, "utf-8");
   return JSON.parse(jsonString);

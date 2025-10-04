@@ -1,7 +1,7 @@
 // packages/core/src/config.ts
 
 import path from "path";
-import { validateFile, getHomePath } from "@basilisk/utils";
+import { validateFile, getHomePath, overrideJsonField } from "@basilisk/utils";
 import { readJson, writeJson, log } from "@basilisk/utils";
 import { generatePrivateKey } from "./keys.js";
 
@@ -53,9 +53,7 @@ async function setDefaultConfig() {
 
 export async function overrideConfigField(field: string, value: any) {
   try {
-    const data = await readJson(getConfigFile());
-    data[field] = value;
-    await writeJson(getConfigFile(), data);
+    await overrideJsonField(getConfigFile(), field, value);
   } catch (error: any) {
     console.error("An error occurred: ", error);
   }
