@@ -8,14 +8,13 @@
   ],
   "scripts": {
     "build": "npx tsc -b",
-    "build:packages": "lerna run build",
     "prep": "npm install && npm run build",
-    "cli": "npm run prep && node apps/cli/dist/index.js",
-    "relay": "npm run prep && node apps/relay/dist/index.js",
-    "debug-cli": "npm run prep && cross-env DEBUG=libp2p* node apps/cli/dist/index.js",
-    "debug-relay": "npm run prep && cross-env DEBUG=libp2p* node apps/relay/dist/index.js",
-    "clean": "rimraf log",
-    "reset": "rimraf config"
+    "cli": "npm run build && node apps/cli/dist/index.js",
+    "cli-peer": "npm run build && node apps/cli/dist/index.js --home=peer_data/",
+    "relay": "npm run build && node apps/relay/dist/index.js",
+    "debug-cli": "npm run build && cross-env DEBUG=libp2p* node apps/cli/dist/index.js",
+    "debug-relay": "npm run build && cross-env DEBUG=libp2p* node apps/relay/dist/index.js",
+    "clean": "rimraf basilisk_data peer_data"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",
