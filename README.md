@@ -61,8 +61,3 @@ npm run cli
 - `debug-relay`: Runs the relay with debug logs.
 - `clean`: Removes the log files.
 - `reset`: Removes the config files.
-
-
-## TODO List
-
-- [ ] Get rid of the old chat approach
