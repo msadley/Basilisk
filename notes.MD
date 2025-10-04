@@ -1,0 +1,1 @@
+- Os peers serão identificados pelo peer id extraído dos multiaddrs
