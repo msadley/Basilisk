@@ -84,14 +84,14 @@ export const chatEvents = new EventEmitter();
 
 export class Node {
   private node: Libp2p;
-  private chatStreams: Map<Multiaddr, Stream> = new Map();
+  private chatStreams: Map<string, Stream> = new Map();
 
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
 
     this.node.addEventListener("connection:close", (evt) => {
       const remoteAddr = evt.detail.remoteAddr;
-      this.chatStreams.delete(remoteAddr);
+      this.chatStreams.delete(remoteAddr.toString());
     });
   }
 
@@ -114,20 +114,18 @@ export class Node {
     };
 
     const node = await createLibp2p(config);
+    const basiliskNode = new Node(node);
 
     await log("INFO", "Creating chat protocol...");
     await node.handle("/chat/1.0.0", async ({ stream }) => {
-      for await (const chunk of stream.source) {
-        const message: Message = JSON.parse(toString(chunk.subarray()));
-        chatEvents.emit("message:receive", message);
-      }
+      await basiliskNode.retrieveMessageFromStream(stream);
     });
     await log("INFO", "Chat protocol created.");
 
     await node.start();
     await log("INFO", "Node initialized.");
 
-    return new Node(node);
+    return basiliskNode;
   }
 
   async stop() {
@@ -159,26 +157,44 @@ export class Node {
       multiaddr(addr),
       "/chat/1.0.0"
     );
-    this.chatStreams.set(multiaddr(addr), stream);
+    this.chatStreams.set(addr, stream);
     await log("INFO", `Chat stream created with ${addr}.`);
   }
 
   async closeChatStream(addr: string) {
     await log("INFO", `Closing chat stream with ${addr}...`);
-    this.chatStreams.delete(multiaddr(addr));
+    this.chatStreams.delete(addr);
     await log("INFO", `Closed chat stream with ${addr}.`);
   }
 
   async sendMessage(message: Message) {
-    this.messageToStream(message, this.chatStreams.get(multiaddr(message.to))!);
+    await log("INFO", `Sending message to ${message.to}`);
+    const addr = multiaddr(message.to);
+    if (!this.chatStreams.get(addr.toString())) {
+      await this.createChatStream(message.to);
+    }
+    const stream = this.chatStreams.get(addr.toString());
+    if (!stream) {
+      throw new Error(
+        `Failed to create or retrieve chat stream for ${message.to}`
+      );
+    }
+    await this.messageToStream(message, stream);
+    await log("INFO", `Message sent to ${message.to}.`);
   }
 
   async messageToStream(message: Message, stream: Stream) {
-    pipe(
+    const sink = (stream as any).sink ?? stream;
+    if (!sink) {
+      throw new Error(
+        "Stream sink is undefined. Check the Stream object structure."
+      );
+    }
+    await pipe(
       [JSON.stringify(message)],
       (source) => map(source, (string) => fromString(string)),
       (source) => lp.encode(source),
-      stream.sink
+      sink
     );
   }
 
@@ -189,7 +205,9 @@ export class Node {
       (source) => map(source, (buffer) => toString(buffer.subarray())),
       (source) => map(source, (string) => JSON.parse(string)),
       (source) =>
-        map(source, (message) => chatEvents.emit("message:receive", message))
+        map(source, (message: Message) =>
+          chatEvents.emit("message:receive", message)
+        )
     );
   }
 }

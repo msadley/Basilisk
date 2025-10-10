@@ -5,7 +5,9 @@ import { log } from "@basilisk/utils";
 import { Basilisk } from "@basilisk/core";
 import type { Multiaddr } from "@multiformats/multiaddr";
 
-let configArg = process.argv.find((arg) => arg.startsWith("--home="))?.split("=")[1];
+let configArg = process.argv
+  .find((arg) => arg.startsWith("--home="))
+  ?.split("=")[1];
 if (!configArg) {
   configArg = "./basilisk_data";
 }
@@ -65,6 +67,14 @@ async function menu() {
           await stop();
           break;
 
+        case "/message":
+          if (!data[1] || !data[2]) {
+            help();
+          } else {
+            await basilisk.sendMessage(data[1], data[2]);
+          }
+          break;
+
         default:
           help();
           break;
@@ -92,6 +102,7 @@ async function help() {
   console.log(`Commands available:
 /addresses                      List the addresses this node is listening on
 /ping <address>                 Ping a node listening on <address>
+/message <address> <content>    Send a message to <address> containing <content>
 /exit                           Exit the application
 /help                           Show this menu
           `);

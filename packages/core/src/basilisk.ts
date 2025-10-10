@@ -1,7 +1,7 @@
 // packages/core/src/basilisk.ts
 
-import { Node } from "./node.js";
-import type { Message } from "./database.js";
+import { Node, chatEvents } from "./node.js";
+import { retrieveMessages, saveMessage, type Message } from "./database.js";
 import { setHomePath } from "@basilisk/utils";
 import type { Multiaddr } from "@multiformats/multiaddr";
 
@@ -12,6 +12,10 @@ export class Basilisk {
 
   private constructor(nodeInstance: Node) {
     this.node = nodeInstance;
+
+    chatEvents.on("message:receive", (message: Message) => {
+      saveMessage(message, message["from"]); // XXX CAREFUL WITH THIS
+    });
   }
 
   static async init(nodeType: "CLIENT" | "RELAY", home?: string) {
@@ -29,23 +33,23 @@ export class Basilisk {
     return this.node.getMultiaddrs();
   }
 
-  async stop() {
+  stop() {
     this.node.stop();
   }
 
-  async ping(addr: string): Promise<number> {
+  ping(addr: string): Promise<number> {
     return this.node.pingTest(addr);
   }
 
-  async retrieveChatMessages(_addr: string) {
-    // TODO
+  retrieveChatMessages(addr: string) {
+    retrieveMessages(addr);
   }
 
-  async openChatConnection(addr: string) {
+  openChatConnection(addr: string) {
     this.node.createChatStream(addr);
   }
 
-  async closeChatConnection(addr: string) {
+  closeChatConnection(addr: string) {
     this.node.closeChatStream(addr);
   }
 
@@ -57,6 +61,7 @@ export class Basilisk {
       to: addr,
     };
     await this.node.sendMessage(message);
+    await saveMessage(message, addr);
   }
 
   async sendMedia(_addr: string, _path: string) {
