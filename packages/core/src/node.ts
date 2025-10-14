@@ -2,29 +2,15 @@
 
 // Libp2p-related imports
 import { createLibp2p, type Libp2p, type Libp2pOptions } from "libp2p";
-import { noise } from "@chainsafe/libp2p-noise";
-import { yamux } from "@chainsafe/libp2p-yamux";
-import { identify } from "@libp2p/identify";
-import { bootstrap } from "@libp2p/bootstrap";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import type { Stream } from "@libp2p/interface";
-import { ping } from "@libp2p/ping";
-import { webSockets } from "@libp2p/websockets";
-import { autoNAT } from "@libp2p/autonat";
-import { dcutr } from "@libp2p/dcutr";
-import { kadDHT } from "@libp2p/kad-dht";
-import { tcp } from "@libp2p/tcp";
-import {
-  circuitRelayServer,
-  circuitRelayTransport,
-} from "@libp2p/circuit-relay-v2";
 
 //Misc imports
 import { EventEmitter } from "events";
 import map from "it-map";
 import { pipe } from "it-pipe";
+import drain from "it-drain";
 import * as lp from "it-length-prefixed";
-import { fromString } from "uint8arrays/from-string";
 import { toString } from "uint8arrays/to-string";
 import type { Message } from "./database.js";
 
@@ -32,66 +18,21 @@ import type { Message } from "./database.js";
 import { getPrivateKey } from "./keys.js";
 import { log } from "@basilisk/utils";
 import { validateConfigFile } from "./config.js";
+import { clientConfig, serverConfig, baseConfig } from "./libp2p.js";
+import { Connection } from "./connection.js";
 
-// Environment variables
-const bootstrapNodes = process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
-  "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
-];
-const publicDns = process.env.PUBLIC_DNS || "localhost";
-
-// Libp2p config templates
-const baseConfig: Partial<Libp2pOptions> = {
-  connectionEncrypters: [noise()],
-  streamMuxers: [yamux()],
-  services: {
-    ping: ping(),
-    dht: kadDHT(),
-    identify: identify(),
-    autoNAT: autoNAT(),
-    dcutr: dcutr(),
-  } as any,
-};
-
-const clientConfig: Partial<Libp2pOptions> = {
-  addresses: {
-    listen: ["/p2p-circuit"],
-  },
-  transports: [tcp(), webSockets(), circuitRelayTransport()],
-  peerDiscovery: [
-    bootstrap({
-      list: bootstrapNodes,
-    }),
-  ],
-};
-
-const serverConfig: Partial<Libp2pOptions> = {
-  addresses: {
-    listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
-    announce: [`/dns4/${publicDns}/tcp/4001`, `/dns4/${publicDns}/tcp/4002/ws`],
-  },
-  transports: [tcp(), webSockets()],
-  services: {
-    relay: circuitRelayServer({
-      reservations: {
-        applyDefaultLimit: false,
-      },
-    }),
-  },
-};
-
-// Events
 export const chatEvents = new EventEmitter();
 
 export class Node {
   private node: Libp2p;
-  private chatStreams: Map<string, Stream> = new Map();
+  private chatConnections: Map<string, Connection> = new Map();
 
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
 
     this.node.addEventListener("connection:close", (evt) => {
       const remoteAddr = evt.detail.remoteAddr;
-      this.chatStreams.delete(remoteAddr.toString());
+      this.chatConnections.delete(remoteAddr.toString());
     });
   }
 
@@ -117,8 +58,15 @@ export class Node {
     const basiliskNode = new Node(node);
 
     await log("INFO", "Creating chat protocol...");
-    await node.handle("/chat/1.0.0", async ({ stream }) => {
-      await basiliskNode.retrieveMessageFromStream(stream);
+    await node.handle("/chat/1.0.0", async ({ stream, connection }) => {
+      await log(
+        "INFO",
+        `Chat stream opened with ${connection.remoteAddr.toString()}`
+      );
+      await basiliskNode.retrieveMessageFromStream(
+        stream,
+        connection.remoteAddr
+      );
     });
     await log("INFO", "Chat protocol created.");
 
@@ -151,63 +99,60 @@ export class Node {
     return latency;
   }
 
-  async createChatStream(addr: string) {
-    await log("INFO", `Creating chat stream with ${addr}...`);
+  async createChatConnection(addr: string) {
+    await log("INFO", `Creating chat connection with ${addr}...`);
     const stream: Stream = await this.node.dialProtocol(
       multiaddr(addr),
       "/chat/1.0.0"
     );
-    this.chatStreams.set(addr, stream);
-    await log("INFO", `Chat stream created with ${addr}.`);
+    const connection = new Connection(stream);
+    this.chatConnections.set(addr, connection);
+    await log("INFO", `Chat connection created with ${addr}.`);
   }
 
   async closeChatStream(addr: string) {
-    await log("INFO", `Closing chat stream with ${addr}...`);
-    this.chatStreams.delete(addr);
-    await log("INFO", `Closed chat stream with ${addr}.`);
+    await log("INFO", `Closing chat connection with ${addr}...`);
+    this.chatConnections.delete(addr);
+    await log("INFO", `Closed chat connection with ${addr}.`);
   }
 
   async sendMessage(message: Message) {
     await log("INFO", `Sending message to ${message.to}`);
     const addr = multiaddr(message.to);
-    if (!this.chatStreams.get(addr.toString())) {
-      await this.createChatStream(message.to);
+    if (!this.chatConnections.get(addr.toString())) {
+      await this.createChatConnection(message.to);
     }
-    const stream = this.chatStreams.get(addr.toString());
-    if (!stream) {
+    const connection = this.chatConnections.get(addr.toString());
+    if (!connection) {
       throw new Error(
-        `Failed to create or retrieve chat stream for ${message.to}`
+        `Failed to create or retrieve chat connection for ${message.to}`
       );
     }
-    await this.messageToStream(message, stream);
+    connection.sendMessage(message);
     await log("INFO", `Message sent to ${message.to}.`);
   }
 
-  async messageToStream(message: Message, stream: Stream) {
-    const sink = (stream as any).sink ?? stream;
-    if (!sink) {
-      throw new Error(
-        "Stream sink is undefined. Check the Stream object structure."
+  async retrieveMessageFromStream(stream: Stream, sender: Multiaddr) {
+    try {
+      await pipe(
+        stream.source,
+        (source) => lp.decode(source),
+        (source) => map(source, (buffer) => toString(buffer.subarray())),
+        (source) => map(source, (string) => JSON.parse(string)),
+        (source) =>
+          map(source, (message: Message) => {
+            chatEvents.emit("message:receive", message, sender);
+          }),
+        drain
       );
+      await log("INFO", `Stream from ${sender} processed successfully.`);
+    } catch (err: any) {
+      await log(
+        "ERROR",
+        `Error processing stream from ${sender}: ${err.message}`
+      );
+    } finally {
+      stream.close();
     }
-    await pipe(
-      [JSON.stringify(message)],
-      (source) => map(source, (string) => fromString(string)),
-      (source) => lp.encode(source),
-      sink
-    );
-  }
-
-  async retrieveMessageFromStream(stream: Stream) {
-    pipe(
-      stream.source,
-      (source) => lp.decode(source),
-      (source) => map(source, (buffer) => toString(buffer.subarray())),
-      (source) => map(source, (string) => JSON.parse(string)),
-      (source) =>
-        map(source, (message: Message) =>
-          chatEvents.emit("message:receive", message)
-        )
-    );
   }
 }
