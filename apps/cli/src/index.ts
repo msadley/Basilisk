@@ -1,6 +1,6 @@
 // apps/cli/src/index.ts
 
 import "dotenv/config";
-import { menu } from "./cli.js";
+import { cli } from "./cli.js";
 
-menu();
+cli();

@@ -1,13 +1,18 @@
 // packages/core/src/config.ts
 
-import { validateFile } from "@basilisk/utils";
+import path from "path";
+import { validateFile, getHomePath, overrideJsonField } from "@basilisk/utils";
 import { readJson, writeJson, log } from "@basilisk/utils";
 import { generatePrivateKey } from "./keys.js";
 
-export const CONFIG_FILE = "config/config.json";
+const CONFIG_FILE: string = "config.json";
 
-export interface Config {
+interface Config {
   privateKey: string;
+}
+
+function getConfigFile(): string {
+  return path.join(getHomePath(), CONFIG_FILE);
 }
 
 export const defaultConfig = (): Config => ({
@@ -16,9 +21,9 @@ export const defaultConfig = (): Config => ({
 
 export async function validateConfigFile() {
   await log("INFO", "Validating config file...");
-  if (!(await validateFile(CONFIG_FILE))) await setDefaultConfig();
+  if (!(await validateFile(getConfigFile()))) await setDefaultConfig();
 
-  const data = await readJson(CONFIG_FILE);
+  const data = await readJson(getConfigFile());
   if (
     data["privateKey"] === undefined ||
     data["privateKey"] === "" ||
@@ -32,7 +37,7 @@ export async function validateConfigFile() {
 async function setDefaultConfig() {
   await log("INFO", "Setting default config...");
   try {
-    await writeJson(CONFIG_FILE, defaultConfig());
+    await writeJson(getConfigFile(), defaultConfig());
     await log("INFO", "Default config set.");
   } catch (error: any) {
     await log(
@@ -46,11 +51,18 @@ async function setDefaultConfig() {
   }
 }
 
-export async function overrideConfig(field: string, value: any) {
+export async function overrideConfigField(field: string, value: any) {
   try {
-    const data = await readJson(CONFIG_FILE);
-    data[field] = value;
-    await writeJson(CONFIG_FILE, data);
+    await overrideJsonField(getConfigFile(), field, value);
+  } catch (error: any) {
+    console.error("An error occurred: ", error);
+  }
+}
+
+export async function getConfigField(field: string) {
+  try {
+    const data = await readJson(getConfigFile());
+    return data[field];
   } catch (error: any) {
     console.error("An error occurred: ", error);
   }

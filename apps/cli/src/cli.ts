@@ -2,18 +2,17 @@
 
 import readline from "readline";
 import { log } from "@basilisk/utils";
-import { Node, stdinToStream, streamToConsole } from "@basilisk/core";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { Basilisk } from "@basilisk/core";
+import type { Multiaddr } from "@multiformats/multiaddr";
 
-const entries = [
-  "ping address",
-  "print addresses",
-  "chat address",
-  "dial address",
-  "exit",
-];
+let configArg = process.argv
+  .find((arg) => arg.startsWith("--home="))
+  ?.split("=")[1];
+if (!configArg) {
+  configArg = "./basilisk_data";
+}
 
-const node: Node = await Node.init("CLIENT");
+const basilisk: Basilisk = await Basilisk.init("CLIENT", configArg);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -28,142 +27,90 @@ function prompt(query: string): Promise<string> {
   });
 }
 
-export async function menu() {
-  while (true) {
-    // Setting up the prompt
-    console.clear();
-
-    console.log(`------------------------------------------------------------------------------
-----------------------------Welcome to Basilisk CLI----------------------------
-------------------------------------------------------------------------------`);
-
-    for (let i = 0; i < entries.length; i++)
-      console.log(`${i + 1}. ` + entries[i]);
-
-    const answer: string = await prompt("\nPlease select an option: ");
-
-    switch (answer) {
-      case "1":
-        await pingTest();
-        break;
-
-      case "2":
-        node.printAddresses().forEach((addr: string) => {
-          console.log(addr);
-        });
-        await prompt("Press Enter to continue...");
-        break;
-
-      case "3":
-        await chat();
-        break;
-
-      case "4":
-        await dial();
-        break;
-
-      case "5":
-        console.log("Exiting...");
-        node.stop();
-        rl.close();
-        process.exit(0);
-
-      default:
-        await prompt("Invalid option!\nPress Enter to continue...");
-        break;
-    }
-  }
-}
-
-async function pingTest() {
-  const maString: string = await prompt("Enter the multiaddress to ping: ");
-
-  if (!maString) {
-    console.log("No multiaddress provided.");
-    await prompt("Press Enter to continue...");
-    return;
-  }
-
-  try {
-    const multiAddress: Multiaddr = multiaddr(maString);
-    try {
-      const result = await node.pingTest(multiAddress);
-      if (result) {
-        console.log(result);
-        await log("INFO", result);
-      }
-    } catch (error: any) {
-      log("ERROR", "Error pinging node: " + error.message);
-    }
-  } catch (error: any) {
-    log("ERROR", "Error parsing multiaddress: " + error.message);
-  } finally {
-    await prompt("Press Enter to continue...");
-  }
-}
-
-async function chat() {
-  const maString: string = await prompt(
-    "Enter the multiaddress to start the chat: "
+export async function cli() {
+  console.clear();
+  console.log(
+    "Welcome to Basilisk! Enter /help for the list of commands available"
   );
 
-  if (!maString) {
-    console.log("No multiaddress provided.");
-    await prompt("Press Enter to continue...");
-    return;
-  }
+  process.on("SIGINT", async () => {
+    await stop();
+    process.exit(0);
+  });
 
-  try {
-    const multiAddress: Multiaddr = multiaddr(maString);
-    try {
-      const chatStream = await node.startChatStream(multiAddress);
-      console.log("Chat stream started with " + maString);
-      stdinToStream(chatStream);
-      streamToConsole(chatStream);
-    } catch (error: any) {
-      log("ERROR", `Error when chatting ${maString}: ` + error.message);
-      console.log(`Error when chatting ${maString}: ` + error.message);
+  process.on("SIGTERM", async () => {
+    await stop();
+    process.exit(0);
+  });
+
+  await menu();
+}
+
+async function menu() {
+  while (true) {
+    const answer: string = await prompt("Basilisk> ");
+
+    if (answer[0] === "/") {
+      const data: string[] = answer.split(" ");
+      switch (data[0]) {
+        case "/ping":
+          await pingTest(data[1]);
+          break;
+
+        case "/addresses":
+          basilisk.getMultiaddrs().forEach((addr: Multiaddr) => {
+            console.log(addr.toString());
+          });
+          break;
+
+        case "/exit":
+          await stop();
+          break;
+
+        case "/message":
+          if (!data[1] || !data[2]) {
+            help();
+          } else {
+            await basilisk.sendMessage(data[1], data[2]);
+          }
+          break;
+
+        default:
+          help();
+          break;
+      }
+    } else {
+      help();
     }
-  } catch (error: any) {
-    log("ERROR", "Error parsing multiaddress: " + error.message);
-  } finally {
-    await prompt("Press Enter to continue...");
   }
 }
 
-async function dial() {
-  const maString: string = await prompt("Enter the multiaddress to dial: ");
-
-  if (!maString) {
-    console.log("No multiaddress provided.");
-    await prompt("Press Enter to continue...");
+async function pingTest(addr: string | undefined) {
+  if (addr === undefined) {
+    console.log("Usage: /ping <address>");
     return;
   }
-
   try {
-    const multiAddress: Multiaddr = multiaddr(maString);
-    try {
-      console.log("Starting dial to" + maString);
-      const conn = await node.dial(multiAddress);
-      console.log("Succesfully dialed " + maString);
-
-      const checkInterval = setInterval(() => {
-        if (!conn.remoteAddr.toString().includes("/p2p-circuit")) {
-          console.log("Found direct (hole-punched) connection:");
-          console.log("Remote Address:", conn.remoteAddr.toString());
-          clearInterval(checkInterval);
-        } else {
-          console.log(
-            "Still on a relayed connection or connecting, checking again in 5 seconds..."
-          );
-        }
-      }, 5000);
-    } catch (error: any) {
-      await log("ERROR", "Error dialing node: " + error.message);
-    }
+    const result = await basilisk.ping(addr);
+    console.log("Latency: " + result + "ms");
   } catch (error: any) {
-    log("ERROR", "Error parsing multiaddress: " + error.message);
-  } finally {
-    await prompt("Press Enter to continue...");
+    log("ERROR", "Error pinging node: " + error.message);
   }
+}
+
+async function help() {
+  console.log(`Commands available:
+/addresses                      List the addresses this node is listening on
+/ping <address>                 Ping a node listening on <address>
+/message <address> <content>    Send a message to <address> containing <content>
+/exit                           Exit the application
+/help                           Show this menu
+          `);
+}
+
+async function stop() {
+  console.log("\nExiting...");
+  basilisk.stop();
+  rl.close();
+  process.exit(0);
 }

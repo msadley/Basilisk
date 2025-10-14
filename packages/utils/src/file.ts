@@ -8,9 +8,6 @@ export function absolutePath(file: string): string {
   return path.join(appRootPath.path, file);
 }
 
-/**
- * Returns false if the file wasn't valid else returns true
- */
 export async function validateFile(filePath: string): Promise<boolean> {
   try {
     await fs.promises.access(absolutePath(filePath));
@@ -26,4 +23,29 @@ export async function createFile(filePath: string) {
     recursive: true,
   });
   await fs.promises.writeFile(absolutePath(filePath), "");
+}
+
+export async function writeJson(file: string, data: any) {
+  file = absolutePath(file); 
+  const jsonString = JSON.stringify(data, null, 2);
+  await fs.promises.mkdir(path.dirname(file), {
+    recursive: true,
+  });
+  await fs.promises.writeFile(file, jsonString, "utf-8");
+}
+
+export async function overrideJsonField(
+  file: string,
+  field: string,
+  data: any
+) {
+  let jsonData = await readJson(file);
+  jsonData[field] = data;
+  await writeJson(file, jsonData);
+}
+
+export async function readJson(file: string): Promise<Record<string, any>> {
+  file = absolutePath(file);
+  const jsonString = await fs.promises.readFile(file, "utf-8");
+  return JSON.parse(jsonString);
 }

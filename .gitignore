@@ -12,8 +12,10 @@ tsconfig.tsbuildinfo
 package-lock.json
 
 # User-specific directories
-/config
-log
+basilisk_data
+peer_data
 
 # Environment variables
 .env
+
+notes.MD
