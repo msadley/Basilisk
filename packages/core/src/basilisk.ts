@@ -1,9 +1,23 @@
 // packages/core/src/basilisk.ts
 
+import {
+  getDatabase,
+  getDatabases,
+  getMessage,
+  getMessages,
+  saveMessage,
+} from "./database.js";
+import {
+  getNickname,
+  getProfilePicture,
+  setNickname,
+  setProfilePicture,
+} from "./profile/profile.js";
 import { Node, chatEvents } from "./node.js";
-import { retrieveMessages, saveMessage, type Message } from "./database.js";
 import { log, setHomePath } from "@basilisk/utils";
-import type { Multiaddr } from "@multiformats/multiaddr";
+import { type Multiaddr } from "@multiformats/multiaddr";
+import type { Database, Message } from "./types.js";
+import { type Profile } from "./types.js";
 
 const DEFAULT_HOME: string = "basilisk_data/";
 
@@ -29,12 +43,51 @@ export class Basilisk {
     return new Basilisk(nodeInstance);
   }
 
+  async getProfile(): Promise<Profile> {
+    return {
+      nickname: await this.getNickname(),
+      profilePicture: await this.getProfilePicture(),
+    };
+  }
+
   getId(): string {
     return this.node.getId();
   }
 
   getMultiaddrs(): Multiaddr[] {
     return this.node.getMultiaddrs();
+  }
+
+  async getNickname(): Promise<string> {
+    return await getNickname();
+  }
+
+  async setNickname(nickname: string) {
+    await setNickname(nickname);
+  }
+
+  async getProfilePicture(): Promise<string> {
+    return await getProfilePicture();
+  }
+
+  async setProfilePicture(picture: string) {
+    await setProfilePicture(picture);
+  }
+
+  async getChats(): Promise<string[]> {
+    return await getDatabases();
+  }
+
+  async getChatById(id: string): Promise<Database> {
+    return await getDatabase(id);
+  }
+
+  async getMessages(id: string): Promise<Message[]> {
+    return await getMessages(id);
+  }
+
+  async getMessage(id: string, msg: number): Promise<Message> {
+    return await getMessage(id, msg);
   }
 
   stop() {
@@ -45,8 +98,8 @@ export class Basilisk {
     return this.node.pingTest(addr);
   }
 
-  retrieveChatMessages(addr: string) {
-    retrieveMessages(addr);
+  getChatMessages(addr: string) {
+    getMessages(addr);
   }
 
   openChatConnection(addr: string) {

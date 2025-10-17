@@ -12,3 +12,7 @@ export function setHomePath(newPath: string) {
 export function getHomePath() {
   return homePath;
 }
+
+export function getHomeDatabasePath(): string {
+  return path.join(getHomePath(), "databases/")
+}

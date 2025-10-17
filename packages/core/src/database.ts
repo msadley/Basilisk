@@ -2,38 +2,24 @@
 
 import {
   createFile,
+  getHomeDatabasePath,
   getHomePath,
   getPeerId,
   log,
   overrideJsonField,
   readJson,
+  searchFiles,
   validateFile,
   writeJson,
 } from "@basilisk/utils";
 import path from "path";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-
-interface Database {
-  id: string;
-  messages: savedMessage[];
-}
+import type { Database, Message, SavedMessage } from "./types.js";
 
 const defaultDatabase = (): Database => ({
   id: "",
   messages: [],
 });
-
-export interface Message {
-  id?: number;
-  content: string;
-  timestamp: number;
-  from: string;
-  to: string;
-}
-
-interface savedMessage extends Message {
-  id: number;
-}
 
 export function getId(data: string): string {
   // Extracts the peerId from the multiaddrs for a more reliable id
@@ -79,20 +65,47 @@ export async function saveMessage(message: Message, id: string) {
   id = getId(id);
   await ensureDatabaseFile(id);
   const path: string = getDatabasePath(id);
-  let messages: savedMessage[] = (await readJson(path))["messages"];
+  let messages: SavedMessage[] = (await readJson(path))["messages"];
   let newId: number = 0;
   if (messages.length > 0) {
     const lastMessage = messages[messages.length - 1];
     newId = lastMessage ? lastMessage.id + 1 : 1;
   }
   message.id = newId;
-  messages.push(message as savedMessage);
+  messages.push(message as SavedMessage);
   await overrideJsonField(path, "messages", messages);
 }
 
-export async function retrieveMessages(id: string): Promise<Message[]> {
+export async function getMessages(id: string): Promise<Message[]> {
   id = getId(id);
   await ensureDatabaseFile(id);
   const path: string = getDatabasePath(id);
   return (await readJson(path))["messages"];
+}
+
+export async function getMessage(id: string, msg: number): Promise<Message> {
+  const database: Database = await getDatabase(id);
+  const message = database.messages.find((message) => message.id === msg);
+  if (message) {
+    return message;
+  } else {
+    throw new Error("Message not found");
+  }
+}
+
+export async function getDatabases(): Promise<string[]> {
+  const databaseFiles = await searchFiles(getHomeDatabasePath());
+
+  const databases: Database[] = (await Promise.all(
+    databaseFiles.map((file) => readJson(file))
+  )) as Database[];
+
+  const databaseIds: string[] = await Promise.all(
+    databases.map((database: Database) => database.id)
+  );
+  return databaseIds;
+}
+
+export async function getDatabase(id: string) {
+  return (await readJson(getDatabasePath(id))) as Database;
 }

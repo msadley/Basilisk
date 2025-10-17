@@ -1,6 +1,8 @@
 // packages/core/src/index.ts
 
-export * from "./keys.js";
 export * from "./node.js";
-export * from "./config.js";
+export * from "./profile/config.js";
+export * from "./profile/keys.js";
+export * from "./profile/profile.js";
 export * from "./basilisk.js";
+export * from "./types.js";

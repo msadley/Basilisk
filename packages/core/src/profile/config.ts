@@ -4,12 +4,9 @@ import path from "path";
 import { validateFile, getHomePath, overrideJsonField } from "@basilisk/utils";
 import { readJson, writeJson, log } from "@basilisk/utils";
 import { generatePrivateKey } from "./keys.js";
+import type { Config } from "../types.js";
 
 const CONFIG_FILE: string = "config.json";
-
-interface Config {
-  privateKey: string;
-}
 
 function getConfigFile(): string {
   return path.join(getHomePath(), CONFIG_FILE);

@@ -12,14 +12,14 @@ import { pipe } from "it-pipe";
 import drain from "it-drain";
 import * as lp from "it-length-prefixed";
 import { toString } from "uint8arrays/to-string";
-import type { Message } from "./database.js";
 
 // Local packages imports
-import { getPrivateKey } from "./keys.js";
+import { getPrivateKey } from "./profile/keys.js";
 import { log } from "@basilisk/utils";
-import { validateConfigFile } from "./config.js";
+import { validateConfigFile } from "./profile/config.js";
 import { clientConfig, serverConfig, baseConfig } from "./libp2p.js";
 import { Connection } from "./connection.js";
+import type { Message } from "./types.js";
 
 export const chatEvents = new EventEmitter();
 
