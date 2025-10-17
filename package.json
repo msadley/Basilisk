@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "build": "npx tsc -b",
-    "rest": "npm run rest --prefix apps/rest",
-    "rest2": "npm run rest2 --prefix apps/rest",
+    "rest": "npm run build && npm run rest --prefix apps/rest",
+    "rest2": "npm run build && npm run rest2 --prefix apps/rest",
     "relay": "npm run build && node apps/relay/dist/index.js",
     "clean": "rimraf basilisk_data peer_data"
   },
