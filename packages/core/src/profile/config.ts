@@ -1,7 +1,11 @@
 // packages/core/src/config.ts
 
 import path from "path";
-import { validateFile, getHomePath, overrideJsonField } from "@basilisk/utils";
+import {
+  ensurePathExists,
+  getHomePath,
+  overrideJsonField,
+} from "@basilisk/utils";
 import { readJson, writeJson, log } from "@basilisk/utils";
 import { generatePrivateKey } from "./keys.js";
 import type { Config } from "../types.js";
@@ -18,7 +22,7 @@ export const defaultConfig = (): Config => ({
 
 export async function validateConfigFile() {
   await log("INFO", "Validating config file...");
-  if (!(await validateFile(getConfigFile()))) await setDefaultConfig();
+  if (!(await ensurePathExists(getConfigFile()))) await setDefaultConfig();
 
   const data = await readJson(getConfigFile());
   if (

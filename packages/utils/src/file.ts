@@ -8,12 +8,15 @@ export function absolutePath(file: string): string {
   return path.join(appRootPath.path, file);
 }
 
-export async function validateFile(filePath: string): Promise<boolean> {
+export async function ensurePathExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(absolutePath(filePath));
   } catch (error: any) {
-    await createFile(filePath);
-    return false;
+    if (error.code === "ENOENT") {
+      await createFile(filePath);
+      return false;
+    }
+    throw error;
   }
   return true;
 }

@@ -9,7 +9,7 @@ import {
   overrideJsonField,
   readJson,
   searchFiles,
-  validatePath,
+  ensurePathExists,
   writeJson,
 } from "@basilisk/utils";
 import path from "path";
@@ -33,19 +33,15 @@ export function getId(data: string): string {
 }
 
 function getDatabasePath(id: string): string {
-  return path.join(getHomePath(), `databases/${id}.db`);
-}
-
-async function ensureDatabasePath() {
-  const path: string = getHomeDatabasePath();
-  if (!(await validatePath(path))) {
-  }
+  const databasePath = path.join(getHomePath(), `databases/${id}.db`);
+  ensurePathExists(databasePath);
+  return databasePath;
 }
 
 async function ensureDatabaseFile(id: string) {
   id = getId(id);
   const path: string = getDatabasePath(id);
-  if (!(await validatePath(path))) {
+  if (!(await ensurePathExists(path))) {
     await log("INFO", "Creating template database...");
     await setDefaultDatabase(id);
     await overrideJsonField(path, "id", id);

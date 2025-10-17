@@ -6,7 +6,7 @@ import {
   getMessage,
   getMessages,
   saveMessage,
-} from "./database.js";
+} from "./data/database.js";
 import {
   getName,
   getProfilePicture,
@@ -46,6 +46,7 @@ export class Basilisk {
   async getProfile(): Promise<Profile> {
     return {
       id: this.getId(),
+      addresses: this.getMultiaddrs().map((addr) => addr.toString()),
       name: await this.getName(),
       profilePicture: await this.getProfilePicture(),
     };

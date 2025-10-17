@@ -2,6 +2,7 @@
 
 export interface Profile {
   id: string;
+  addresses?: string[];
   name?: string;
   profilePicture?: string;
 }
