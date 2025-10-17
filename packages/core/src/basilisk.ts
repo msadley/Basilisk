@@ -8,9 +8,9 @@ import {
   saveMessage,
 } from "./database.js";
 import {
-  getNickname,
+  getName,
   getProfilePicture,
-  setNickname,
+  setName,
   setProfilePicture,
 } from "./profile/profile.js";
 import { Node, chatEvents } from "./node.js";
@@ -45,7 +45,8 @@ export class Basilisk {
 
   async getProfile(): Promise<Profile> {
     return {
-      nickname: await this.getNickname(),
+      id: this.getId(),
+      name: await this.getName(),
       profilePicture: await this.getProfilePicture(),
     };
   }
@@ -58,12 +59,12 @@ export class Basilisk {
     return this.node.getMultiaddrs();
   }
 
-  async getNickname(): Promise<string> {
-    return await getNickname();
+  async getName(): Promise<string> {
+    return await getName();
   }
 
-  async setNickname(nickname: string) {
-    await setNickname(nickname);
+  async setName(name: string) {
+    await setName(name);
   }
 
   async getProfilePicture(): Promise<string> {

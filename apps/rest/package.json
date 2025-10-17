@@ -1,0 +1,15 @@
+{
+  "name": "@basilisk/rest-api-server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "npx tsc -b",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts",
+    "dev2": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts --home=peer_data/",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@basilisk/utils": "*",
+    "@basilisk/core": "*"
+  }
+}

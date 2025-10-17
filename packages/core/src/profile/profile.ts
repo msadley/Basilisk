@@ -2,12 +2,12 @@
 
 import { getConfigField, overrideConfigField } from "./config.js";
 
-export async function getNickname(): Promise<string> {
-  return await getConfigField("nickname");
+export async function getName(): Promise<string> {
+  return await getConfigField("name");
 }
 
-export async function setNickname(nickname: string) {
-  await overrideConfigField("nickname", nickname);
+export async function setName(name: string) {
+  await overrideConfigField("name", name);
 }
 
 export async function getProfilePicture(): Promise<string> {

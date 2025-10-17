@@ -1,7 +1,8 @@
 // packages/core/src/types.ts
 
 export interface Profile {
-  nickname?: string;
+  id: string;
+  name?: string;
   profilePicture?: string;
 }
 
