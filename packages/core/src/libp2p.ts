@@ -16,7 +16,7 @@ import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import type { Libp2pOptions } from "libp2p";
 
-const bootstrapNodes = process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
+export const bootstrapNodes = process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
   "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
 ];
 const publicDns = process.env.PUBLIC_DNS || "localhost";

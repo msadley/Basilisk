@@ -17,7 +17,12 @@ import { toString } from "uint8arrays/to-string";
 import { getPrivateKey } from "./profile/keys.js";
 import { log } from "@basilisk/utils";
 import { validateConfigFile } from "./profile/config.js";
-import { clientConfig, serverConfig, baseConfig } from "./libp2p.js";
+import {
+  clientConfig,
+  serverConfig,
+  baseConfig,
+  bootstrapNodes,
+} from "./libp2p.js";
 import { Connection } from "./connection.js";
 import type { Message } from "./types.js";
 
@@ -38,6 +43,8 @@ export class Node {
 
   static async init(mode: "CLIENT" | "RELAY"): Promise<Node> {
     await log("INFO", "Initializing node...");
+
+    await log("INFO", `Using bootstrap nodes: ${bootstrapNodes.join(", ")}`);
 
     await validateConfigFile();
 

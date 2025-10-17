@@ -1,6 +1,6 @@
 // apps/rest/server.ts
 
-import 'dotenv/config';
+import "./utils/env.js";
 
 import express, {
   type Application,
