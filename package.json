@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "build": "npx tsc -b",
-    "rest": "npm run build && node apps/rest/dist/index.js",
+    "rest": "npm run rest --prefix apps/rest",
+    "rest2": "npm run rest2 --prefix apps/rest",
     "relay": "npm run build && node apps/relay/dist/index.js",
     "clean": "rimraf basilisk_data peer_data"
   },
@@ -35,7 +36,8 @@
     "it-drain": "^3.0.10",
     "it-pushable": "^3.2.3",
     "libp2p": "^2.9.0",
-    "utils": "file:packages/utils"
+    "utils": "file:packages/utils",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^24.2.0",
