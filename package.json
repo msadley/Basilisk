@@ -8,8 +8,7 @@
   ],
   "scripts": {
     "build": "npx tsc -b",
-    "cli": "npm run build && node apps/cli/dist/index.js",
-    "cli-peer": "npm run build && node apps/cli/dist/index.js --home=peer_data/",
+    "rest": "npm run build && node apps/rest/dist/index.js",
     "relay": "npm run build && node apps/relay/dist/index.js",
     "clean": "rimraf basilisk_data peer_data"
   },
