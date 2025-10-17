@@ -3,7 +3,6 @@
 import path from "path";
 import { promises as fs } from "fs";
 import appRootPath from "app-root-path";
-import { log } from "./log.js";
 
 export function absolutePath(file: string): string {
   return path.join(appRootPath.path, file);
@@ -24,7 +23,6 @@ export async function ensureFileExists(filePath: string): Promise<boolean> {
 
 export async function ensureDirectoryExists(dirPath: string): Promise<boolean> {
   const absPath = absolutePath(dirPath);
-  await log("INFO", `Verifying existence of directory: ${absPath}`);
   try {
     await fs.access(absPath);
     return true;
