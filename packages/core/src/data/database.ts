@@ -22,7 +22,6 @@ const defaultDatabase = (): Database => ({
 });
 
 export function getId(data: string): string {
-  // Extracts the peerId from the multiaddrs for a more reliable id
   try {
     const addr: Multiaddr = multiaddr(data);
     const id: string | undefined = getPeerId(addr);
