@@ -19,3 +19,6 @@ peer_data
 .env
 
 notes.MD
+
+# Bruno rest api request
+.bruno
