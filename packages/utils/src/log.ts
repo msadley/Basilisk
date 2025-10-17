@@ -1,6 +1,6 @@
 // packages/utils/src/log.ts
 
-import { absolutePath, ensurePathExists } from "./file.js";
+import { absolutePath, ensureFileExists } from "./file.js";
 import fs from "fs";
 import path from "path";
 import { getHomePath } from "./path.js";
@@ -28,7 +28,7 @@ function getCurrentTimestamp(mode: "FULL" | "COMPACT"): string {
 }
 
 export async function log(level: "INFO" | "WARN" | "ERROR", message: string) {
-  await ensurePathExists(getLogFile());
+  await ensureFileExists(getLogFile());
 
   await fs.promises.appendFile(
     absolutePath(getLogFile()),

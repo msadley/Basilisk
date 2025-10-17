@@ -9,7 +9,8 @@ import {
   overrideJsonField,
   readJson,
   searchFiles,
-  ensurePathExists,
+  ensureFileExists,
+  ensureDirectoryExists,
   writeJson,
 } from "@basilisk/utils";
 import path from "path";
@@ -31,16 +32,20 @@ export function getId(data: string): string {
   }
 }
 
-function getDatabasePath(id: string): string {
+async function getDatabasePath(id: string): Promise<string> {
   const databasePath = path.join(getHomePath(), `databases/${id}.db`);
-  ensurePathExists(databasePath);
+  await ensureDirectoryExists(path.dirname(databasePath));
   return databasePath;
+}
+
+async function ensureDatabasePath() {
+  await ensureDirectoryExists(getHomeDatabasePath());
 }
 
 async function ensureDatabaseFile(id: string) {
   id = getId(id);
-  const path: string = getDatabasePath(id);
-  if (!(await ensurePathExists(path))) {
+  const path: string = await getDatabasePath(id);
+  if (!(await ensureFileExists(path))) {
     await log("INFO", "Creating template database...");
     await setDefaultDatabase(id);
     await overrideJsonField(path, "id", id);
@@ -57,7 +62,7 @@ async function ensureDatabaseFile(id: string) {
 }
 
 async function setDefaultDatabase(id: string) {
-  const file: string = getDatabasePath(id);
+  const file: string = await getDatabasePath(id);
   await createFile(file);
   await writeJson(file, defaultDatabase());
 }
@@ -65,7 +70,7 @@ async function setDefaultDatabase(id: string) {
 export async function saveMessage(message: Message, id: string) {
   id = getId(id);
   await ensureDatabaseFile(id);
-  const path: string = getDatabasePath(id);
+  const path: string = await getDatabasePath(id);
   let messages: SavedMessage[] = (await readJson(path))["messages"];
   let newId: number = 0;
   if (messages.length > 0) {
@@ -80,7 +85,7 @@ export async function saveMessage(message: Message, id: string) {
 export async function getMessages(id: string): Promise<Message[]> {
   id = getId(id);
   await ensureDatabaseFile(id);
-  const path: string = getDatabasePath(id);
+  const path: string = await getDatabasePath(id);
   return (await readJson(path))["messages"];
 }
 
@@ -95,6 +100,8 @@ export async function getMessage(id: string, msg: number): Promise<Message> {
 }
 
 export async function getDatabases(): Promise<string[]> {
+  await log("INFO", "Getting databases...");
+  await ensureDatabasePath();
   const databaseFiles = await searchFiles(getHomeDatabasePath());
 
   const databases: Database[] = (await Promise.all(
@@ -108,5 +115,5 @@ export async function getDatabases(): Promise<string[]> {
 }
 
 export async function getDatabase(id: string) {
-  return (await readJson(getDatabasePath(id))) as Database;
+  return (await readJson(await getDatabasePath(id))) as Database;
 }

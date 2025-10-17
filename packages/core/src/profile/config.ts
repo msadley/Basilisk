@@ -2,7 +2,7 @@
 
 import path from "path";
 import {
-  ensurePathExists,
+  ensureFileExists,
   getHomePath,
   overrideJsonField,
 } from "@basilisk/utils";
@@ -22,7 +22,7 @@ export const defaultConfig = (): Config => ({
 
 export async function validateConfigFile() {
   await log("INFO", "Validating config file...");
-  if (!(await ensurePathExists(getConfigFile()))) await setDefaultConfig();
+  if (!(await ensureFileExists(getConfigFile()))) await setDefaultConfig();
 
   const data = await readJson(getConfigFile());
   if (
