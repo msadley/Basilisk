@@ -9,12 +9,12 @@ import {
   overrideJsonField,
   readJson,
   searchFiles,
-  validateFile,
+  validatePath,
   writeJson,
 } from "@basilisk/utils";
 import path from "path";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-import type { Database, Message, SavedMessage } from "./types.js";
+import type { Database, Message, SavedMessage } from "../types.js";
 
 const defaultDatabase = (): Database => ({
   id: "",
@@ -36,10 +36,16 @@ function getDatabasePath(id: string): string {
   return path.join(getHomePath(), `databases/${id}.db`);
 }
 
+async function ensureDatabasePath() {
+  const path: string = getHomeDatabasePath();
+  if (!(await validatePath(path))) {
+  }
+}
+
 async function ensureDatabaseFile(id: string) {
   id = getId(id);
   const path: string = getDatabasePath(id);
-  if (!(await validateFile(path))) {
+  if (!(await validatePath(path))) {
     await log("INFO", "Creating template database...");
     await setDefaultDatabase(id);
     await overrideJsonField(path, "id", id);
