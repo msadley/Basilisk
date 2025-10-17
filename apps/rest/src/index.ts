@@ -1,5 +1,7 @@
 // apps/rest/server.ts
 
+import 'dotenv/config';
+
 import express, {
   type Application,
   type Request,
