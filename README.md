@@ -43,21 +43,9 @@ The relay is a public node that other nodes can use to discover each other. To r
 npm run relay
 ```
 
-### CLI
-
-The CLI is the main interface for the chat app. To run the CLI, use the following command:
-
-```sh
-npm run cli
-```
-
 ## Available Scripts
 
 - `build`: Builds the project.
-- `prep`: Installs dependencies and builds the project.
 - `cli`: Runs the CLI app.
 - `relay`: Runs the relay.
-- `debug-cli`: Runs the CLI app with debug logs.
-- `debug-relay`: Runs the relay with debug logs.
 - `clean`: Removes the log files.
-- `reset`: Removes the config files.

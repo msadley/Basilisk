@@ -3,7 +3,7 @@
   "references": [
     { "path": "packages/core" },
     { "path": "packages/utils" },
-    { "path": "apps/cli" },
+    { "path": "apps/rest" },
     { "path": "apps/relay" }
   ]
 }
