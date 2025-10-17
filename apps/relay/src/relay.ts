@@ -1,29 +1,31 @@
 // apps/relay/src/relay.ts
 
+import "dotenv/config";
+
 import { type Multiaddr } from "@multiformats/multiaddr";
 import { Basilisk } from "@basilisk/core";
 
 const basilisk = await Basilisk.init("RELAY");
 
-export async function start() {
-  await printAddresses();
+export function start() {
+  printAddresses();
 
   process.on("SIGINT", async () => {
-    await stop();
+    stop();
     process.exit(0);
   });
 
   process.on("SIGTERM", async () => {
-    await stop();
+    stop();
     process.exit(0);
   });
 }
 
-async function stop() {
-  await basilisk.stop();
+function stop() {
+  basilisk.stop();
 }
 
-async function printAddresses() {
+function printAddresses() {
   console.log("Listening on: ");
   const addresses = basilisk.getMultiaddrs();
   addresses.forEach((addr: Multiaddr) => console.log(addr.toString()));
