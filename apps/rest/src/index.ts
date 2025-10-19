@@ -6,7 +6,7 @@ import express, {
   type Application,
   type Request,
   type Response,
-  type NextFunction,
+  type NextFunction,  
 } from "express";
 import cors from "cors";
 import { Basilisk } from "@basilisk/core";
@@ -16,9 +16,11 @@ import profileRoutes from "./routes/profile/profile.routes.js";
 import chatRoutes from "./routes/chat/chat.routes.js";
 import toolsRoutes from "./routes/tools/tools.routes.js";
 
+const home_data: string | undefined = process.env.HOME_DATA || undefined;
+const port: number = Number(process.env.SERVER_PORT) || 3001;
+
 const app: Application = express();
-const port: number = 3001;
-export const basilisk = await Basilisk.init("CLIENT");
+export const basilisk = await Basilisk.init("CLIENT", home_data);
 
 app.use(cors());
 app.use(express.json());
