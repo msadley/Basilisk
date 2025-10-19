@@ -68,7 +68,6 @@ async function setDefaultDatabase(id: string) {
 }
 
 export async function saveMessage(message: Message, id: string) {
-  id = getId(id);
   await ensureDatabaseFile(id);
   const path: string = await getDatabasePath(id);
   let messages: SavedMessage[] = (await readJson(path))["messages"];

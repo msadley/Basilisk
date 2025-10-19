@@ -1,8 +1,8 @@
 // packages/utils/src/peerId.ts
 
-import { type Multiaddr } from "@multiformats/multiaddr";
+import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
-export function getPeerId(addr: Multiaddr): string | undefined {
+export function getPeerId(addr: Multiaddr): string {
   const tuples = addr.getComponents();
   for (const tuple of tuples) {
     const code = tuple.code;
@@ -11,5 +11,13 @@ export function getPeerId(addr: Multiaddr): string | undefined {
       return value.toString();
     }
   }
-  return undefined;
+  throw new Error("Error when parsing peerId from multiaddr.");
+}
+
+export function multiaddrFromPeerId(
+  relayAddr: string,
+  peerId: string
+): Multiaddr {
+  const addr: string = `${relayAddr}/p2p-circuit/p2p/${peerId}`;
+  return multiaddr(addr);
 }

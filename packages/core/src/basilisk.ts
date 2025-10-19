@@ -100,27 +100,19 @@ export class Basilisk {
     return this.node.pingTest(addr);
   }
 
-  getChatMessages(addr: string) {
-    getMessages(addr);
+  getChatMessages(id: string) {
+    getMessages(id);
   }
 
-  openChatConnection(addr: string) {
-    this.node.createChatConnection(addr);
-  }
-
-  closeChatConnection(addr: string) {
-    this.node.closeChatStream(addr);
-  }
-
-  async sendMessage(addr: string, content: string) {
+  async sendMessage(id: string, content: string) {
     const message: Message = {
       content: content,
       timestamp: Date.now(),
       from: this.node.getId(),
-      to: addr,
+      to: id,
     };
     await this.node.sendMessage(message);
-    await saveMessage(message, addr);
+    await saveMessage(message, id);
   }
 
   async sendMedia(_addr: string, _path: string) {

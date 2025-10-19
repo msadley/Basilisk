@@ -15,7 +15,7 @@ import { toString } from "uint8arrays/to-string";
 
 // Local packages imports
 import { getPrivateKey } from "./profile/keys.js";
-import { log } from "@basilisk/utils";
+import { getPeerId, log, multiaddrFromPeerId } from "@basilisk/utils";
 import { validateConfigFile } from "./profile/config.js";
 import {
   clientConfig,
@@ -75,7 +75,7 @@ export class Node {
         );
         await basiliskNode.retrieveMessageFromStream(
           stream,
-          connection.remoteAddr
+          getPeerId(connection.remoteAddr)
         );
       });
       await log("INFO", "Chat protocol created.");
@@ -110,30 +110,29 @@ export class Node {
     return latency;
   }
 
-  async createChatConnection(addr: string) {
-    await log("INFO", `Creating chat connection with ${addr}...`);
+  async createChatConnection(id: string) {
+    await log("INFO", `Creating chat connection with ${id}...`);
     const stream: Stream = await this.node.dialProtocol(
-      multiaddr(addr),
+      multiaddrFromPeerId(bootstrapNodes[0], id),
       "/chat/1.0.0"
     );
     const connection = new Connection(stream);
-    this.chatConnections.set(addr, connection);
-    await log("INFO", `Chat connection created with ${addr}.`);
+    this.chatConnections.set(id, connection);
+    await log("INFO", `Chat connection created with ${id}.`);
   }
 
-  async closeChatStream(addr: string) {
-    await log("INFO", `Closing chat connection with ${addr}...`);
-    this.chatConnections.delete(addr);
-    await log("INFO", `Closed chat connection with ${addr}.`);
+  async closeChatStream(id: string) {
+    await log("INFO", `Closing chat connection with ${id}...`);
+    this.chatConnections.delete(id);
+    await log("INFO", `Closed chat connection with ${id}.`);
   }
 
   async sendMessage(message: Message) {
     await log("INFO", `Sending message to ${message.to}`);
-    const addr = multiaddr(message.to);
-    if (!this.chatConnections.get(addr.toString())) {
+    if (!this.chatConnections.get(message.to)) {
       await this.createChatConnection(message.to);
     }
-    const connection = this.chatConnections.get(addr.toString());
+    const connection = this.chatConnections.get(message.to);
     if (!connection) {
       throw new Error(
         `Failed to create or retrieve chat connection for ${message.to}`
@@ -143,7 +142,7 @@ export class Node {
     await log("INFO", `Message sent to ${message.to}.`);
   }
 
-  async retrieveMessageFromStream(stream: Stream, sender: Multiaddr) {
+  async retrieveMessageFromStream(stream: Stream, id: string) {
     try {
       await pipe(
         stream.source,
@@ -152,16 +151,13 @@ export class Node {
         (source) => map(source, (string) => JSON.parse(string)),
         (source) =>
           map(source, (message: Message) => {
-            chatEvents.emit("message:receive", message, sender);
+            chatEvents.emit("message:receive", message, id);
           }),
         drain
       );
-      await log("INFO", `Stream from ${sender} processed successfully.`);
+      await log("INFO", `Stream from ${id} processed successfully.`);
     } catch (err: any) {
-      await log(
-        "ERROR",
-        `Error processing stream from ${sender}: ${err.message}`
-      );
+      await log("ERROR", `Error processing stream from ${id}: ${err.message}`);
     } finally {
       stream.close();
     }
