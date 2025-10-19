@@ -50,15 +50,20 @@ export const getMessage = async (
 
 // TODO Fix media compatibility
 export const sendMessage = async (
-  req: Request<{ id: string }, {}, { content: string }>,
+  req: Request<{ id: string }>,
   res: Response
 ) => {
   log(
     "INFO",
     `Request received for sending a message to chat ${req.params.id}`
   );
-  const { id } = req.params;
-  const { content } = req.body;
-  await basilisk.sendMessage(id, content);
+  const id = req.params.id;
+  const content = req.body.content;
+  try {
+    await basilisk.sendMessage(id, content);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+    return;
+  }
   res.status(201).json({ message: "Message sent successfully." });
 };
