@@ -36,6 +36,8 @@
     "it-drain": "^3.0.10",
     "it-pushable": "^3.2.3",
     "libp2p": "^2.9.0",
+    "react-intersection-observer": "^9.16.0",
+    "react-stately": "^3.42.0",
     "utils": "file:packages/utils",
     "zod": "^4.1.12"
   },
