@@ -48,7 +48,7 @@ export const clientConfig: Partial<Libp2pOptions> = {
 export const serverConfig: Partial<Libp2pOptions> = {
   addresses: {
     listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
-    announce: [`/dns4/${publicDns}/tcp/4001`, `/dns4/${publicDns}/tcp/4002/ws`],
+    announce: [`/ip4/${publicDns}/tcp/4001`, `/ip4/${publicDns}/tcp/4002/ws`],
   },
   transports: [tcp(), webSockets()],
   services: {
