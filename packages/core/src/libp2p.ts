@@ -15,11 +15,30 @@ import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import type { Libp2pOptions } from "libp2p";
+import { log } from "@basilisk/utils";
 
 export const bootstrapNodes = process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
-  "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
+  "/ip4/<IP>/tcp/4001/p2p/12D3KooW...",
 ];
-const publicDns = process.env.PUBLIC_DNS || "localhost";
+
+async function getMyIp(): Promise<string> {
+  try {
+    const response = await fetch("https://api.ipify.org?format=json");
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = (await response.json()) as { ip: string };
+    const myIp = data.ip;
+
+    await log("INFO", `Got public ip: ${myIp}`);
+    return myIp;
+  } catch (err) {
+    await log("ERROR", `Failed to get IP: ${err}`);
+    throw new Error("Failed to get IP");
+  }
+}
 
 export const baseConfig: Partial<Libp2pOptions> = {
   connectionEncrypters: [noise()],
@@ -48,7 +67,7 @@ export const clientConfig: Partial<Libp2pOptions> = {
 export const serverConfig: Partial<Libp2pOptions> = {
   addresses: {
     listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
-    announce: [`/ip4/${publicDns}/tcp/4001`, `/ip4/${publicDns}/tcp/4002/ws`],
+    announce: [`/ip4/${getMyIp()}/tcp/4001`, `/ip4/${getMyIp()}/tcp/4002/ws`],
   },
   transports: [tcp(), webSockets()],
   services: {
