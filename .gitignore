@@ -22,3 +22,6 @@ notes.MD
 
 # Bruno rest api request
 .bruno
+
+# React Component Preview
+previewConfig.json
