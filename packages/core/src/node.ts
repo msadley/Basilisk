@@ -44,9 +44,11 @@ export class Node {
   static async init(mode: "CLIENT" | "RELAY"): Promise<Node> {
     await log("INFO", "Initializing node...");
 
-    await log("INFO", `Using bootstrap nodes: ${bootstrapNodes.join(", ")}`);
+    if (mode === "CLIENT") {
+      await log("INFO", `Using bootstrap nodes: ${bootstrapNodes.join(", ")}`);
 
-    await validateConfigFile();
+      await validateConfigFile();
+    }
 
     const modeConfig = mode === "CLIENT" ? clientConfig : serverConfig;
 
@@ -64,18 +66,20 @@ export class Node {
     const node = await createLibp2p(config);
     const basiliskNode = new Node(node);
 
-    await log("INFO", "Creating chat protocol...");
-    await node.handle("/chat/1.0.0", async ({ stream, connection }) => {
-      await log(
-        "INFO",
-        `Chat stream opened with ${connection.remoteAddr.toString()}`
-      );
-      await basiliskNode.retrieveMessageFromStream(
-        stream,
-        connection.remoteAddr
-      );
-    });
-    await log("INFO", "Chat protocol created.");
+    if (mode === "CLIENT") {
+      await log("INFO", "Creating chat protocol...");
+      await node.handle("/chat/1.0.0", async ({ stream, connection }) => {
+        await log(
+          "INFO",
+          `Chat stream opened with ${connection.remoteAddr.toString()}`
+        );
+        await basiliskNode.retrieveMessageFromStream(
+          stream,
+          connection.remoteAddr
+        );
+      });
+      await log("INFO", "Chat protocol created.");
+    }
 
     await node.start();
     await log("INFO", "Node initialized.");
