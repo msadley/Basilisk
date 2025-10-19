@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc -b",
-    "rest": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts",
-    "rest2": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts --home=peer_data/",
+    "rest": "npx nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts",
+    "rest2": "npx cross-env SERVER_PORT=3002 HOME_DATA=peer_data nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {
