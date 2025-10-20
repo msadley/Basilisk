@@ -3,12 +3,12 @@
 import { type Request, type Response } from "express";
 import { basilisk } from "../../index.js";
 import { log } from "@basilisk/utils";
-import { type Message } from "@basilisk/core";
+import { type Message, type Profile } from "@basilisk/core";
 
 export const getChats = async (_req: Request, res: Response) => {
   log("INFO", "Request received for chats");
-  const databases: string[] = await basilisk.getChats();
-  res.status(200).json(databases);
+  const profiles: Profile[] = await basilisk.getChats();
+  res.status(200).json(profiles);
 };
 
 export const getChat = async (req: Request<{ id: string }>, res: Response) => {

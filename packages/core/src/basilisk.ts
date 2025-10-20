@@ -2,7 +2,7 @@
 
 import {
   getDatabase,
-  getDatabases,
+  listDatabases,
   getMessage,
   getMessages,
   saveMessage,
@@ -76,8 +76,8 @@ export class Basilisk {
     await setProfilePicture(picture);
   }
 
-  async getChats(): Promise<string[]> {
-    return await getDatabases();
+  async getChats(): Promise<Profile[]> {
+    return await listDatabases();
   }
 
   async getChatById(id: string): Promise<Database> {

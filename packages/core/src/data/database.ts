@@ -15,10 +15,10 @@ import {
 } from "@basilisk/utils";
 import path from "path";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-import type { Database, Message, SavedMessage } from "../types.js";
+import type { Database, Message, Profile, SavedMessage } from "../types.js";
 
 const defaultDatabase = (): Database => ({
-  id: "",
+  profile: { id: "" },
   messages: [],
 });
 
@@ -98,7 +98,7 @@ export async function getMessage(id: string, msg: number): Promise<Message> {
   }
 }
 
-export async function getDatabases(): Promise<string[]> {
+export async function listDatabases(): Promise<Profile[]> {
   await log("INFO", "Getting databases...");
   await ensureDatabasePath();
   const databaseFiles = await searchFiles(getHomeDatabasePath());
@@ -107,10 +107,10 @@ export async function getDatabases(): Promise<string[]> {
     databaseFiles.map((file) => readJson(file))
   )) as Database[];
 
-  const databaseIds: string[] = await Promise.all(
-    databases.map((database: Database) => database.id)
+  const profiles: Profile[] = await Promise.all(
+    databases.map((database: Database) => database.profile)
   );
-  return databaseIds;
+  return profiles;
 }
 
 export async function getDatabase(id: string) {

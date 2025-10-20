@@ -20,7 +20,7 @@ export interface SavedMessage extends Message {
 }
 
 export interface Database {
-  id: string;
+  profile: Profile;
   messages: SavedMessage[];
 }
 
