@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import styles from "./Sidebar.module.css";
 import SettingsButton from "./SettingsButton/SettingsButton";
-import type { Contact, View } from "../../types";
+import type { Profile, View } from "../../types";
 import AddChatButton from "./AddChatButton/AddChatButton";
 import WelcomeButton from "./WelcomeButton/WelcomeButton";
 
@@ -11,31 +11,31 @@ type SidebarProps = {
 };
 
 function Sidebar({ onViewChange }: SidebarProps) {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   function renderContacts() {
-    return contacts.map((contact) => (
+    return profiles.map((profile) => (
       <div
-        key={contact.id}
+        key={profile.id}
         className={styles.contact}
-        onClick={() => onViewChange({ type: "chat", id: contact.id })}
+        onClick={() => onViewChange({ type: "chat", id: profile.id })}
       >
-        <img src={contact.profilePicture} />
+        <img src={profile.profilePicture} />
       </div>
     ));
   }
 
   useEffect(() => {
-    async function fetchContacts() {
+    async function fetchProfiles() {
       try {
         const response = await fetch("http://localhost:3001/chat");
         if (!response.ok) {
           throw new Error("Falha ao buscar dados");
         }
         const data = await response.json();
-        setContacts(data);
+        setProfiles(data);
       } catch (error: any) {
         setError(error.message || "Ocorreu um erro.");
       } finally {
@@ -43,7 +43,7 @@ function Sidebar({ onViewChange }: SidebarProps) {
       }
     }
 
-    fetchContacts();
+    fetchProfiles();
   }, []);
 
   // TODO Melhorar isso

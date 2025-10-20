@@ -22,3 +22,10 @@ export interface Contact {
   name: string;
   profilePicture?: string;
 }
+
+export interface Profile {
+  id: string;
+  addresses?: string[];
+  name?: string;
+  profilePicture?: string;
+}
