@@ -1,0 +1,15 @@
+.addChatButton {
+  background: none;
+  margin: 2px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.addChatButton svg {
+    width: 100%;
+    height: 100%;
+    color: var(--ctp-lavender)
+}

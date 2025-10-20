@@ -1,0 +1,92 @@
+.chat {
+  margin: 8px;
+  margin-left: 0px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--ctp-base);
+  border-radius: 30px;
+}
+
+.header {
+  border-top-left-radius: 26px;
+  border-top-right-radius: 26px;
+  background: var(--ctp-base);
+  height: 30px;
+}
+
+.box {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  padding: 10px;
+  background: var(--ctp-surface0);
+  border-radius: 26px;
+}
+
+.sidebar {
+  width: 30px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ctp-crust);
+  align-items: center;
+}
+
+.messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.message {
+  background: white;
+  padding: 8px 12px;
+  margin: 5px 0;
+  border-radius: 8px;
+  max-width: 60%;
+}
+
+.footer {
+  border-bottom-left-radius: 26px;
+  border-bottom-right-radius: 26px;
+  display: flex;
+  padding: 10px;
+  background: var(--ctp-base);
+  height: 30px;
+}
+
+.textBox {
+  flex: 1;
+  display: flex;
+  background-color: var(--ctp-crust);
+  border-radius: 26px;
+}
+
+.textBox input {
+  background: var(--ctp-mantle);
+  z-index: 1;
+  flex: 1;
+  padding: 8px;
+  border: 0;
+  outline: none;
+  border-radius: 26px;
+  border-top-right-radius: 30px;
+  border-bottom-right-radius: 30px;
+}
+
+.textBox button {
+  background: var(--ctp-crust);
+  border: none;
+  text-align: right;
+  padding: 4px 8px;
+  border-radius: 26px;
+  border-top-right-radius: 8px;
+  cursor: pointer;
+}
