@@ -3,21 +3,21 @@
 import { type Request, type Response } from "express";
 import { basilisk } from "../../index.js";
 import { log } from "@basilisk/utils";
-import { type Message, type Profile } from "@basilisk/core";
+import { type Message, type Chat } from "@basilisk/core";
 
 export const getPeerProfile = async (
   req: Request<{ peerId: string }>,
   res: Response
 ) => {
   await log("INFO", `Request received for peer profile ${req.params.peerId}`);
-  const { peerId: id } = req.params;
-  const profile = await basilisk.getPeerProfile(id);
+  const { peerId } = req.params;
+  const profile = await basilisk.getPeerProfile(peerId);
   res.status(200).json(profile);
 };
 
 export const getChats = async (_req: Request, res: Response) => {
   await log("INFO", "Retrieving chats...");
-  const profiles: Profile[] = await basilisk.getChats();
+  const profiles: Chat[] = await basilisk.getChats();
   await log("INFO", `Found ${profiles.length} chats.`);
   res.status(200).json(profiles);
 };
@@ -27,24 +27,24 @@ export const getMessages = async (
   res: Response
 ) => {
   log("INFO", `Retrieving messages from ${req.params.peerId}`);
-  const { peerId: id } = req.params;
+  const { peerId } = req.params;
   const page = parseInt(req.query.page || "1");
   const limit = parseInt(req.query.limit || "20");
-  const messages = await basilisk.getMessages(id, page, limit);
+  const messages = await basilisk.getMessages(peerId, page, limit);
   res.status(200).json(messages);
 };
 
 export const getMessage = async (
-  req: Request<{ peerId: string; msg: number }>,
+  req: Request<{ peerId: string; msgId: number }>,
   res: Response
 ) => {
   log(
     "INFO",
-    `Request received for message ${req.params.msg} from chat ${req.params.peerId}`
+    `Request received for message ${req.params.msgId} from chat ${req.params.peerId}`
   );
   const message: Message = await basilisk.getMessage(
     req.params.peerId,
-    req.params.msg
+    req.params.msgId
   );
   res.status(200).json(message);
 };
@@ -58,10 +58,10 @@ export const sendMessage = async (
     "INFO",
     `Request received for sending a message to chat ${req.params.peerId}`
   );
-  const id = req.params.peerId;
+  const peerId = req.params.peerId;
   const content = req.body.content;
   try {
-    await basilisk.sendMessage(id, content);
+    await basilisk.sendMessage(peerId, content);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
     return;

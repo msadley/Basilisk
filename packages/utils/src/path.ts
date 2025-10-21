@@ -1,9 +1,8 @@
 // packages/utils/src/path.ts
 
 import path from "path";
-import os from "os";
 
-let homePath: string = path.join(os.homedir(), ".basilisk");
+let homePath: string;
 
 export function setHomePath(newPath: string) {
   homePath = newPath;
@@ -14,5 +13,5 @@ export function getHomePath() {
 }
 
 export function getHomeDatabasePath(): string {
-  return path.join(getHomePath(), "databases/")
+  return path.join(getHomePath(), "database");
 }

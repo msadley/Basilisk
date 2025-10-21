@@ -1,27 +1,35 @@
 // packages/core/src/database.ts
 
-import { getHomeDatabasePath, ensureFileExists, log } from "@basilisk/utils";
+import {
+  absolutePath,
+  ensureDirectoryExists,
+  getHomeDatabasePath,
+  log,
+} from "@basilisk/utils";
 import Database from "better-sqlite3";
 import type { Chat, Message, MessagePacket, Profile } from "../types.js";
+import path from "path";
 
 let db: Database.Database;
 
-function getDb(): Database.Database {
+async function getDb(): Promise<Database.Database> {
   if (!db) {
-    db = new Database(getHomeDatabasePath());
+    await ensureDirectoryExists(getHomeDatabasePath());
+    db = new Database(
+      absolutePath(path.join(getHomeDatabasePath(), "database.db"))
+    );
     db.pragma("journal_mode = WAL");
   }
   return db;
 }
 
 export async function ensureDatabase() {
-  if (!(await ensureFileExists(getHomeDatabasePath())))
-    createDatabase(getHomeDatabasePath());
+  createDatabase();
 }
 
-function createDatabase(_dbPath: string) {
-  log("INFO", "Creating new database with initial schema.");
-  const db = getDb();
+async function createDatabase() {
+  log("INFO", "Creating database tables if they don't exist...");
+  const db = await getDb();
   db.exec(`
     CREATE TABLE IF NOT EXISTS profiles (
       id TEXT PRIMARY KEY,
@@ -54,19 +62,19 @@ function createDatabase(_dbPath: string) {
       FOREIGN KEY (profile_id) REFERENCES profiles(id)
     );
   `);
-  log("INFO", "Database created successfully.");
+  log("INFO", "Database schema is up to date.");
 }
 
-function upsertProfile(profile: Profile) {
-  const db = getDb();
+async function upsertProfile(profile: Profile) {
+  const db = await getDb();
   const stmt = db.prepare(
     "INSERT INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
   );
   stmt.run(profile.id, profile.name, profile.avatar);
 }
 
-function upsertChat(chat: Chat) {
-  const db = getDb();
+async function upsertChat(chat: Chat) {
+  const db = await getDb();
   const stmt = db.prepare(
     "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
   );
@@ -75,10 +83,10 @@ function upsertChat(chat: Chat) {
 
 export async function saveMessage(message: MessagePacket) {
   await ensureDatabase();
-  const db = getDb();
+  const db = await getDb();
 
-  upsertProfile(message.from);
-  upsertChat({
+  await upsertProfile(message.from);
+  await upsertChat({
     id: message.to,
     name: message.from.name ?? message.to,
     avatar: message.from.avatar ?? "",
@@ -98,7 +106,7 @@ export async function getMessages(
   offset: number
 ): Promise<Message[]> {
   await ensureDatabase();
-  const db = getDb();
+  const db = await getDb();
   const stmt = db.prepare(
     "SELECT id, content, timestamp, from_id as 'from' FROM messages WHERE chat_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?"
   );
@@ -111,7 +119,7 @@ export async function getMessage(
   msgId: number
 ): Promise<Message> {
   await ensureDatabase();
-  const db = getDb();
+  const db = await getDb();
   const stmt = db.prepare(
     "SELECT id, content, timestamp, from_id as 'from' FROM messages WHERE chat_id = ? AND id = ?"
   );
@@ -126,7 +134,7 @@ export async function getMessage(
 
 export async function getChats(): Promise<Chat[]> {
   await ensureDatabase();
-  const db = getDb();
+  const db = await getDb();
   const stmt = db.prepare(
     "SELECT id, name, avatar, type FROM chats ORDER BY id"
   );
@@ -136,7 +144,7 @@ export async function getChats(): Promise<Chat[]> {
 
 export async function getChatMembers(chatId: string): Promise<Profile[]> {
   await ensureDatabase();
-  const db = getDb();
+  const db = await getDb();
   const stmt = db.prepare(`
     SELECT p.id, p.name, p.avatar
     FROM profiles p

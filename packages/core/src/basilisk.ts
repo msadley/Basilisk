@@ -9,7 +9,12 @@ import {
 } from "./data/database.js";
 import { getProfile, setProfile } from "./profile/profile.js";
 import { Node, chatEvents } from "./node.js";
-import { log, setHomePath } from "@basilisk/utils";
+import {
+  ensureDirectoryExists,
+  getHomePath,
+  log,
+  setHomePath,
+} from "@basilisk/utils";
 import { type Multiaddr } from "@multiformats/multiaddr";
 import {
   type Chat,
@@ -18,7 +23,7 @@ import {
   type Profile,
 } from "./types.js";
 
-const DEFAULT_HOME: string = "basilisk_data/";
+const DEFAULT_HOME: string = "basilisk_data";
 
 export class Basilisk {
   private node: Node;
@@ -34,6 +39,7 @@ export class Basilisk {
 
   static async init(nodeType: "CLIENT" | "RELAY", home?: string) {
     setHomePath(home ? home : DEFAULT_HOME);
+    await ensureDirectoryExists(getHomePath());
     await ensureDatabase();
 
     const nodeInstance = await Node.init(nodeType);

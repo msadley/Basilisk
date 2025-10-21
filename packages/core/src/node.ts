@@ -131,21 +131,25 @@ export class Node {
     return latency;
   }
 
-  async createChatConnection(id: string) {
-    await log("INFO", `Creating chat connection with ${id}...`);
-    const stream: Stream = await this.node.dialProtocol(
-      multiaddrFromPeerId(bootstrapNodes[0], id),
-      "/chat/1.0.0"
-    );
-    const connection = new Connection(stream);
-    this.chatConnections.set(id, connection);
-    await log("INFO", `Chat connection created with ${id}.`);
+  async createChatConnection(peerId: string) {
+    await log("INFO", `Creating chat connection with ${peerId}...`);
+    try {
+      const stream: Stream = await this.node.dialProtocol(
+        multiaddrFromPeerId(bootstrapNodes[0], peerId),
+        "/chat/1.0.0"
+      );
+      const connection = new Connection(stream);
+      this.chatConnections.set(peerId, connection);
+      await log("INFO", `Chat connection created with ${peerId}.`);
+    } catch (error: any) {
+      await log("ERROR", "Failed to create chat connection: " + error.message);
+    }
   }
 
-  async getPeerProfile(id: string): Promise<Profile> {
-    await log("INFO", `Requesting profile from ${id}...`);
+  async getPeerProfile(peerId: string): Promise<Profile> {
+    await log("INFO", `Requesting profile from ${peerId}...`);
     const stream = await this.node.dialProtocol(
-      multiaddrFromPeerId(bootstrapNodes[0], id),
+      multiaddrFromPeerId(bootstrapNodes[0], peerId),
       "/info/1.0.0"
     );
 
@@ -161,7 +165,7 @@ export class Node {
         throw new Error("Stream ended without a response");
       }
     );
-    await log("INFO", `Profile received from ${id}`);
+    await log("INFO", `Profile received from ${peerId}`);
     return response;
   }
 
