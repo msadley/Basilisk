@@ -1,25 +1,22 @@
 // packages/core/src/basilisk.ts
 
 import {
-  getDatabase,
-  listDatabases,
+  ensureDatabase,
+  getChats,
   getMessage,
   getMessages,
   saveMessage,
-  ensureDatabaseFile,
 } from "./data/database.js";
-import {
-  getName,
-  getProfile,
-  getAvatar,
-  setName,
-  setAvatar,
-} from "./profile/profile.js";
+import { getProfile, setProfile } from "./profile/profile.js";
 import { Node, chatEvents } from "./node.js";
 import { log, setHomePath } from "@basilisk/utils";
 import { type Multiaddr } from "@multiformats/multiaddr";
-import type { Database, Message, MessagePacket } from "./types.js";
-import { type Profile } from "./types.js";
+import {
+  type Chat,
+  type Message,
+  type MessagePacket,
+  type Profile,
+} from "./types.js";
 
 const DEFAULT_HOME: string = "basilisk_data/";
 
@@ -29,17 +26,15 @@ export class Basilisk {
   private constructor(nodeInstance: Node) {
     this.node = nodeInstance;
 
-    chatEvents.on(
-      "message:receive",
-      async (message: MessagePacket, remoteAddr: string) => {
-        await log("INFO", `Message received from ${remoteAddr}`);
-        await saveMessage(message, remoteAddr);
-      }
-    );
+    chatEvents.on("message:receive", async (message: MessagePacket) => {
+      await log("INFO", `Message received from ${message.from.id}`);
+      await saveMessage(message);
+    });
   }
 
   static async init(nodeType: "CLIENT" | "RELAY", home?: string) {
     setHomePath(home ? home : DEFAULT_HOME);
+    await ensureDatabase();
 
     const nodeInstance = await Node.init(nodeType);
     return new Basilisk(nodeInstance);
@@ -47,6 +42,10 @@ export class Basilisk {
 
   async getProfile(): Promise<Profile> {
     return await getProfile();
+  }
+
+  async setProfile(name?: string, avatar?: string) {
+    return await setProfile(name, avatar);
   }
 
   getId(): string {
@@ -57,22 +56,6 @@ export class Basilisk {
     return this.node.getMultiaddrs();
   }
 
-  async getName(): Promise<string> {
-    return await getName();
-  }
-
-  async setName(name: string) {
-    await setName(name);
-  }
-
-  async getAvatar(): Promise<string> {
-    return await getAvatar();
-  }
-
-  async setAvatar(picture: string) {
-    await setAvatar(picture);
-  }
-
   async getPeerProfile(id: string): Promise<Profile> {
     if (id === this.getId()) {
       return await this.getProfile();
@@ -80,16 +63,17 @@ export class Basilisk {
     return await this.node.getPeerProfile(id);
   }
 
-  async getChats(): Promise<Profile[]> {
-    return await listDatabases();
+  async getChats(): Promise<Chat[]> {
+    return await getChats();
   }
 
-  async getChatById(id: string): Promise<Database> {
-    return await getDatabase(id);
-  }
-
-  async getMessages(id: string): Promise<Message[]> {
-    return await getMessages(id);
+  async getMessages(
+    id: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<Message[]> {
+    const offset = (page - 1) * limit;
+    return await getMessages(id, limit, offset);
   }
 
   async getMessage(id: string, msg: number): Promise<Message> {
@@ -104,13 +88,7 @@ export class Basilisk {
     return await this.node.pingTest(addr);
   }
 
-  async getChatMessages(id: string) {
-    await getMessages(id);
-  }
-
   async sendMessage(id: string, content: string) {
-    const peerProfile: Profile = await this.getPeerProfile(id);
-    ensureDatabaseFile(id, peerProfile);
     const message: MessagePacket = {
       content: content,
       timestamp: Date.now(),
@@ -118,7 +96,7 @@ export class Basilisk {
       to: id,
     };
     await this.node.sendMessage(message);
-    await saveMessage(message, id);
+    await saveMessage(message);
   }
 
   async sendMedia(_addr: string, _path: string) {

@@ -15,16 +15,8 @@ const updateProfileSchema = z.object({
 
 export const setProfile = async (req: Request, res: Response) => {
   try {
-    const { name, avatar } = updateProfileSchema.parse(req.body);
-
-    if (name) {
-      await basilisk.setName(name);
-    }
-
-    if (avatar) {
-      await basilisk.setAvatar(avatar);
-    }
-
+    updateProfileSchema.parse(req.body);
+    basilisk.setProfile(req.body.name, req.body.avatar);
     const updatedProfile = await basilisk.getProfile();
     res.status(200).json(updatedProfile);
   } catch (error) {

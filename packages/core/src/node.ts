@@ -98,6 +98,7 @@ export class Node {
 
     await node.start();
     await setId(node.peerId.toString());
+
     await log("INFO", "Node initialized.");
 
     return basiliskNode;
@@ -194,7 +195,9 @@ export class Node {
         (source) => map(source, (string) => JSON.parse(string)),
         (source) =>
           map(source, (message: MessagePacket) => {
-            chatEvents.emit("message:receive", message, id);
+            if (message.to !== id)
+              log("WARN", "Message does not match specified sender");
+            else chatEvents.emit("message:receive", message);
           }),
         drain
       );

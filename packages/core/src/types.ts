@@ -7,7 +7,6 @@ export interface Profile {
 }
 
 export interface MessagePacket {
-  id?: number;
   content: string;
   timestamp: number;
   from: Profile;
@@ -21,16 +20,23 @@ export interface Message {
   from: string;
 }
 
-export interface Database {
-  profile: Profile;
-  messages: Message[];
-}
-
 export interface Config {
   privateKey: string;
-  profile: {
-    id: string;
-    name?: string;
-    avatar?: string;
-  };
+  profile: Profile;
+}
+
+export interface Chat {
+  id: string;
+  name: string;
+  avatar: string;
+  type: "private" | "group";
+}
+
+export interface PrivateChat extends Chat {
+  type: "private";
+}
+
+export interface GroupChat extends Chat {
+  type: "group";
+  members: Profile[];
 }

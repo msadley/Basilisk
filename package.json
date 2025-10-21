@@ -32,6 +32,7 @@
     "@libp2p/websockets": "^9.2.18",
     "@multiformats/multiaddr": "^12.5.1",
     "app-root-path": "^3.1.0",
+    "better-sqlite3": "^12.4.1",
     "core": "file:packages/core",
     "dotenv": "^17.2.1",
     "framer-motion": "^12.23.24",
@@ -44,6 +45,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.2.0",
     "cross-env": "^10.0.0",
     "lerna": "^9.0.0",

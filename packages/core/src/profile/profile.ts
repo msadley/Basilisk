@@ -12,19 +12,19 @@ export async function setId(id: string) {
   await overrideConfigField("profile.id", id);
 }
 
-export async function getName(): Promise<string> {
+async function getName(): Promise<string> {
   return await getConfigField("profile.name");
 }
 
-export async function setName(name: string) {
+async function setName(name: string) {
   await overrideConfigField("profile.name", name);
 }
 
-export async function getAvatar(): Promise<string> {
+async function getAvatar(): Promise<string> {
   return await getConfigField("profile.avatar");
 }
 
-export async function setAvatar(picture: string) {
+async function setAvatar(picture: string) {
   await overrideConfigField("profile.avatar", picture);
 }
 
@@ -34,4 +34,9 @@ export async function getProfile() {
     name: await getName(),
     avatar: await getAvatar(),
   };
+}
+
+export async function setProfile(name?: string, avatar?: string) {
+  if (name) await setName(name);
+  if (avatar) await setAvatar(avatar);
 }
