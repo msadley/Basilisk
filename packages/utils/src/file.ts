@@ -41,8 +41,8 @@ export async function createFile(filePath: string) {
 
 export async function searchFiles(dir: string): Promise<string[]> {
   let files = await fs.readdir(absolutePath(dir));
-  files = files.filter((file) => path.extname(file) === ".db");
-  files = files.map((file) => path.join(dir, file));
+  files = files.filter((file: string) => path.extname(file) === ".db");
+  files = files.map((file: string) => path.join(dir, file));
   return files;
 }
 

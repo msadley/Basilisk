@@ -9,3 +9,7 @@ export const ping = async (req: Request<{ addr: string }>, res: Response) => {
   const latency = await basilisk.ping(req.params.addr);
   res.json({ latency });
 };
+
+export const addresses = async (_req: Request, res: Response) => {
+  res.json(basilisk.getMultiaddrs());
+};

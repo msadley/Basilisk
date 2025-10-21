@@ -1,109 +1,156 @@
 // packages/core/src/database.ts
 
 import {
-  createFile,
-  getHomeDatabasePath,
-  getHomePath,
-  log,
-  overrideJsonField,
-  readJson,
-  searchFiles,
-  ensureFileExists,
+  absolutePath,
   ensureDirectoryExists,
-  writeJson,
+  getHomeDatabasePath,
+  log,
 } from "@basilisk/utils";
+import Database from "better-sqlite3";
+import type { Chat, Message, MessagePacket, Profile } from "../types.js";
 import path from "path";
-import type { Database, Message, MessagePacket, Profile } from "../types.js";
 
-const defaultDatabase = (): Database => ({
-  profile: { id: "" },
-  messages: [],
-});
+let db: Database.Database;
 
-function packetToMessage(packet: MessagePacket, newId: number): Message {
-  return {
-    id: newId,
-    content: packet.content,
-    timestamp: packet.timestamp,
-    from: packet.from.id,
-  };
-}
-
-async function getDatabasePath(id: string): Promise<string> {
-  const databasePath = path.join(getHomePath(), `databases/${id}.db`);
-  await ensureDirectoryExists(path.dirname(databasePath));
-  return databasePath;
-}
-
-async function ensureDatabasePath() {
-  await ensureDirectoryExists(getHomeDatabasePath());
-}
-
-export async function ensureDatabaseFile(id: string, profile: Profile) {
-  const path: string = await getDatabasePath(id);
-  if (!(await ensureFileExists(path))) {
-    await log("INFO", "Creating template database...");
-    await setDefaultDatabase(id);
-    await overrideJsonField(path, "profile", profile);
-  } else {
-    try {
-      readJson(path);
-    } catch (error: any) {
-      await log("WARN", `Error when parsing database file: ${error}`);
-      await log("INFO", "Creating template database...");
-      await setDefaultDatabase(id);
-      await overrideJsonField(path, "profile", profile);
-    }
+async function getDb(): Promise<Database.Database> {
+  if (!db) {
+    await ensureDirectoryExists(getHomeDatabasePath());
+    db = new Database(
+      absolutePath(path.join(getHomeDatabasePath(), "database.db"))
+    );
+    db.pragma("journal_mode = WAL");
   }
+  return db;
 }
 
-async function setDefaultDatabase(id: string) {
-  const file: string = await getDatabasePath(id);
-  await createFile(file);
-  await writeJson(file, defaultDatabase());
+export async function ensureDatabase() {
+  createDatabase();
 }
 
-export async function saveMessage(message: MessagePacket, id: string) {
-  await ensureDatabaseFile(id, message.from);
-  const path: string = await getDatabasePath(id);
+async function createDatabase() {
+  log("INFO", "Creating database tables if they don't exist...");
+  const db = await getDb();
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS profiles (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      avatar TEXT
+    );
 
-  let messages: Message[] = (await readJson(path))["messages"];
-  const lastId = messages[messages.length - 1]?.id ?? -1;
-  messages.push(packetToMessage(message, lastId + 1));
-  await overrideJsonField(path, "messages", messages);
-  await overrideJsonField(path, "profile", message.from);
+    CREATE TABLE IF NOT EXISTS chats (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      avatar TEXT,
+      type TEXT NOT NULL CHECK(type IN ('private', 'group'))
+    );
+
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      chat_id TEXT NOT NULL,
+      from_id TEXT NOT NULL,
+      content TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      FOREIGN KEY (chat_id) REFERENCES chats(id),
+      FOREIGN KEY (from_id) REFERENCES profiles(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_members (
+      chat_id TEXT NOT NULL,
+      profile_id TEXT NOT NULL,
+      PRIMARY KEY (chat_id, profile_id),
+      FOREIGN KEY (chat_id) REFERENCES chats(id),
+      FOREIGN KEY (profile_id) REFERENCES profiles(id)
+    );
+  `);
+  log("INFO", "Database schema is up to date.");
 }
 
-export async function getMessages(id: string): Promise<Message[]> {
-  const path: string = await getDatabasePath(id);
-  return (await readJson(path))["messages"];
-}
-
-export async function getMessage(id: string, msg: number): Promise<Message> {
-  const database: Database = await getDatabase(id);
-  const message = database.messages.find((message) => message.id === msg);
-  if (message) {
-    return message;
-  } else {
-    throw new Error("Message not found");
-  }
-}
-
-export async function listDatabases(): Promise<Profile[]> {
-  await log("INFO", "Getting databases...");
-  await ensureDatabasePath();
-  const databaseFiles = await searchFiles(getHomeDatabasePath());
-
-  const databases: Database[] = (await Promise.all(
-    databaseFiles.map((file) => readJson(file))
-  )) as Database[];
-
-  const profiles: Profile[] = await Promise.all(
-    databases.map((database: Database) => database.profile)
+async function upsertProfile(profile: Profile) {
+  const db = await getDb();
+  const stmt = db.prepare(
+    "INSERT INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
   );
-  return profiles;
+  stmt.run(profile.id, profile.name, profile.avatar);
 }
 
-export async function getDatabase(id: string) {
-  return (await readJson(await getDatabasePath(id))) as Database;
+async function upsertChat(chat: Chat) {
+  const db = await getDb();
+  const stmt = db.prepare(
+    "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
+  );
+  stmt.run(chat.id, chat.name, chat.avatar, chat.type);
+}
+
+export async function saveMessage(message: MessagePacket) {
+  await ensureDatabase();
+  const db = await getDb();
+
+  await upsertProfile(message.from);
+  await upsertChat({
+    id: message.to,
+    name: message.from.name ?? message.to,
+    avatar: message.from.avatar ?? "",
+    type: "private", // TODO Assumindo privado por enquanto, precisará de lógica para grupos
+  });
+
+  const stmt = db.prepare(
+    "INSERT INTO messages (chat_id, from_id, content, timestamp) VALUES (?, ?, ?, ?)"
+  );
+  stmt.run(message.to, message.from.id, message.content, message.timestamp);
+  log("INFO", `Message from ${message.from.id} saved to chat ${message.to}`);
+}
+
+export async function getMessages(
+  peerId: string,
+  limit: number,
+  offset: number
+): Promise<Message[]> {
+  await ensureDatabase();
+  const db = await getDb();
+  const stmt = db.prepare(
+    "SELECT id, content, timestamp, from_id as 'from' FROM messages WHERE chat_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?"
+  );
+  const messages = stmt.all(peerId, limit, offset) as Message[];
+  return messages;
+}
+
+export async function getMessage(
+  peerId: string,
+  msgId: number
+): Promise<Message> {
+  await ensureDatabase();
+  const db = await getDb();
+  const stmt = db.prepare(
+    "SELECT id, content, timestamp, from_id as 'from' FROM messages WHERE chat_id = ? AND id = ?"
+  );
+  const message = stmt.get(peerId, msgId) as Message | undefined;
+
+  if (!message) {
+    throw new Error(`Message with id ${msgId} not found in chat ${peerId}`);
+  }
+
+  return message;
+}
+
+export async function getChats(): Promise<Chat[]> {
+  await ensureDatabase();
+  const db = await getDb();
+  const stmt = db.prepare(
+    "SELECT id, name, avatar, type FROM chats ORDER BY id"
+  );
+  const chats = stmt.all() as Chat[];
+  return chats;
+}
+
+export async function getChatMembers(chatId: string): Promise<Profile[]> {
+  await ensureDatabase();
+  const db = await getDb();
+  const stmt = db.prepare(`
+    SELECT p.id, p.name, p.avatar
+    FROM profiles p
+    JOIN chat_members cm ON p.id = cm.profile_id
+    WHERE cm.chat_id = ?
+  `);
+  const members = stmt.all(chatId) as Profile[];
+  return members;
 }

@@ -4,7 +4,6 @@ import { Router } from "express";
 
 import {
   getChats,
-  getChat,
   getMessage,
   getMessages,
   sendMessage,
@@ -15,10 +14,9 @@ import { handler } from "../../utils/handler.js";
 const router = Router();
 
 router.get("/", handler(getChats));
-router.get("/:id", handler(getChat));
-router.get("/:id/profile", handler(getPeerProfile));
-router.get("/:id/message", handler(getMessages));
-router.get("/:id/message/:msg", handler(getMessage));
-router.post("/:id/message", handler(sendMessage));
+router.get("/:peerId/profile", handler(getPeerProfile));
+router.get("/:peerId/message", handler(getMessages));
+router.get("/:peerId/message/:msgId", handler(getMessage));
+router.post("/:peerId/message", handler(sendMessage));
 
 export default router;
