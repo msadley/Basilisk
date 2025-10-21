@@ -10,6 +10,7 @@
     "build": "npx tsc -b",
     "rest": "npm run build && npm run rest --prefix apps/rest",
     "rest2": "npm run build && npm run rest2 --prefix apps/rest",
+    "vite": "npm run dev --prefix apps/web",
     "relay": "npm run build && node apps/relay/dist/index.js",
     "clean": "rimraf basilisk_data peer_data"
   },
@@ -33,6 +34,7 @@
     "app-root-path": "^3.1.0",
     "core": "file:packages/core",
     "dotenv": "^17.2.1",
+    "framer-motion": "^12.23.24",
     "it-drain": "^3.0.10",
     "it-pushable": "^3.2.3",
     "libp2p": "^2.9.0",
