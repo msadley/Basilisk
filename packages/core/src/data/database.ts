@@ -56,7 +56,7 @@ async function ensureDatabaseFile(id: string) {
       await log("WARN", `Error when parsing database file: ${error}`);
       await log("INFO", "Creating template database...");
       await setDefaultDatabase(id);
-      await overrideJsonField(path, "id", id);
+      await overrideJsonField(path, "profile.id", id);
     }
   }
 }

@@ -11,6 +11,7 @@ import map from "it-map";
 import { pipe } from "it-pipe";
 import drain from "it-drain";
 import * as lp from "it-length-prefixed";
+import { fromString } from "uint8arrays/from-string";
 import { toString } from "uint8arrays/to-string";
 
 // Local packages imports
@@ -24,7 +25,8 @@ import {
   bootstrapNodes,
 } from "./libp2p.js";
 import { Connection } from "./connection.js";
-import type { Message } from "./types.js";
+import type { Message, Profile } from "./types.js";
+import { getProfile, setId } from "./profile/profile.js";
 
 export const chatEvents = new EventEmitter();
 
@@ -79,9 +81,23 @@ export class Node {
         );
       });
       await log("INFO", "Chat protocol created.");
+
+      await log("INFO", "Creating info protocol...");
+      await node.handle("/info/1.0.0", async ({ stream, connection }) => {
+        await log(
+          "INFO",
+          `Info stream opened with ${connection.remoteAddr.toString()}`
+        );
+        await basiliskNode.sendInfoToStream(
+          stream,
+          getPeerId(connection.remoteAddr)
+        );
+      });
+      await log("INFO", "Info protocol created.");
     }
 
     await node.start();
+    await setId(node.peerId.toString());
     await log("INFO", "Node initialized.");
 
     return basiliskNode;
@@ -99,6 +115,10 @@ export class Node {
 
   getMultiaddrs(): Multiaddr[] {
     return this.node.getMultiaddrs();
+  }
+
+  async getProfile(): Promise<Profile> {
+    return await getProfile();
   }
 
   async pingTest(addr: string): Promise<number> {
@@ -119,6 +139,29 @@ export class Node {
     const connection = new Connection(stream);
     this.chatConnections.set(id, connection);
     await log("INFO", `Chat connection created with ${id}.`);
+  }
+
+  async getPeerProfile(id: string): Promise<Profile> {
+    await log("INFO", `Requesting profile from ${id}...`);
+    const stream = await this.node.dialProtocol(
+      multiaddrFromPeerId(bootstrapNodes[0], id),
+      "/info/1.0.0"
+    );
+
+    const response = await pipe(
+      [],
+      stream,
+      (source) => lp.decode(source),
+      (source) => map(source, (buf) => toString(buf.subarray())),
+      async function (source) {
+        for await (const msg of source) {
+          return JSON.parse(msg) as Profile;
+        }
+        throw new Error("Stream ended without a response");
+      }
+    );
+    await log("INFO", `Profile received from ${id}`);
+    return response;
   }
 
   async closeChatStream(id: string) {
@@ -158,6 +201,22 @@ export class Node {
       await log("INFO", `Stream from ${id} processed successfully.`);
     } catch (err: any) {
       await log("ERROR", `Error processing stream from ${id}: ${err.message}`);
+    } finally {
+      stream.close();
+    }
+  }
+
+  private async sendInfoToStream(stream: Stream, id: string) {
+    try {
+      const profile = await this.getProfile();
+      await pipe(
+        [fromString(JSON.stringify(profile))],
+        (source) => lp.encode(source),
+        stream.sink
+      );
+      await log("INFO", `Profile sent to ${id}: ${JSON.stringify(profile)}`);
+    } catch (err: any) {
+      await log("ERROR", `Error sending profile to ${id}: ${err.message}`);
     } finally {
       stream.close();
     }

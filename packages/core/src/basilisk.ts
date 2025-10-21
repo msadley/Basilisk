@@ -9,9 +9,10 @@ import {
 } from "./data/database.js";
 import {
   getName,
-  getProfilePicture,
+  getProfile,
+  getAvatar,
   setName,
-  setProfilePicture,
+  setAvatar,
 } from "./profile/profile.js";
 import { Node, chatEvents } from "./node.js";
 import { log, setHomePath } from "@basilisk/utils";
@@ -44,12 +45,7 @@ export class Basilisk {
   }
 
   async getProfile(): Promise<Profile> {
-    return {
-      id: this.getId(),
-      addresses: this.getMultiaddrs().map((addr) => addr.toString()),
-      name: await this.getName(),
-      profilePicture: await this.getProfilePicture(),
-    };
+    return await getProfile();
   }
 
   getId(): string {
@@ -68,12 +64,19 @@ export class Basilisk {
     await setName(name);
   }
 
-  async getProfilePicture(): Promise<string> {
-    return await getProfilePicture();
+  async getAvatar(): Promise<string> {
+    return await getAvatar();
   }
 
-  async setProfilePicture(picture: string) {
-    await setProfilePicture(picture);
+  async setAvatar(picture: string) {
+    await setAvatar(picture);
+  }
+
+  async getPeerProfile(id: string): Promise<Profile> {
+    if (id === this.getId()) {
+      return await this.getProfile();
+    }
+    return await this.node.getPeerProfile(id);
   }
 
   async getChats(): Promise<Profile[]> {

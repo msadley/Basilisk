@@ -2,9 +2,8 @@
 
 export interface Profile {
   id: string;
-  addresses?: string[];
   name?: string;
-  profilePicture?: string;
+  avatar?: string;
 }
 
 export interface Message {
@@ -26,4 +25,9 @@ export interface Database {
 
 export interface Config {
   privateKey: string;
+  profile: {
+    id: string;
+    name?: string;
+    avatar?: string;
+  };
 }

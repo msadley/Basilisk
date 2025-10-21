@@ -1,19 +1,37 @@
 // packages/core/src/profile/profile.ts
 
+import { log } from "@basilisk/utils";
 import { getConfigField, overrideConfigField } from "./config.js";
 
+export async function getId() {
+  await log("INFO", "Getting profile id...");
+  return await getConfigField("profile.id");
+}
+
+export async function setId(id: string) {
+  await overrideConfigField("profile.id", id);
+}
+
 export async function getName(): Promise<string> {
-  return await getConfigField("name");
+  return await getConfigField("profile.name");
 }
 
 export async function setName(name: string) {
-  await overrideConfigField("name", name);
+  await overrideConfigField("profile.name", name);
 }
 
-export async function getProfilePicture(): Promise<string> {
-  return await getConfigField("profilePicture");
+export async function getAvatar(): Promise<string> {
+  return await getConfigField("profile.avatar");
 }
 
-export async function setProfilePicture(picture: string) {
-  await overrideConfigField("profilePicture", picture);
+export async function setAvatar(picture: string) {
+  await overrideConfigField("profile.avatar", picture);
+}
+
+export async function getProfile() {
+  return {
+    id: await getId(),
+    name: await getName(),
+    avatar: await getAvatar(),
+  };
 }

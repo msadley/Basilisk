@@ -10,19 +10,19 @@ export const getProfile = async (_req: Request, res: Response) => {
 
 const updateProfileSchema = z.object({
   name: z.string().optional(),
-  profilePicture: z.url().optional(),
+  avatar: z.url().optional(),
 });
 
 export const setProfile = async (req: Request, res: Response) => {
   try {
-    const { name, profilePicture } = updateProfileSchema.parse(req.body);
+    const { name, avatar } = updateProfileSchema.parse(req.body);
 
     if (name) {
       await basilisk.setName(name);
     }
 
-    if (profilePicture) {
-      await basilisk.setProfilePicture(profilePicture);
+    if (avatar) {
+      await basilisk.setAvatar(avatar);
     }
 
     const updatedProfile = await basilisk.getProfile();

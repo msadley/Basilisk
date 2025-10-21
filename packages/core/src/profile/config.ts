@@ -18,6 +18,11 @@ function getConfigFile(): string {
 
 export const defaultConfig = (): Config => ({
   privateKey: "to-be-generated",
+  profile: {
+    id: "",
+    name: "",
+    avatar: "",
+  },
 });
 
 export async function validateConfigFile() {
@@ -60,11 +65,26 @@ export async function overrideConfigField(field: string, value: any) {
   }
 }
 
-export async function getConfigField(field: string) {
+export async function getConfigField(field: string): Promise<string> {
+  const keys = field.split(".");
+  let current: any;
+
   try {
-    const data = await readJson(getConfigFile());
-    return data[field];
-  } catch (error: any) {
-    console.error("An error occurred: ", error);
+    current = await readJson(getConfigFile());
+  } catch (err) {
+    throw new Error(`Failed to read config file: ${(err as Error).message}`);
+  }
+
+  for (const key of keys) {
+    if (typeof current !== "object" || current === null || !(key in current)) {
+      throw new Error(`Config key "${key}" not found in "${field}"`);
+    }
+    current = current[key];
+  }
+
+  if (typeof current === "string") {
+    return current;
+  } else {
+    throw new Error(`Expected string at "${field}", got ${typeof current}`);
   }
 }

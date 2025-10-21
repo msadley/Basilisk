@@ -66,7 +66,18 @@ export async function overrideJsonField(
   field: string,
   data: any
 ) {
-  let jsonData = await readJson(file);
-  jsonData[field] = data;
+  const jsonData = await readJson(file);
+  const keys = field.split(".");
+  let current = jsonData;
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (typeof current[key] !== "object" || current[key] === null) {
+      current[key] = {};
+    }
+    current = current[key];
+  }
+
+  current[keys[keys.length - 1]] = data;
   await writeJson(file, jsonData);
 }
