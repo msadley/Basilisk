@@ -4,7 +4,6 @@ import {
   createFile,
   getHomeDatabasePath,
   getHomePath,
-  getPeerId,
   log,
   overrideJsonField,
   readJson,
@@ -14,22 +13,20 @@ import {
   writeJson,
 } from "@basilisk/utils";
 import path from "path";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-import type { Database, Message, Profile, SavedMessage } from "../types.js";
+import type { Database, Message, MessagePacket, Profile } from "../types.js";
 
 const defaultDatabase = (): Database => ({
   profile: { id: "" },
   messages: [],
 });
 
-export function getId(data: string): string {
-  try {
-    const addr: Multiaddr = multiaddr(data);
-    const id: string | undefined = getPeerId(addr);
-    return id ? id : "";
-  } catch (error: any) {
-    return data;
-  }
+function packetToMessage(packet: MessagePacket, newId: number): Message {
+  return {
+    id: newId,
+    content: packet.content,
+    timestamp: packet.timestamp,
+    from: packet.from.id,
+  };
 }
 
 async function getDatabasePath(id: string): Promise<string> {
@@ -42,13 +39,12 @@ async function ensureDatabasePath() {
   await ensureDirectoryExists(getHomeDatabasePath());
 }
 
-async function ensureDatabaseFile(id: string) {
-  id = getId(id);
+export async function ensureDatabaseFile(id: string, profile: Profile) {
   const path: string = await getDatabasePath(id);
   if (!(await ensureFileExists(path))) {
     await log("INFO", "Creating template database...");
     await setDefaultDatabase(id);
-    await overrideJsonField(path, "id", id);
+    await overrideJsonField(path, "profile", profile);
   } else {
     try {
       readJson(path);
@@ -56,7 +52,7 @@ async function ensureDatabaseFile(id: string) {
       await log("WARN", `Error when parsing database file: ${error}`);
       await log("INFO", "Creating template database...");
       await setDefaultDatabase(id);
-      await overrideJsonField(path, "profile.id", id);
+      await overrideJsonField(path, "profile", profile);
     }
   }
 }
@@ -67,23 +63,18 @@ async function setDefaultDatabase(id: string) {
   await writeJson(file, defaultDatabase());
 }
 
-export async function saveMessage(message: Message, id: string) {
-  await ensureDatabaseFile(id);
+export async function saveMessage(message: MessagePacket, id: string) {
+  await ensureDatabaseFile(id, message.from);
   const path: string = await getDatabasePath(id);
-  let messages: SavedMessage[] = (await readJson(path))["messages"];
-  let newId: number = 0;
-  if (messages.length > 0) {
-    const lastMessage = messages[messages.length - 1];
-    newId = lastMessage ? lastMessage.id + 1 : 1;
-  }
-  message.id = newId;
-  messages.push(message as SavedMessage);
+
+  let messages: Message[] = (await readJson(path))["messages"];
+  const lastId = messages[messages.length - 1]?.id ?? -1;
+  messages.push(packetToMessage(message, lastId + 1));
   await overrideJsonField(path, "messages", messages);
+  await overrideJsonField(path, "profile", message.from);
 }
 
 export async function getMessages(id: string): Promise<Message[]> {
-  id = getId(id);
-  await ensureDatabaseFile(id);
   const path: string = await getDatabasePath(id);
   return (await readJson(path))["messages"];
 }

@@ -25,7 +25,7 @@ import {
   bootstrapNodes,
 } from "./libp2p.js";
 import { Connection } from "./connection.js";
-import type { Message, Profile } from "./types.js";
+import type { MessagePacket, Profile } from "./types.js";
 import { getProfile, setId } from "./profile/profile.js";
 
 export const chatEvents = new EventEmitter();
@@ -170,7 +170,7 @@ export class Node {
     await log("INFO", `Closed chat connection with ${id}.`);
   }
 
-  async sendMessage(message: Message) {
+  async sendMessage(message: MessagePacket) {
     await log("INFO", `Sending message to ${message.to}`);
     if (!this.chatConnections.get(message.to)) {
       await this.createChatConnection(message.to);
@@ -193,7 +193,7 @@ export class Node {
         (source) => map(source, (buffer) => toString(buffer.subarray())),
         (source) => map(source, (string) => JSON.parse(string)),
         (source) =>
-          map(source, (message: Message) => {
+          map(source, (message: MessagePacket) => {
             chatEvents.emit("message:receive", message, id);
           }),
         drain

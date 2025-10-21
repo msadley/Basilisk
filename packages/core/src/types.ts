@@ -6,21 +6,24 @@ export interface Profile {
   avatar?: string;
 }
 
-export interface Message {
+export interface MessagePacket {
   id?: number;
   content: string;
   timestamp: number;
-  from: string;
+  from: Profile;
   to: string;
 }
 
-export interface SavedMessage extends Message {
+export interface Message {
   id: number;
+  content: string;
+  timestamp: number;
+  from: string;
 }
 
 export interface Database {
   profile: Profile;
-  messages: SavedMessage[];
+  messages: Message[];
 }
 
 export interface Config {

@@ -6,6 +6,7 @@ import {
   getMessage,
   getMessages,
   saveMessage,
+  ensureDatabaseFile,
 } from "./data/database.js";
 import {
   getName,
@@ -17,7 +18,7 @@ import {
 import { Node, chatEvents } from "./node.js";
 import { log, setHomePath } from "@basilisk/utils";
 import { type Multiaddr } from "@multiformats/multiaddr";
-import type { Database, Message } from "./types.js";
+import type { Database, Message, MessagePacket } from "./types.js";
 import { type Profile } from "./types.js";
 
 const DEFAULT_HOME: string = "basilisk_data/";
@@ -30,7 +31,7 @@ export class Basilisk {
 
     chatEvents.on(
       "message:receive",
-      async (message: Message, remoteAddr: string) => {
+      async (message: MessagePacket, remoteAddr: string) => {
         await log("INFO", `Message received from ${remoteAddr}`);
         await saveMessage(message, remoteAddr);
       }
@@ -95,23 +96,25 @@ export class Basilisk {
     return await getMessage(id, msg);
   }
 
-  stop() {
-    this.node.stop();
+  async stop() {
+    await this.node.stop();
   }
 
-  ping(addr: string): Promise<number> {
-    return this.node.pingTest(addr);
+  async ping(addr: string): Promise<number> {
+    return await this.node.pingTest(addr);
   }
 
-  getChatMessages(id: string) {
-    getMessages(id);
+  async getChatMessages(id: string) {
+    await getMessages(id);
   }
 
   async sendMessage(id: string, content: string) {
-    const message: Message = {
+    const peerProfile: Profile = await this.getPeerProfile(id);
+    ensureDatabaseFile(id, peerProfile);
+    const message: MessagePacket = {
       content: content,
       timestamp: Date.now(),
-      from: this.node.getId(),
+      from: await this.node.getProfile(),
       to: id,
     };
     await this.node.sendMessage(message);
