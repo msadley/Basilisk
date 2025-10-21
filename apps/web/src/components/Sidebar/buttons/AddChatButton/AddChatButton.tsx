@@ -1,12 +1,8 @@
 import { Icon } from "@iconify/react";
-
 import styles from "./AddChatButton.module.css";
+import type { ButtonProps } from "../../../../types";
 
-interface AddChatButtonProps {
-  onClick: () => void;
-}
-
-function AddChatButton({ onClick }: AddChatButtonProps) {
+function AddChatButton({ onClick }: ButtonProps) {
   return (
     <button className={styles.addChatButton} onClick={onClick}>
       <Icon icon="mingcute:add-circle-fill" />

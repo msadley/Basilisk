@@ -1,33 +1,26 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import {useChatScroll, useDataLoader} from 'use-chat-scroll'
 import styles from "./Chat.module.css";
 import type { Database } from "@basilisk/core";
 import Message from "./Message/Message";
 import InputBox from "./InputBox/InputBox";
-import { motion } from "framer-motion";
+import type { ViewProps } from "../../../../types";
 
-type ChatProps = {
+interface ChatProps extends ViewProps {
   id: string;
-  setHeader: (element: ReactNode) => void;
-  setFooter: (element: ReactNode) => void;
-};
+}
 
 function Chat({ id, setHeader, setFooter }: ChatProps) {
   const [database, setDatabase] = useState<Database>({
     profile: { id: "" },
     messages: [],
   });
+  const containerRef = useRef<React.RefObject<HTMLDivElement>>()
+  const loader = useDataLoader(loadAdditionalData, data, setData)
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  function renderMessages() {
-    return database.messages.map((message) => (
-      <Message
-        key={message.id}
-        content={message.content}
-        timestamp={message.timestamp}
-      />
-    ));
-  }
+
 
   useEffect(() => {
     async function getDatabase() {
@@ -50,15 +43,7 @@ function Chat({ id, setHeader, setFooter }: ChatProps) {
 
   useEffect(() => {
     if (database.profile.id) {
-      setHeader(
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {database.profile.name || database.profile.id}
-        </motion.div>
-      );
+      setHeader(<div>{database.profile.name || database.profile.id}</div>);
     }
 
     return () => setHeader(undefined);
@@ -81,7 +66,7 @@ function Chat({ id, setHeader, setFooter }: ChatProps) {
     return <div className={styles.chat}>Chat não encontrado</div>;
   }
 
-  return <div className={styles.chat}>{renderMessages()}</div>;
+  return <div className={styles.chat}>{}</div>;
 }
 
 export default Chat;

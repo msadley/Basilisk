@@ -5,63 +5,88 @@ import Settings from "./views/Settings";
 import AddChat from "./views/AddChat"; */
 import type { View } from "../../App";
 import styles from "./MainArea.module.css";
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function MainArea({ view }: { view: View }) {
   const [header, setHeader] = useState<ReactNode>();
   const [footer, setFooter] = useState<ReactNode>();
 
-  useEffect(() => {
-    setHeader(undefined);
-    setFooter(undefined);
-  }, [view]);
+  const body = () => {
+    switch (view.type) {
+      case "welcome":
+        return (
+          <Welcome key="welcome" setHeader={setHeader} setFooter={setFooter} />
+        );
 
-  let body;
-  switch (view.type) {
-    case "welcome":
-      body = <Welcome key="welcome" />;
-      break;
+      case "chat":
+        if (view.id === undefined)
+          throw new Error("ID do chat não foi fornecido.");
 
-    case "chat":
-      if (view.id === undefined)
-        throw new Error("ID do chat não foi fornecido.");
+        return (
+          <Chat
+            key={view.id}
+            id={view.id}
+            setHeader={setHeader}
+            setFooter={setFooter}
+          />
+        );
 
-      body = (
-        <Chat
-          key={view.id}
-          id={view.id}
-          setHeader={setHeader}
-          setFooter={setFooter}
-        />
-      );
-      break;
-
-    /* case "group":
-        return <GroupChat groupId={view.id} groupName={view.name} />;
+      /*
+      case "group":
+          body = <GroupChat ... setHeader={setHeader} setFooter={setFooter} />;
+          break;
 
       case "settings":
-        return <Settings />;
+          body = <Settings ... setHeader={setHeader} setFooter={setFooter} />;
+          break;
+      */
 
-      case "add-chat":
-        return <AddChat />; */
+      default:
+        if (header) setHeader(null);
+        if (footer) setFooter(null);
+        return null;
+    }
+  };
 
-    default:
-      body = <div></div>;
-      break;
-  }
   return (
     <div className={styles.mainArea}>
-      <motion.div key={view.id + view.type} layout className={styles.header}>
-        <AnimatePresence>{header}</AnimatePresence>
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          key={view.id}
+          layout
+          className={styles.header}
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -10, opacity: 0 }}
+          transition={{
+            layout: { duration: 0.5 },
+            opacity: { duration: 0.3 },
+          }}
+        >
+          {header}
+        </motion.div>
+      </AnimatePresence>
+
+      <motion.div
+        layout
+        className={styles.body}
+        transition={{
+          layout: { duration: 0.5 },
+        }}
+      >
+        <AnimatePresence mode="wait">{body()}</AnimatePresence>
       </motion.div>
 
-      <motion.div layout className={styles.body}>
-        <AnimatePresence mode="wait">{body}</AnimatePresence>
-      </motion.div>
-
-      <AnimatePresence>
-        <motion.div layout className={styles.footer}>
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          key={view.id}
+          layout
+          className={styles.footer}
+          transition={{
+            layout: { duration: 0.5 },
+          }}
+        >
           {footer}
         </motion.div>
       </AnimatePresence>

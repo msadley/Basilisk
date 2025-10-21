@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 26px;
   overflow: hidden;
   margin: 8px;
   background-color: var(--ctp-base);
@@ -11,28 +10,31 @@
 
 .header {
   display: flex;
+  justify-content: center;
+  align-content: center;
+  overflow: hidden;
   min-height: 26px;
   padding: 6px;
-  align-content: center;
-  justify-content: center;
   font-size: 12px;
 }
 
 .body {
   display: flex;
   flex: 1;
-  border-radius: 26px;
   overflow: hidden;
-  margin-left: 6px;
   margin-right: 6px;
+  margin-left: 6px;
   background-color: var(--ctp-surface0);
+  border-radius: 26px;
 }
 
 .footer {
   display: flex;
+  overflow: hidden;
   min-height: 26px;
   padding: 8px;
   background: var(--ctp-base);
+  position: relative;
   border-bottom-right-radius: 26px;
   border-bottom-left-radius: 26px;
 }

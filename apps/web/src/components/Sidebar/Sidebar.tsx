@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
 import styles from "./Sidebar.module.css";
-import SettingsButton from "./SettingsButton/SettingsButton";
 import type { View } from "../../App";
-import AddChatButton from "./AddChatButton/AddChatButton";
-import WelcomeButton from "./WelcomeButton/WelcomeButton";
+import SettingsButton from "./buttons/SettingsButton/SettingsButton";
+import AddChatButton from "./buttons/AddChatButton/AddChatButton";
+import HomeButton from "./buttons/HomeButton/HomeButton";
 import { Icon } from "@iconify/react";
 import type { Profile } from "@basilisk/core";
 
@@ -64,7 +64,7 @@ function Sidebar({ onViewChange }: SidebarProps) {
   return (
     <div className={styles.sidebar}>
       <div className={styles.header}>
-        <WelcomeButton onClick={() => onViewChange({ type: "welcome" })} />
+        <HomeButton onClick={() => onViewChange({ type: "welcome" })} />
       </div>
       <div className={styles.body}>
         <div className={styles.contacts}>{renderContacts()}</div>

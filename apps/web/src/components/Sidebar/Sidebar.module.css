@@ -30,6 +30,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .contact svg {
