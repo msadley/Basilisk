@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 
 import styles from "./Sidebar.module.css";
 import SettingsButton from "./SettingsButton/SettingsButton";
-import type { Profile, View } from "../../types";
+import type { View } from "../../App";
 import AddChatButton from "./AddChatButton/AddChatButton";
 import WelcomeButton from "./WelcomeButton/WelcomeButton";
+import { Icon } from "@iconify/react";
+import type { Profile } from "@basilisk/core";
 
 type SidebarProps = {
   onViewChange: (view: View) => void;
@@ -16,13 +18,17 @@ function Sidebar({ onViewChange }: SidebarProps) {
   const [error, setError] = useState<string | null>(null);
 
   function renderContacts() {
-    return profiles.map((profile) => (
+    return profiles.map((profile: Profile) => (
       <div
         key={profile.id}
         className={styles.contact}
         onClick={() => onViewChange({ type: "chat", id: profile.id })}
       >
-        <img src={profile.profilePicture} />
+        {profile.avatar ? (
+          <img src={profile.avatar} alt="Profile" />
+        ) : (
+          <Icon icon="mingcute:user-2-fill" />
+        )}
       </div>
     ));
   }

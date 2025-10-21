@@ -32,6 +32,10 @@
   overflow: hidden;
 }
 
+.contact svg {
+  color: white;
+}
+
 .contact img {
   height: 100%;
   background-color: var(--ctp-lavender);

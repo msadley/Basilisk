@@ -13,7 +13,8 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "@basilisk/core": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

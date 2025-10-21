@@ -1,33 +1,21 @@
 .welcome {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  width: 100%;
-  margin: 8px;
-  padding: 6px;
-  padding-top: 26px;
-  padding-bottom: 26px;
-  background-color: var(--ctp-base);
-  border-radius: 26px;
-}
-
-.body {
-  border-radius: 26px;
-  height: 100%;
-  background-color: var(--ctp-surface0);
-  display: flex;
-  align-items: center;
   justify-content: center;
-  flex-direction: column;
+  align-items: center;
+  height: 100%;
   padding: 6px;
+  background-color: var(--ctp-surface0);
 }
 
-.body img {
+.welcome img {
   width: 30%;
   height: 30%;
   background-color: transparent;
 }
 
-.body h1 {
-  color: var(--ctp-text);
+.welcome h1 {
   font-size: 24px;
+  color: var(--ctp-text);
 }

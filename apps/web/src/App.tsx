@@ -4,7 +4,12 @@ import styles from "./App.module.css";
 
 import Sidebar from "./components/Sidebar/Sidebar";
 import MainArea from "./components/MainArea/MainArea";
-import type { View } from "./types";
+
+export type View = {
+  type: string;
+  id?: string;
+  name?: string;
+};
 
 function App() {
   const [activeView, setActiveView] = useState({ type: "welcome" });
