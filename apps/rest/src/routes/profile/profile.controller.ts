@@ -27,3 +27,12 @@ export const setProfile = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const getPeerProfile = async (
+  req: Request<{ peerId: string }>,
+  res: Response
+) => {
+  const { peerId } = req.params;
+  const profile = await basilisk.getPeerProfile(peerId);
+  res.status(200).json(profile);
+};

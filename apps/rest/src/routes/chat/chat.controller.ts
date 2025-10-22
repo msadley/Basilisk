@@ -5,16 +5,6 @@ import { basilisk } from "../../index.js";
 import { log } from "@basilisk/utils";
 import { type Message, type Chat } from "@basilisk/core";
 
-export const getPeerProfile = async (
-  req: Request<{ peerId: string }>,
-  res: Response
-) => {
-  await log("INFO", `Request received for peer profile ${req.params.peerId}`);
-  const { peerId } = req.params;
-  const profile = await basilisk.getPeerProfile(peerId);
-  res.status(200).json(profile);
-};
-
 export const getChats = async (_req: Request, res: Response) => {
   await log("INFO", "Retrieving chats...");
   const profiles: Chat[] = await basilisk.getChats();
@@ -28,7 +18,7 @@ export const getMessages = async (
 ) => {
   log("INFO", `Retrieving messages from ${req.params.peerId}`);
   const { peerId } = req.params;
-  const page = parseInt(req.query.page || "1");
+  const page = parseInt(req.query.page || "0");
   const limit = parseInt(req.query.limit || "20");
   const messages = await basilisk.getMessages(peerId, page, limit);
   res.status(200).json(messages);
