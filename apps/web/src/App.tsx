@@ -5,12 +5,8 @@ import styles from "./App.module.css";
 import Sidebar from "./components/Sidebar/Sidebar";
 import MainArea from "./components/MainArea/MainArea";
 import { UserProvider } from "./contexts/UserContext";
-
-export type View = {
-  type: string;
-  id?: string;
-  name?: string;
-};
+import type { View } from "./types";
+import { DataProvider } from "./contexts/DataContext";
 
 function App() {
   const [activeView, setActiveView] = useState({ type: "welcome" });
@@ -21,10 +17,12 @@ function App() {
 
   return (
     <UserProvider>
-      <div className={styles.app}>
-        <Sidebar onViewChange={handleChangeView} />
-        <MainArea view={activeView} />
-      </div>
+      <DataProvider>
+        <div className={styles.app}>
+          <Sidebar onViewChange={handleChangeView} />
+          <MainArea view={activeView} />
+        </div>
+      </DataProvider>
     </UserProvider>
   );
 }

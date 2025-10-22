@@ -1,31 +1,36 @@
 // packages/core/src/database.ts
 
-import Database from "better-sqlite3";
-import type { Chat, Message, MessagePacket, Profile } from "../types.js";
+import { EventEmitter } from "events";
+import type {
+  Chat,
+  Database,
+  Message,
+  MessagePacket,
+  Profile,
+} from "./types.js";
 
-let db: Database.Database;
+let db: Database;
 
-/**
- * Initializes the database module with a better-sqlite3 database instance.
- * This should be called by the main class before any other database function.
- * @param database The better-sqlite3 database instance.
- */
-export function setDb(database: Database.Database) {
+export const databaseEvents = new EventEmitter();
+
+export function setDb(database: Database) {
   db = database;
-  db.pragma("journal_mode = WAL");
 }
 
-function getDb(): Database.Database {
+function getDb(): Database {
   if (!db) {
     throw new Error("Database not initialized. Call init() first.");
   }
   return db;
 }
 
-export function createSchema() {
+export async function createSchema(): Promise<void> {
   console.log("INFO: Creating database tables if they don't exist...");
   const db = getDb();
-  db.exec(`
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS settings (
+    );
+
     CREATE TABLE IF NOT EXISTS profiles (
       id TEXT PRIMARY KEY,
       name TEXT,
@@ -60,125 +65,157 @@ export function createSchema() {
   console.log("INFO: Database schema is up to date.");
 }
 
-export function upsertProfile(profile: Profile) {
+export async function upsertProfile(profile: Profile): Promise<number> {
   const db = getDb();
-  const stmt = db.prepare(
-    "INSERT INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
+
+  return db.run(
+    "INSERT INTO profiles (id, name, avatar) VALUES (@id, @name, @avatar) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
+    {
+      id: profile.id,
+      name: profile.name || "",
+      avatar: profile.avatar || "",
+    }
   );
-  stmt.run(profile.id, profile.name, profile.avatar);
 }
 
-export function upsertChat(chat: Chat) {
+export async function upsertChat(
+  chat: Chat
+): Promise<{ changes: number; created: boolean }> {
   const db = getDb();
-  const stmt = db.prepare(
-    "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
+  const existing = await db.get("SELECT id FROM chats WHERE id = ?", [chat.id]);
+
+  if (existing) {
+    const changes = await db.run(
+      "UPDATE chats SET name = @name, avatar = @avatar, type = @type WHERE id = @id",
+      {
+        id: chat.id,
+        name: chat.name,
+        avatar: chat.avatar,
+        type: chat.type,
+      }
+    );
+    return { changes, created: false };
+  }
+
+  const changes = await db.run(
+    "INSERT INTO chats (id, name, avatar, type) VALUES (@id, @name, @avatar, @type)",
+    { id: chat.id, name: chat.name, avatar: chat.avatar, type: chat.type }
   );
-  stmt.run(chat.id, chat.name, chat.avatar, chat.type);
+  return { changes, created: true };
 }
 
-/**
- * Saves a message packet to the database.
- * This operation is transactional, ensuring that the profile, chat, and message are all saved correctly.
- * @param message The message packet to save.
- */
 export async function saveMessage(message: MessagePacket): Promise<void> {
-  const db = getDb();
   const chatId = await getChatId(message);
+  const chatType = chatId.includes("group-") ? "group" : "private";
 
-  const saveTx = db.transaction(() => {
-    const upsertProfileStmt = db.prepare(
-      "INSERT INTO profiles (id, name, avatar) VALUES (@id, @name, @avatar) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
-    );
-    upsertProfileStmt.run(message.from);
+  const profileUpdated = await upsertProfile(message.from);
 
-    const upsertChatStmt = db.prepare(
-      "INSERT INTO chats (id, name, avatar, type) VALUES (@id, @name, @avatar, @type) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar"
-    );
-    upsertChatStmt.run({
+  const chatCreated = await upsertChat({
+    id: chatId,
+    name: message.from.name ?? message.to,
+    avatar: message.from.avatar ?? "",
+    type: chatType,
+  });
+
+  if (profileUpdated) databaseEvents.emit("profile:update", message.from);
+
+  if (chatCreated) {
+    databaseEvents.emit("chat:start", {
       id: chatId,
       name: message.from.name ?? message.to,
       avatar: message.from.avatar ?? "",
-      type: chatId.includes("group-") ? "group" : "private",
+      type: chatType,
     });
+  }
 
-    const insertMessageStmt = db.prepare(
-      "INSERT INTO messages (chat_id, from_id, content, timestamp) VALUES (?, ?, ?, ?)"
-    );
-    insertMessageStmt.run(
-      chatId,
-      message.from.id,
-      message.content,
-      message.timestamp
-    );
-  });
+  const db = getDb();
 
-  saveTx();
+  await db.run(
+    "INSERT INTO messages (chat_id, from_id, content, timestamp) VALUES (?, ?, ?, ?)",
+    [chatId, message.from.id, message.content, message.timestamp]
+  );
+
+  const savedMessage = await db.get<Message>(
+    "SELECT id, content, timestamp, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? AND from_id = ? AND content = ? AND timestamp = ? ORDER BY id DESC LIMIT 1",
+    [chatId, message.from.id, message.content, message.timestamp]
+  );
+
   console.log(`INFO: Message from ${message.from.id} saved to chat ${chatId}`);
+
+  if (savedMessage) {
+    databaseEvents.emit("message:register", savedMessage);
+  } else {
+    console.error(
+      "Could not retrieve the message immediately after saving it."
+    );
+  }
 }
 
-function getChatId(message: MessagePacket): Promise<string> {
+async function getChatId(message: MessagePacket): Promise<string> {
   if (message.to.includes("group-")) return message.to;
-  const myId = getId();
+  const myId = await getId();
   if (message.to === myId) return message.from.id;
   return message.to;
 }
 
-export function getMyProfile(): Profile | undefined {
+export async function getMyProfile(): Promise<Profile> {
   const db = getDb();
-  const stmt = db.prepare("SELECT id, name, avatar FROM profiles LIMIT 1");
-  return stmt.get() as Profile | undefined;
+  const profile: Profile | undefined = await db.get<Profile>(
+    "SELECT id, name, avatar FROM profiles LIMIT 1"
+  );
+  if (!profile) {
+    throw new Error("Profile not found in the database.");
+  }
+  return profile;
 }
 
-export function getMessages(
+export async function getMessages(
   peerId: string,
-  limit: number,
-  offset: number
-): Message[] {
+  page: number
+): Promise<Message[]> {
   const db = getDb();
-  const stmt = db.prepare(
-    "SELECT id, content, timestamp, from_id as 'from' FROM messages WHERE chat_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?"
+  const limit = 20;
+  const offset = (Math.max(1, page) - 1) * limit;
+  return db.all<Message>(
+    "SELECT id, content, timestamp, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+    [peerId, limit, offset]
   );
-  const messages = stmt.all(peerId, limit, offset) as Message[];
-  return messages;
 }
 
-export function getMessage(peerId: string, msgId: number): Message {
+export async function getMessage(
+  peerId: string,
+  msgId: number
+): Promise<Message> {
   const db = getDb();
-  const stmt = db.prepare(
-    "SELECT id, content, timestamp, from_id as 'from' FROM messages WHERE chat_id = ? AND id = ?"
+  const message = await db.get<Message>(
+    "SELECT id, content, timestamp, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? AND id = ?",
+    [peerId, msgId]
   );
-  const message = stmt.get(peerId, msgId) as Message | undefined;
 
   if (!message) {
     throw new Error(`Message with id ${msgId} not found in chat ${peerId}`);
   }
-
   return message;
 }
 
-export function getChats(): Chat[] {
+export async function getChats(): Promise<Chat[]> {
   const db = getDb();
-  const stmt = db.prepare(
-    "SELECT id, name, avatar, type FROM chats ORDER BY id"
-  );
-  const chats = stmt.all() as Chat[];
-  return chats;
+  return db.all<Chat>("SELECT id, name, avatar, type FROM chats ORDER BY id");
 }
 
-export function getChatMembers(chatId: string): Profile[] {
+export async function getChatMembers(chatId: string): Promise<Profile[]> {
   const db = getDb();
-  const stmt = db.prepare(`
+  return db.all<Profile>(
+    `
     SELECT p.id, p.name, p.avatar
     FROM profiles p
     JOIN chat_members cm ON p.id = cm.profile_id
     WHERE cm.chat_id = ?
-  `);
-  const members = stmt.all(chatId) as Profile[];
-  return members;
+  `,
+    [chatId]
+  );
 }
 
-export function getId(): string {
-  const profile = getMyProfile();
-  if (!profile) throw new Error("User profile not found in the database.");
-  return profile.id;
+export async function getId(): Promise<string> {
+  return (await getMyProfile()).id;
 }

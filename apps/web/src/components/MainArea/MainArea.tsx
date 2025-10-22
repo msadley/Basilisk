@@ -3,7 +3,7 @@ import Chat from "./views/Chat/Chat";
 /* import GroupChat from "./views/GroupChat";
 import Settings from "./views/Settings";
 import AddChat from "./views/AddChat"; */
-import type { View } from "../../App";
+import type { View } from "../../types";
 import styles from "./MainArea.module.css";
 import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";

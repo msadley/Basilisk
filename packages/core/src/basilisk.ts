@@ -1,71 +1,116 @@
 // packages/core/src/basilisk.ts
 
-import Database from "better-sqlite3";
-import * as db from "./database.js";
-import type { Chat, Message, MessagePacket, Profile } from "./types.js";
-
-export interface BasiliskConfig {
-  /**
-   * Path to the SQLite database file.
-   * @default ":memory:"
-   */
-  dbPath?: string;
-  /**
-   * The user's profile. If provided and no profile exists in the database,
-   * this profile will be created as the primary user.
-   */
-  profile?: Profile;
-}
+import { Node, chatEvents } from "./node.js";
+import {
+  setDb,
+  createSchema,
+  getMyProfile,
+  databaseEvents,
+  saveMessage,
+  getMessages,
+} from "./database.js";
+import type {
+  Chat,
+  Message,
+  Profile,
+  SendToUiCallback,
+  UIEvent,
+} from "./types.js";
+import { type Database, type MessagePacket } from "./types.js";
 
 export class Basilisk {
-  private db: Database.Database;
+  private node: Node;
+  private uiCallBack: SendToUiCallback;
 
-  constructor(config: BasiliskConfig = {}) {
-    const { dbPath = ":memory:", profile } = config;
-    this.db = new Database(dbPath);
-    console.log(`INFO: Database initialized at ${dbPath}`);
+  private constructor(
+    nodeInstance: Node,
+    database: Database,
+    uiCallBack: SendToUiCallback
+  ) {
+    this.node = nodeInstance;
+    this.uiCallBack = uiCallBack;
+    setDb(database);
+    createSchema();
 
-    // Provide the database instance to the internal database module
-    db.setDb(this.db);
+    chatEvents.on("message:receive", async (message: MessagePacket) => {
+      await saveMessage(message);
+    });
 
-    // Initialize schema and potentially create the first profile
-    this.init(profile);
+    databaseEvents.on("message:register", async (message: Message) => {
+      this.uiCallBack({
+        type: "message-registered",
+        payload: { message },
+      });
+    });
+
+    databaseEvents.on("profile:update", async (profile: Profile) => {
+      this.uiCallBack({
+        type: "profile-updated",
+        payload: { profile },
+      });
+    });
+
+    databaseEvents.on("chat:start", async (chat: Chat) => {
+      this.uiCallBack({
+        type: "chat-started",
+        payload: { chat },
+      });
+    });
   }
 
-  /**
-   * Initializes the database schema and runs any necessary migrations.
-   * This must be called before using other Basilisk methods.
-   */
-  private init(profile?: Profile) {
+  public static async init(
+    database: Database,
+    uiCallback: SendToUiCallback,
+    bootstrapNodes: string[]
+  ) {
     console.log("INFO: Initializing Basilisk...");
-    db.createSchema();
+    const node = await Node.init({ mode: "CLIENT", bootstrapNodes });
+    return new Basilisk(node, database, uiCallback);
+  }
 
-    // If a profile is provided and none exist, create it.
-    if (profile && !db.getMyProfile()) {
-      db.upsertProfile(profile);
-      console.log(`INFO: Created initial profile for ${profile.name}`);
+  public async startNode() {
+    await this.node.start();
+    this.uiCallBack({
+      type: "node-started",
+      payload: { peerId: this.node.getPeerId() },
+    });
+  }
+
+  public async handleUiCommand(event: UIEvent) {
+    switch (event.type) {
+      case "send-message":
+        await this.sendMessage(event.payload.toPeerId, event.payload.text);
+        break;
+
+      case "get-profile":
+        await this.getProfile(event.payload.peerId);
+        break;
+
+      case "get-messages":
+        await this.getMessages(event.payload.peerId, event.payload.page);
+        break;
+
+      default:
+        break;
     }
-
-    console.log("INFO: Basilisk initialization complete.");
   }
 
-  public saveMessage(message: MessagePacket): Promise<void> {
-    return db.saveMessage(message);
+  private async sendMessage(peerId: string, content: string) {
+    const from = await getMyProfile();
+    const message: MessagePacket = {
+      from: from,
+      to: peerId,
+      content: content,
+      timestamp: Date.now(),
+    };
+    await this.node.sendMessage(message);
   }
 
-  public getMessages(peerId: string, limit: number, offset: number): Message[] {
-    return db.getMessages(peerId, limit, offset);
+  private async getMessages(peerId: string, page: number): Promise<Message[]> {
+    return await getMessages(peerId, page);
   }
 
-  public getChats(): Chat[] {
-    return db.getChats();
-  }
-
-  public getMyProfile(): Profile | undefined {
-    return db.getMyProfile();
-  }
-
-  public getId(): string {
-    return db.getId();
+  private async getProfile(peerId: string): Promise<Profile> {
+    return await this.node.getPeerProfile(peerId);
   }
 }

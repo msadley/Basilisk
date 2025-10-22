@@ -7,11 +7,13 @@ import {
 } from "react";
 import styles from "./Chat.module.css";
 import InputBox from "./InputBox/InputBox";
-import type { ViewProps, Message as MessageType } from "../../../../types";
+import type { ViewProps } from "../../../../types";
 import { Icon } from "@iconify/react";
 import Message from "./Message/Message";
 import { useUser } from "../../../../contexts/UserContext";
 import { AnimatePresence, motion } from "framer-motion";
+import { useData } from "../../../../contexts/DataContext";
+import type { Profile } from "@basilisk/core";
 
 interface ChatProps extends ViewProps {
   id: string;
@@ -19,77 +21,55 @@ interface ChatProps extends ViewProps {
 
 function Chat({ id, setHeader, setFooter }: ChatProps) {
   const { profile, isProfileLoading } = useUser();
-  const [messages, setMessages] = useState<MessageType[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
+  const { profiles, messages: allMessages, getMessages } = useData();
+  const messages = allMessages[id] || [];
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [peerProfile, setPeerProfile] = useState<Profile>();
+
+  useEffect(() => {
+    setPeerProfile(profiles[id]);
+  }, [id, setHeader]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<number | null>(null);
+  const prevMessageCountRef = useRef(0);
 
-  const fetchMessages = useCallback(
-    (page: number): Promise<MessageType[]> => {
-      return new Promise((resolve) => {
-        setTimeout(async () => {
-          const response = await fetch(
-            `http://localhost:3001/chat/${id}/message?page=${page}`
-          );
-          const newMessages: MessageType[] = await response.json();
-          resolve(newMessages);
-        }, 500);
-      });
-    },
-    [id]
-  );
-
-  const loadMoreMessages = useCallback(async () => {
+  const loadMoreMessages = useCallback(() => {
     if (isLoading || !hasMore) return;
 
     setIsLoading(true);
-
     if (containerRef.current) {
       scrollRef.current = containerRef.current.scrollHeight;
     }
-
-    const newMessages = await fetchMessages(page);
-
-    if (newMessages.length < 20) {
-      setHasMore(false);
-    } else {
-      setMessages((prevMessages) => [...prevMessages, ...newMessages]);
-      setPage((prevPage) => prevPage + 1);
-    }
-
-    setIsLoading(false);
-  }, [isLoading, hasMore, page, fetchMessages]);
+    prevMessageCountRef.current = messages.length;
+    getMessages(id, page);
+  }, [id, page, getMessages, isLoading, hasMore, messages.length]);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch(`http://localhost:3001/profile/${id}`);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch profile: ${response.statusText}`);
-        }
-
-        const profile = await response.json();
-
-        if (profile.id) {
-          setHeader(<div>{profile.name || profile.id}</div>);
-        }
-      } catch (e: any) {
-        setError(e.message || "Failed to load profile.");
+    if (isLoading || isInitialLoad) {
+      const newMessagesCount = messages.length - prevMessageCountRef.current;
+      if (newMessagesCount < 20) {
+        setHasMore(false);
       }
-    };
+      setPage((prevPage) => prevPage + 1);
+      if (isLoading) setIsLoading(false);
+      if (isInitialLoad) setIsInitialLoad(false);
+    }
+  }, [messages, isLoading, isInitialLoad]);
 
-    fetchProfile();
+  useEffect(() => {
+    setHasMore(true);
+    setPage(1);
+    setIsInitialLoad(true);
+    setIsLoading(false);
+    prevMessageCountRef.current = 0;
 
-    return () => setHeader(undefined);
-  }, [id, setHeader]);
+    getMessages(id, 1);
+  }, [id, getMessages]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -117,35 +97,14 @@ function Chat({ id, setHeader, setFooter }: ChatProps) {
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    if (isInitialLoad) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-      if (messages.length > 0) {
-        setIsInitialLoad(false);
-      }
-    } else if (scrollRef.current) {
+    if (scrollRef.current) {
       const newScrollHeight = containerRef.current.scrollHeight;
-      const heightDifference = newScrollHeight - scrollRef.current;
-      containerRef.current.scrollTop += heightDifference;
+      containerRef.current.scrollTop = newScrollHeight - scrollRef.current;
       scrollRef.current = null;
+    } else {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [messages, isInitialLoad]);
-
-  useEffect(() => {
-    setIsLoading(true);
-    setMessages([]);
-    setPage(0);
-    setHasMore(true);
-    setIsInitialLoad(true);
-
-    fetchMessages(0).then((initialMessages) => {
-      setMessages(initialMessages);
-      setPage(1);
-      if (initialMessages.length < 20) {
-        setHasMore(false);
-      }
-      setIsLoading(false);
-    });
-  }, [id, fetchMessages]);
+  }, [messages]);
 
   useEffect(() => {
     setFooter(<InputBox />);
@@ -154,10 +113,6 @@ function Chat({ id, setHeader, setFooter }: ChatProps) {
       setFooter(undefined);
     };
   }, [setFooter]);
-
-  if (error) {
-    return <div className={styles.chat}>Erro: {error}</div>;
-  }
 
   return (
     <div
@@ -200,12 +155,14 @@ function Chat({ id, setHeader, setFooter }: ChatProps) {
         ) : null
       )}
 
-      <div ref={sentinelRef}>
+      <div ref={sentinelRef} style={{ height: "1px" }}>
         {hasMore && isLoading && (
-          <Icon
-            className={styles.loadingIcon}
-            icon="mingcute:loading-3-fill"
-          ></Icon>
+          <div className={styles.loadingContainer}>
+            <Icon
+              className={styles.loadingIcon}
+              icon="mingcute:loading-3-fill"
+            />
+          </div>
         )}
       </div>
     </div>
