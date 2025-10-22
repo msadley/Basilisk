@@ -6,26 +6,26 @@ import SettingsButton from "./buttons/SettingsButton/SettingsButton";
 import AddChatButton from "./buttons/AddChatButton/AddChatButton";
 import HomeButton from "./buttons/HomeButton/HomeButton";
 import { Icon } from "@iconify/react";
-import type { Profile } from "@basilisk/core";
+import type { Chat } from "../../types";
 
 type SidebarProps = {
   onViewChange: (view: View) => void;
 };
 
 function Sidebar({ onViewChange }: SidebarProps) {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  function renderContacts() {
-    return profiles.map((profile: Profile) => (
+  function renderChats() {
+    return chats.map((chat: Chat) => (
       <div
-        key={profile.id}
-        className={styles.contact}
-        onClick={() => onViewChange({ type: "chat", id: profile.id })}
+        key={chat.id}
+        className={styles.chat}
+        onClick={() => onViewChange({ type: "chat", id: chat.id })}
       >
-        {profile.avatar ? (
-          <img src={profile.avatar} alt="Profile" />
+        {chat.avatar ? (
+          <img src={chat.avatar} alt="Profile" />
         ) : (
           <Icon icon="mingcute:user-2-fill" />
         )}
@@ -34,14 +34,16 @@ function Sidebar({ onViewChange }: SidebarProps) {
   }
 
   useEffect(() => {
-    async function fetchProfiles() {
+    async function fetchChats() {
       try {
         const response = await fetch("http://localhost:3001/chat");
         if (!response.ok) {
-          throw new Error("Falha ao buscar dados");
+          throw new Error(
+            `Falha ao buscar dados: ${response.status} ${response.statusText}`
+          );
         }
-        const data = await response.json();
-        setProfiles(data);
+        const data: Chat[] = await response.json();
+        setChats(data);
       } catch (error: any) {
         setError(error.message || "Ocorreu um erro.");
       } finally {
@@ -49,7 +51,7 @@ function Sidebar({ onViewChange }: SidebarProps) {
       }
     }
 
-    fetchProfiles();
+    fetchChats();
   }, []);
 
   // TODO Melhorar isso
@@ -67,7 +69,7 @@ function Sidebar({ onViewChange }: SidebarProps) {
         <HomeButton onClick={() => onViewChange({ type: "welcome" })} />
       </div>
       <div className={styles.body}>
-        <div className={styles.contacts}>{renderContacts()}</div>
+        <div className={styles.chatContainer}>{renderChats()}</div>
       </div>
       <div className={styles.footer}>
         <AddChatButton onClick={() => onViewChange({ type: "add-chat" })} />

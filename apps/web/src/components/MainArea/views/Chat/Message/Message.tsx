@@ -6,7 +6,7 @@ type MessageProps = {
 };
 
 function Message({ content }: MessageProps) {
-  return <div className={styles.message}>{/* placeholder pra mensagem*/}</div>;
+  return <div className={styles.message}>{content}</div>;
 }
 
 export default Message;

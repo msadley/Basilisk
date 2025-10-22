@@ -5,19 +5,35 @@
   overflow: hidden;
   overflow-y: auto;
   background: var(--ctp-surface0);
+  scrollbar-width: none;
+  gap: 8px;
+  padding: 8px;
 }
 
-.messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
+.loadingIcon {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  height: 40px;
+  aspect-ratio: 1;
+  animation: spin 0.5s ease-in-out infinite;
 }
 
-.message {
-  max-width: 60%;
-  margin: 5px 0;
-  padding: 8px 12px;
-  background: white;
-  border-radius: 8px;
+.loadingIcon svg {
+  color: var(--ctp-lavender);
 }
 
+.messageContainer {
+  display: flex;
+  height: fit-content;
+  flex-direction: column;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

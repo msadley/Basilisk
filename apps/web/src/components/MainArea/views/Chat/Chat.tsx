@@ -1,72 +1,215 @@
-import { useEffect, useRef, useState } from "react";
-import {useChatScroll, useDataLoader} from 'use-chat-scroll'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import styles from "./Chat.module.css";
-import type { Database } from "@basilisk/core";
-import Message from "./Message/Message";
 import InputBox from "./InputBox/InputBox";
-import type { ViewProps } from "../../../../types";
+import type { ViewProps, Message as MessageType } from "../../../../types";
+import { Icon } from "@iconify/react";
+import Message from "./Message/Message";
+import { useUser } from "../../../../contexts/UserContext";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface ChatProps extends ViewProps {
   id: string;
 }
 
 function Chat({ id, setHeader, setFooter }: ChatProps) {
-  const [database, setDatabase] = useState<Database>({
-    profile: { id: "" },
-    messages: [],
-  });
-  const containerRef = useRef<React.RefObject<HTMLDivElement>>()
-  const loader = useDataLoader(loadAdditionalData, data, setData)
+  const { profile, isProfileLoading } = useUser();
+  const [messages, setMessages] = useState<MessageType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<number | null>(null);
+
+  const fetchMessages = useCallback(
+    (page: number): Promise<MessageType[]> => {
+      return new Promise((resolve) => {
+        setTimeout(async () => {
+          const response = await fetch(
+            `http://localhost:3001/chat/${id}/message?page=${page}`
+          );
+          const newMessages: MessageType[] = await response.json();
+          resolve(newMessages);
+        }, 500);
+      });
+    },
+    [id]
+  );
+
+  const loadMoreMessages = useCallback(async () => {
+    if (isLoading || !hasMore) return;
+
+    setIsLoading(true);
+
+    if (containerRef.current) {
+      scrollRef.current = containerRef.current.scrollHeight;
+    }
+
+    const newMessages = await fetchMessages(page);
+
+    if (newMessages.length < 20) {
+      setHasMore(false);
+    } else {
+      setMessages((prevMessages) => [...prevMessages, ...newMessages]);
+      setPage((prevPage) => prevPage + 1);
+    }
+
+    setIsLoading(false);
+  }, [isLoading, hasMore, page, fetchMessages]);
 
   useEffect(() => {
-    async function getDatabase() {
+    const fetchProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/chat/${id}`);
+        const response = await fetch(`http://localhost:3001/profile/${id}`);
+
         if (!response.ok) {
-          throw new Error("Falha ao buscar dados");
+          throw new Error(`Failed to fetch profile: ${response.statusText}`);
         }
-        const data: Database = await response.json();
-        setDatabase(data);
-      } catch (error: any) {
-        setError(error.message || "Ocorreu um erro.");
-      } finally {
-        setIsLoading(false);
+
+        const profile = await response.json();
+
+        if (profile.id) {
+          setHeader(<div>{profile.name || profile.id}</div>);
+        }
+      } catch (e: any) {
+        setError(e.message || "Failed to load profile.");
       }
-    }
+    };
 
-    getDatabase();
-  }, [id]);
-
-  useEffect(() => {
-    if (database.profile.id) {
-      setHeader(<div>{database.profile.name || database.profile.id}</div>);
-    }
+    fetchProfile();
 
     return () => setHeader(undefined);
-  }, [database]);
+  }, [id, setHeader]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          loadMoreMessages();
+        }
+      },
+      {
+        root: containerRef.current,
+        threshold: 0,
+        rootMargin: "120% 0px 0px 0px",
+      }
+    );
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMoreMessages, hasMore, isLoading]);
+
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+
+    if (isInitialLoad) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      if (messages.length > 0) {
+        setIsInitialLoad(false);
+      }
+    } else if (scrollRef.current) {
+      const newScrollHeight = containerRef.current.scrollHeight;
+      const heightDifference = newScrollHeight - scrollRef.current;
+      containerRef.current.scrollTop += heightDifference;
+      scrollRef.current = null;
+    }
+  }, [messages, isInitialLoad]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setMessages([]);
+    setPage(0);
+    setHasMore(true);
+    setIsInitialLoad(true);
+
+    fetchMessages(0).then((initialMessages) => {
+      setMessages(initialMessages);
+      setPage(1);
+      if (initialMessages.length < 20) {
+        setHasMore(false);
+      }
+      setIsLoading(false);
+    });
+  }, [id, fetchMessages]);
 
   useEffect(() => {
     setFooter(<InputBox />);
-  }, [setFooter]);
 
-  // TODO Melhorar isso
-  if (isLoading) {
-    return <div></div>;
-  }
+    return () => {
+      setFooter(undefined);
+    };
+  }, [setFooter]);
 
   if (error) {
     return <div className={styles.chat}>Erro: {error}</div>;
   }
 
-  if (!database) {
-    return <div className={styles.chat}>Chat não encontrado</div>;
-  }
+  return (
+    <div
+      className={styles.chat}
+      ref={containerRef}
+      style={{
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column-reverse",
+        height: "100%",
+      }}
+    >
+      {messages.map((msg) =>
+        !isProfileLoading ? (
+          <AnimatePresence propagate>
+            <motion.div
+              key={msg.id}
+              className={styles.messageContainer}
+              style={{
+                alignItems:
+                  msg.from === profile?.id ? "flex-end" : "flex-start",
+              }}
+              initial={{
+                opacity: 0,
+                x: (msg.from === profile?.id ? 1 : -1) * 20,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              exit={{
+                opacity: 0,
+                x: (msg.from === profile?.id ? 1 : -1) * 20,
+              }}
+              transition={{ type: "spring", duration: 0.5 }}
+            >
+              <Message content={msg.content} timestamp={msg.timestamp} />
+            </motion.div>
+          </AnimatePresence>
+        ) : null
+      )}
 
-  return <div className={styles.chat}>{}</div>;
+      <div ref={sentinelRef}>
+        {hasMore && isLoading && (
+          <Icon
+            className={styles.loadingIcon}
+            icon="mingcute:loading-3-fill"
+          ></Icon>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default Chat;

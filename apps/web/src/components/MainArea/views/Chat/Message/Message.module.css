@@ -1,0 +1,10 @@
+.message {
+  width: fit-content;
+  max-width: 60%;
+  padding: 8px 1rem;
+  background: var(--ctp-crust);
+  color: var(--ctp-text);
+  border-radius: 26px;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}

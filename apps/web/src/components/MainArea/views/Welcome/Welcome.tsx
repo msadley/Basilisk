@@ -1,10 +1,16 @@
 import styles from "./Welcome.module.css";
 import type { ViewProps } from "../../../../types";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 function Welcome({ setHeader, setFooter }: ViewProps) {
-  setHeader(null);
-  setFooter(null);
+  useEffect(() => {
+    return () => setHeader(undefined);
+  }, [setHeader]);
+
+  useEffect(() => {
+    return () => setFooter(undefined);
+  });
 
   return (
     <motion.div
