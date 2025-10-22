@@ -3,15 +3,20 @@
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
 export function getPeerId(addr: Multiaddr): string {
-  const tuples = addr.getComponents();
-  for (const tuple of tuples) {
-    const code = tuple.code;
-    const value = tuple.value;
-    if ((code === 421 || code === 406) && value !== undefined) {
-      return value.toString();
-    }
+  let components = addr.getComponents();
+
+  const circuitIndex = components.findIndex((c) => c.code === 290); // 290 is p2p-circuit
+  if (circuitIndex > -1) {
+    components = components.slice(circuitIndex + 1);
   }
-  throw new Error("Error when parsing peerId from multiaddr.");
+
+  const p2pComponent = components.find((c) => c.code === 421); // 421 is p2p
+
+  if (p2pComponent?.value == null) {
+    throw new Error("Error when parsing peerId from multiaddr.");
+  }
+
+  return p2pComponent.value;
 }
 
 export function multiaddrFromPeerId(

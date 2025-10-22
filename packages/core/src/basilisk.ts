@@ -75,10 +75,10 @@ export class Basilisk {
 
   async getMessages(
     id: string,
-    page: number = 1,
+    page: number = 0,
     limit: number = 20
   ): Promise<Message[]> {
-    const offset = (page - 1) * limit;
+    const offset = Math.max(0, page) * limit;
     return await getMessages(id, limit, offset);
   }
 

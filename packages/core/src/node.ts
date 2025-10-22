@@ -190,7 +190,7 @@ export class Node {
     await log("INFO", `Message sent to ${message.to}.`);
   }
 
-  async retrieveMessageFromStream(stream: Stream, id: string) {
+  async retrieveMessageFromStream(stream: Stream, peerId: string) {
     try {
       await pipe(
         stream.source,
@@ -199,15 +199,18 @@ export class Node {
         (source) => map(source, (string) => JSON.parse(string)),
         (source) =>
           map(source, (message: MessagePacket) => {
-            if (message.to !== id)
+            if (message.from.id !== peerId)
               log("WARN", "Message does not match specified sender");
             else chatEvents.emit("message:receive", message);
           }),
         drain
       );
-      await log("INFO", `Stream from ${id} processed successfully.`);
+      await log("INFO", `Stream from ${peerId} processed successfully.`);
     } catch (err: any) {
-      await log("ERROR", `Error processing stream from ${id}: ${err.message}`);
+      await log(
+        "ERROR",
+        `Error processing stream from ${peerId}: ${err.message}`
+      );
     } finally {
       stream.close();
     }

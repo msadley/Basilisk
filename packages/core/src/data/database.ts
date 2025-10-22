@@ -9,6 +9,7 @@ import {
 import Database from "better-sqlite3";
 import type { Chat, Message, MessagePacket, Profile } from "../types.js";
 import path from "path";
+import { getId } from "../profile/profile.js";
 
 let db: Database.Database;
 
@@ -84,20 +85,28 @@ async function upsertChat(chat: Chat) {
 export async function saveMessage(message: MessagePacket) {
   await ensureDatabase();
   const db = await getDb();
+  const id = await getChatId(message);
 
-  await upsertProfile(message.from);
+  if (!id.includes("group-")) await upsertProfile(message.from);
+
   await upsertChat({
-    id: message.to,
+    id: id,
     name: message.from.name ?? message.to,
     avatar: message.from.avatar ?? "",
-    type: "private", // TODO Assumindo privado por enquanto, precisará de lógica para grupos
+    type: id.includes("group-") ? "group" : "private",
   });
 
   const stmt = db.prepare(
     "INSERT INTO messages (chat_id, from_id, content, timestamp) VALUES (?, ?, ?, ?)"
   );
-  stmt.run(message.to, message.from.id, message.content, message.timestamp);
+  stmt.run(id, message.from.id, message.content, message.timestamp);
   log("INFO", `Message from ${message.from.id} saved to chat ${message.to}`);
+}
+
+async function getChatId(message: MessagePacket): Promise<string> {
+  if (message.to.includes("group-")) return message.to;
+  if (message.to === (await getId())) return message.from.id;
+  return message.to;
 }
 
 export async function getMessages(
