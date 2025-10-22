@@ -16,7 +16,7 @@ import { toString } from "uint8arrays/to-string";
 
 // Local packages imports
 import { getPrivateKey } from "./profile/keys.js";
-import { getPeerId, log, multiaddrFromPeerId } from "@basilisk/utils";
+import { getPeerId, multiaddrFromPeerId } from "./peerId.js";
 import { validateConfigFile } from "./profile/config.js";
 import {
   clientConfig,
@@ -44,10 +44,13 @@ export class Node {
   }
 
   static async init(mode: "CLIENT" | "RELAY"): Promise<Node> {
-    await log("INFO", "Initializing node...");
+    console.log("INFO", "Initializing node...");
 
     if (mode === "CLIENT") {
-      await log("INFO", `Using bootstrap nodes: ${bootstrapNodes.join(", ")}`);
+      console.log(
+        "INFO",
+        `Using bootstrap nodes: ${bootstrapNodes.join(", ")}`
+      );
 
       await validateConfigFile();
     }
@@ -69,9 +72,9 @@ export class Node {
     const basiliskNode = new Node(node);
 
     if (mode === "CLIENT") {
-      await log("INFO", "Creating chat protocol...");
+      console.log("INFO", "Creating chat protocol...");
       await node.handle("/chat/1.0.0", async ({ stream, connection }) => {
-        await log(
+        console.log(
           "INFO",
           `Chat stream opened with ${connection.remoteAddr.toString()}`
         );
@@ -80,11 +83,11 @@ export class Node {
           getPeerId(connection.remoteAddr)
         );
       });
-      await log("INFO", "Chat protocol created.");
+      console.log("INFO", "Chat protocol created.");
 
-      await log("INFO", "Creating info protocol...");
+      console.log("INFO", "Creating info protocol...");
       await node.handle("/info/1.0.0", async ({ stream, connection }) => {
-        await log(
+        console.log(
           "INFO",
           `Info stream opened with ${connection.remoteAddr.toString()}`
         );
@@ -93,21 +96,21 @@ export class Node {
           getPeerId(connection.remoteAddr)
         );
       });
-      await log("INFO", "Info protocol created.");
+      console.log("INFO", "Info protocol created.");
     }
 
     await node.start();
     await setId(node.peerId.toString());
 
-    await log("INFO", "Node initialized.");
+    console.log("INFO", "Node initialized.");
 
     return basiliskNode;
   }
 
   async stop() {
-    await log("INFO", "Stopping node...");
+    console.log("INFO", "Stopping node...");
     this.node.stop();
-    await log("INFO", "Node stopped.");
+    console.log("INFO", "Node stopped.");
   }
 
   getId(): string {
@@ -127,12 +130,12 @@ export class Node {
       ping: (addr: Multiaddr) => Promise<number>;
     };
     const latency: number = await pingService.ping(multiaddr(addr));
-    await log("INFO", `Pinged ${addr.toString()} in ${latency}ms`);
+    console.log("INFO", `Pinged ${addr.toString()} in ${latency}ms`);
     return latency;
   }
 
   async createChatConnection(peerId: string) {
-    await log("INFO", `Creating chat connection with ${peerId}...`);
+    console.log("INFO", `Creating chat connection with ${peerId}...`);
     try {
       const stream: Stream = await this.node.dialProtocol(
         multiaddrFromPeerId(bootstrapNodes[0], peerId),
@@ -140,14 +143,17 @@ export class Node {
       );
       const connection = new Connection(stream);
       this.chatConnections.set(peerId, connection);
-      await log("INFO", `Chat connection created with ${peerId}.`);
+      console.log("INFO", `Chat connection created with ${peerId}.`);
     } catch (error: any) {
-      await log("ERROR", "Failed to create chat connection: " + error.message);
+      console.log(
+        "ERROR",
+        "Failed to create chat connection: " + error.message
+      );
     }
   }
 
   async getPeerProfile(peerId: string): Promise<Profile> {
-    await log("INFO", `Requesting profile from ${peerId}...`);
+    console.log("INFO", `Requesting profile from ${peerId}...`);
     const stream = await this.node.dialProtocol(
       multiaddrFromPeerId(bootstrapNodes[0], peerId),
       "/info/1.0.0"
@@ -165,18 +171,18 @@ export class Node {
         throw new Error("Stream ended without a response");
       }
     );
-    await log("INFO", `Profile received from ${peerId}`);
+    console.log("INFO", `Profile received from ${peerId}`);
     return response;
   }
 
   async closeChatStream(id: string) {
-    await log("INFO", `Closing chat connection with ${id}...`);
+    console.log("INFO", `Closing chat connection with ${id}...`);
     this.chatConnections.delete(id);
-    await log("INFO", `Closed chat connection with ${id}.`);
+    console.log("INFO", `Closed chat connection with ${id}.`);
   }
 
   async sendMessage(message: MessagePacket) {
-    await log("INFO", `Sending message to ${message.to}`);
+    console.log("INFO", `Sending message to ${message.to}`);
     if (!this.chatConnections.get(message.to)) {
       await this.createChatConnection(message.to);
     }
@@ -187,7 +193,7 @@ export class Node {
       );
     }
     connection.sendMessage(message);
-    await log("INFO", `Message sent to ${message.to}.`);
+    console.log("INFO", `Message sent to ${message.to}.`);
   }
 
   async retrieveMessageFromStream(stream: Stream, peerId: string) {
@@ -200,14 +206,14 @@ export class Node {
         (source) =>
           map(source, (message: MessagePacket) => {
             if (message.from.id !== peerId)
-              log("WARN", "Message does not match specified sender");
+              console.log("WARN", "Message does not match specified sender");
             else chatEvents.emit("message:receive", message);
           }),
         drain
       );
-      await log("INFO", `Stream from ${peerId} processed successfully.`);
+      console.log("INFO", `Stream from ${peerId} processed successfully.`);
     } catch (err: any) {
-      await log(
+      console.log(
         "ERROR",
         `Error processing stream from ${peerId}: ${err.message}`
       );
@@ -224,9 +230,9 @@ export class Node {
         (source) => lp.encode(source),
         stream.sink
       );
-      await log("INFO", `Profile sent to ${id}: ${JSON.stringify(profile)}`);
+      console.log("INFO", `Profile sent to ${id}: ${JSON.stringify(profile)}`);
     } catch (err: any) {
-      await log("ERROR", `Error sending profile to ${id}: ${err.message}`);
+      console.log("ERROR", `Error sending profile to ${id}: ${err.message}`);
     } finally {
       stream.close();
     }

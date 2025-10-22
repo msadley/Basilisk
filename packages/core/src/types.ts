@@ -40,3 +40,12 @@ export interface GroupChat extends Chat {
   type: "group";
   members: Profile[];
 }
+
+export type WorkerCommand =
+  | { type: "send-message"; payload: { toPeerId: string; text: string } };
+
+export type UiEvent =
+  | { type: "node-started"; payload: { peerId: string } }
+  | { type: "message-received"; payload: { fromPeerId: string; text: string } };
+
+export type SendToUiCallback = (event: UiEvent) => void;

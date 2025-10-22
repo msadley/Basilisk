@@ -1,111 +1,71 @@
 // packages/core/src/basilisk.ts
 
-import {
-  ensureDatabase,
-  getChats,
-  getMessage,
-  getMessages,
-  saveMessage,
-} from "./data/database.js";
-import { getProfile, setProfile } from "./profile/profile.js";
-import { Node, chatEvents } from "./node.js";
-import {
-  ensureDirectoryExists,
-  getHomePath,
-  log,
-  setHomePath,
-} from "@basilisk/utils";
-import { type Multiaddr } from "@multiformats/multiaddr";
-import {
-  type Chat,
-  type Message,
-  type MessagePacket,
-  type Profile,
-} from "./types.js";
+import Database from "better-sqlite3";
+import * as db from "./database.js";
+import type { Chat, Message, MessagePacket, Profile } from "./types.js";
 
-const DEFAULT_HOME: string = "basilisk_data";
+export interface BasiliskConfig {
+  /**
+   * Path to the SQLite database file.
+   * @default ":memory:"
+   */
+  dbPath?: string;
+  /**
+   * The user's profile. If provided and no profile exists in the database,
+   * this profile will be created as the primary user.
+   */
+  profile?: Profile;
+}
 
 export class Basilisk {
-  private node: Node;
+  private db: Database.Database;
 
-  private constructor(nodeInstance: Node) {
-    this.node = nodeInstance;
+  constructor(config: BasiliskConfig = {}) {
+    const { dbPath = ":memory:", profile } = config;
+    this.db = new Database(dbPath);
+    console.log(`INFO: Database initialized at ${dbPath}`);
 
-    chatEvents.on("message:receive", async (message: MessagePacket) => {
-      await log("INFO", `Message received from ${message.from.id}`);
-      await saveMessage(message);
-    });
+    // Provide the database instance to the internal database module
+    db.setDb(this.db);
+
+    // Initialize schema and potentially create the first profile
+    this.init(profile);
   }
 
-  static async init(nodeType: "CLIENT" | "RELAY", home?: string) {
-    setHomePath(home ? home : DEFAULT_HOME);
-    await ensureDirectoryExists(getHomePath());
-    await ensureDatabase();
+  /**
+   * Initializes the database schema and runs any necessary migrations.
+   * This must be called before using other Basilisk methods.
+   */
+  private init(profile?: Profile) {
+    console.log("INFO: Initializing Basilisk...");
+    db.createSchema();
 
-    const nodeInstance = await Node.init(nodeType);
-    return new Basilisk(nodeInstance);
-  }
-
-  async getProfile(): Promise<Profile> {
-    return await getProfile();
-  }
-
-  async setProfile(name?: string, avatar?: string) {
-    return await setProfile(name, avatar);
-  }
-
-  getId(): string {
-    return this.node.getId();
-  }
-
-  getMultiaddrs(): Multiaddr[] {
-    return this.node.getMultiaddrs();
-  }
-
-  async getPeerProfile(id: string): Promise<Profile> {
-    if (id === this.getId()) {
-      return await this.getProfile();
+    // If a profile is provided and none exist, create it.
+    if (profile && !db.getMyProfile()) {
+      db.upsertProfile(profile);
+      console.log(`INFO: Created initial profile for ${profile.name}`);
     }
-    return await this.node.getPeerProfile(id);
+
+    console.log("INFO: Basilisk initialization complete.");
   }
 
-  async getChats(): Promise<Chat[]> {
-    return await getChats();
+  public saveMessage(message: MessagePacket): Promise<void> {
+    return db.saveMessage(message);
   }
 
-  async getMessages(
-    id: string,
-    page: number = 0,
-    limit: number = 20
-  ): Promise<Message[]> {
-    const offset = Math.max(0, page) * limit;
-    return await getMessages(id, limit, offset);
+  public getMessages(peerId: string, limit: number, offset: number): Message[] {
+    return db.getMessages(peerId, limit, offset);
   }
 
-  async getMessage(id: string, msg: number): Promise<Message> {
-    return await getMessage(id, msg);
+  public getChats(): Chat[] {
+    return db.getChats();
   }
 
-  async stop() {
-    await this.node.stop();
+  public getMyProfile(): Profile | undefined {
+    return db.getMyProfile();
   }
 
-  async ping(addr: string): Promise<number> {
-    return await this.node.pingTest(addr);
-  }
-
-  async sendMessage(id: string, content: string) {
-    const message: MessagePacket = {
-      content: content,
-      timestamp: Date.now(),
-      from: await this.node.getProfile(),
-      to: id,
-    };
-    await this.node.sendMessage(message);
-    await saveMessage(message);
-  }
-
-  async sendMedia(_addr: string, _path: string) {
-    // TODO
+  public getId(): string {
+    return db.getId();
   }
 }
