@@ -3,9 +3,16 @@
 import "dotenv/config";
 
 import { type Multiaddr } from "@multiformats/multiaddr";
-import { Basilisk } from "@basilisk/core";
+import { Node } from "@basilisk/core";
 
-const basilisk = await Basilisk.init("RELAY");
+const PUBLIC_DNS: string | undefined = process.env.PUBLIC_DNS;
+
+if (!PUBLIC_DNS) throw new Error("No public dns was specified.");
+
+const basilisk = await Node.init({
+  mode: "RELAY",
+  publicDns: process.env.PUBLIC_DNS!,
+});
 
 export function start() {
   printAddresses();

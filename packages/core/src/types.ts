@@ -1,5 +1,3 @@
-// packages/core/src/types.ts
-
 /**
  * Represents the possible value types for SQL parameters.
  * Can be a string, number, null, or a byte array.

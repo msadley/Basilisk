@@ -1,5 +1,3 @@
-// packages/core/src/database.ts
-
 import { EventEmitter } from "events";
 import type {
   Chat,

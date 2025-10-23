@@ -1,5 +1,3 @@
-// packages/core/src/node.ts
-
 import { createLibp2p, type Libp2p } from "libp2p";
 import { type Multiaddr } from "@multiformats/multiaddr";
 import type { Stream } from "@libp2p/interface";

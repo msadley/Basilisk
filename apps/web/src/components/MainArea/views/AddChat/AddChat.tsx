@@ -44,17 +44,19 @@ function AddChat({
           </div>
           <div className={styles.spacer}></div>
         </div>
-        <form className={styles.inputContainer} onSubmit={handleSubmit}>
-          <input
-            className={styles.input}
-            type="text"
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Digite o id do chat"
-          ></input>
-          <button type="submit" className={styles.button}>
-            Enviar
-          </button>
-        </form>
+        <div className={styles.inputContainer}>
+          <form onSubmit={handleSubmit}>
+            <input
+              className={styles.input}
+              type="text"
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Digite o id do chat"
+            ></input>
+            <button type="submit" className={styles.button}>
+              Enviar
+            </button>
+          </form>
+        </div>
       </div>
     </motion.div>
   ) : (

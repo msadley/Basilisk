@@ -1,5 +1,3 @@
-// packages/core/src/keys.ts
-
 import { openDB } from "idb";
 
 const idbPromise = openDB("key-storage", 1, {

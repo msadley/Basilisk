@@ -1,5 +1,3 @@
-// package/core/src/connection.ts
-
 import { fromString } from "uint8arrays/from-string";
 import type { Stream } from "@libp2p/interface";
 import * as lp from "it-length-prefixed";

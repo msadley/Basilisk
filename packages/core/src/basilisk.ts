@@ -1,5 +1,3 @@
-// packages/core/src/basilisk.ts
-
 import { Node, chatEvents } from "./node.js";
 import {
   setDb,

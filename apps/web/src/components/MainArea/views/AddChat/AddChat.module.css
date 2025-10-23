@@ -10,9 +10,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: left;
   width: 70%;
-  background-color: var(--ctp-mantle);
+  background-color: var(--ctp-crust);
   border-radius: 26px;
   overflow: hidden;
 }
@@ -45,9 +44,16 @@
   display: flex;
   flex: 1;
   height: 100%;
+  background-color: var(--ctp-mantle);
+  border-top-left-radius: 12px;
+  padding: 1rem;
+}
+
+.inputContainer form {
+  flex: 1;
+  display: flex;
   background-color: var(--ctp-crust);
   border-radius: 26px;
-  margin: 1rem;
 }
 
 .input {
@@ -58,13 +64,17 @@
   padding: 6px;
   padding-left: 1rem;
   background: var(--ctp-base);
-  border: 0;
+  border: none;
   border-radius: 26px;
   border-top-right-radius: 30px;
   border-bottom-right-radius: 30px;
 }
 
 .button {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
   padding-inline: 1rem;
   background: var(--ctp-crust);
   height: 100%;

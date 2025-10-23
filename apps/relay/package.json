@@ -6,7 +6,6 @@
     "build": "npx tsc -b"
   },
   "dependencies": {
-    "@basilisk/core": "*",
-    "@basilisk/utils": "*"
+    "@basilisk/core": "*"
   }
 }

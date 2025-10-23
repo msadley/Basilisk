@@ -1,5 +1,3 @@
-// packages/core/src/libp2p.ts
-
 import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
 import { autoNAT } from "@libp2p/autonat";

@@ -1,18 +1,27 @@
 import type { Database, SqlValue } from "@basilisk/core";
-import initSqlJs, { type Database as SQLDatabase } from "sql.js";
+
+// --- Imports changed from 'sql.js' to '@sqlite.org/sqlite-wasm' ---
+import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
+// ---
 
 export class dbAdapter implements Database {
-  private db: SQLDatabase;
+  // The db type is now the 'DB' (OO1) interface from the official package
+  private db;
 
-  private constructor(db: SQLDatabase) {
+  private constructor(db: any) {
     this.db = db;
   }
 
-  public static async create() {
-    const SQL = await initSqlJs({
-      locateFile: (_) => "/sql-wasm.wasm",
-    });
-    const db = new SQL.Database();
+  public static async create(dbName: string = "basilisk.db") {
+    // Initialize the sqlite3 WASM module
+    const sqlite3 = await sqlite3InitModule();
+
+    // Use the Object-Oriented API (OO1)
+    // This will create a persistent database named 'basilisk.db'
+    // using the default VFS (likely IndexedDB).
+    // To use an in-memory database (like sql.js), pass ":memory:"
+    const db = new sqlite3.oo1.DB(dbName, "c"); // 'c' = create if not exists
+
     return new dbAdapter(db);
   }
 
@@ -20,23 +29,20 @@ export class dbAdapter implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<number> {
-    this.db.run(sql, params);
-    return this.db.getRowsModified();
+    // The OO1 API methods are synchronous.
+    // The 'async' wrapper on this method handles the Promise.
+    this.db.exec(sql, { bind: params });
+
+    // Return the number of rows modified
+    return this.db.changes();
   }
 
   async get<T>(
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T | undefined> {
-    const stmt = this.db.prepare(sql);
-    stmt.bind(params);
-    const hasRow = stmt.step();
-    if (!hasRow) {
-      stmt.free();
-      return undefined;
-    }
-    const row = stmt.getAsObject() as T;
-    stmt.free();
+    // 'selectObject' is the direct equivalent for 'get'
+    const row = this.db.selectObject(sql, params) as T | undefined;
     return row;
   }
 
@@ -44,13 +50,8 @@ export class dbAdapter implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T[]> {
-    const results: T[] = [];
-    const stmt = this.db.prepare(sql);
-    stmt.bind(params);
-    while (stmt.step()) {
-      results.push(stmt.getAsObject() as T);
-    }
-    stmt.free();
-    return results;
+    // 'selectObjects' is the direct equivalent for 'all'
+    const rows = this.db.selectObjects(sql, params) as T[];
+    return rows;
   }
 }

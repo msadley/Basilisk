@@ -1,5 +1,3 @@
-// packages/utils/src/peerId.ts
-
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
 export function getPeerId(addr: Multiaddr): string {

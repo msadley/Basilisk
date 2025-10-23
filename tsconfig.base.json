@@ -34,7 +34,6 @@
     "paths": {
       "@basilisk/rest": ["apps/rest/src"],
       "@basilisk/relay": ["apps/relay/src"],
-      "@basilisk/utils": ["packages/utils/src"],
       "@basilisk/core": ["packages/core/src"]
     }
   }
