@@ -2,6 +2,7 @@ import styles from "./Home.module.css";
 import type { ViewProps } from "../../../../types";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import { useUser } from "../../../../contexts/UserContext";
 
 function Home({
   setHeader,
@@ -9,6 +10,8 @@ function Home({
   setLeftPanel,
   setRightPanel,
 }: ViewProps) {
+  const { profile } = useUser();
+
   useEffect(() => {
     setHeader(<></>);
     setFooter(<></>);
@@ -25,7 +28,8 @@ function Home({
       className={styles.home}
     >
       <img src="/basilisk.svg" alt="logo" />
-      <h1>Bem-vindo ao Basilisk</h1>
+      <p>Bem-vindo ao Basilisk</p>
+      <p>Seu ID de Usuário: {profile?.id}</p>
     </motion.div>
   );
 }

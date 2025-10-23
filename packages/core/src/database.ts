@@ -26,39 +26,35 @@ export async function createSchema(): Promise<void> {
   console.log("INFO: Creating database tables if they don't exist...");
   const db = getDb();
   await db.run(`
-    CREATE TABLE IF NOT EXISTS settings (
-    );
-
     CREATE TABLE IF NOT EXISTS profiles (
       id TEXT PRIMARY KEY,
       name TEXT,
       avatar TEXT
-    );
-
+    )
+  `);
+  await db.run(`
     CREATE TABLE IF NOT EXISTS chats (
       id TEXT PRIMARY KEY,
       name TEXT,
       avatar TEXT,
       type TEXT NOT NULL CHECK(type IN ('private', 'group'))
-    );
-
+    )
+  `);
+  await db.run(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       chat_id TEXT NOT NULL,
       from_id TEXT NOT NULL,
       content TEXT NOT NULL,
-      timestamp INTEGER NOT NULL,
-      FOREIGN KEY (chat_id) REFERENCES chats(id),
-      FOREIGN KEY (from_id) REFERENCES profiles(id)
-    );
-
+      timestamp INTEGER NOT NULL
+    )
+  `);
+  await db.run(`
     CREATE TABLE IF NOT EXISTS chat_members (
       chat_id TEXT NOT NULL,
       profile_id TEXT NOT NULL,
-      PRIMARY KEY (chat_id, profile_id),
-      FOREIGN KEY (chat_id) REFERENCES chats(id),
-      FOREIGN KEY (profile_id) REFERENCES profiles(id)
-    );
+      PRIMARY KEY (chat_id, profile_id)
+    )
   `);
   console.log("INFO: Database schema is up to date.");
 }
@@ -104,7 +100,7 @@ export async function upsertChat(
 
 export async function saveMessage(message: MessagePacket): Promise<void> {
   const chatId = await getChatId(message);
-  const chatType = chatId.includes("group-") ? "group" : "private";
+  const chatType = getChatType(chatId);
 
   const profileUpdated = await upsertProfile(message.from);
 
@@ -154,6 +150,11 @@ async function getChatId(message: MessagePacket): Promise<string> {
   const myId = await getId();
   if (message.to === myId) return message.from.id;
   return message.to;
+}
+
+function getChatType(id: string): "private" | "group" {
+  if (id.includes("group-")) return "group";
+  return "private";
 }
 
 export async function getMyProfile(): Promise<Profile> {
@@ -214,6 +215,6 @@ export async function getChatMembers(chatId: string): Promise<Profile[]> {
   );
 }
 
-export async function getId(): Promise<string> {
+async function getId(): Promise<string> {
   return (await getMyProfile()).id;
 }

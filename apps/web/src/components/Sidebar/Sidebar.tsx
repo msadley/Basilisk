@@ -1,18 +1,15 @@
 import styles from "./Sidebar.module.css";
-import type { View } from "../../types";
 import SettingsButton from "./buttons/SettingsButton/SettingsButton";
 import AddChatButton from "./buttons/AddChatButton/AddChatButton";
 import HomeButton from "./buttons/HomeButton/HomeButton";
 import { Icon } from "@iconify/react";
 import type { Chat } from "@basilisk/core";
 import { useData } from "../../contexts/DataContext";
+import { useLayout } from "../../contexts/LayoutContext";
 
-type SidebarProps = {
-  onViewChange: (view: View) => void;
-};
-
-function Sidebar({ onViewChange }: SidebarProps) {
+function Sidebar() {
   const { chats } = useData();
+  const { onViewChange } = useLayout();
 
   function renderChats() {
     return chats.map((chat: Chat) => (

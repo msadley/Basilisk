@@ -5,23 +5,24 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import type { View } from "../types";
 
 interface LayoutContextType {
-  view: string;
-  setView: (view: string) => void;
+  onView: View;
+  onViewChange: (view: View) => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({ children }: { children: ReactNode }) {
-  const [view, setView] = useState<string>("welcome");
+  const [onView, onViewChange] = useState<View>({ type: "welcome" });
 
   const value = useMemo(
     () => ({
-      view,
-      setView,
+      onView,
+      onViewChange,
     }),
-    [view, setView]
+    [onView, onViewChange]
   );
 
   return (

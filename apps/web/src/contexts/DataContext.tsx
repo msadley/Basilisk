@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -18,7 +19,6 @@ interface DataContextType {
   peerId: string | null;
   sendMessage: (to: string, text: string) => void;
   getMessages: (peerId: string, page: number) => void;
-  createChat: (peerId: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -29,7 +29,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [peerId, setPeerId] = useState<string | null>(null);
 
+  const workerRef = useRef<Worker | null>(null);
+
   useEffect(() => {
+    if (workerRef.current) return;
+
+    workerRef.current = worker;
+
     const handleMessage = (event: MessageEvent<SystemEvent>) => {
       const { type, payload } = event.data;
 
@@ -111,13 +117,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const createChat = (peerId: string) => {
-    worker.postMessage({
-      type: "create-chat",
-      payload: { peerId },
-    });
-  };
-
   const value = {
     profiles,
     messages,
@@ -125,7 +124,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     peerId,
     sendMessage,
     getMessages,
-    createChat,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

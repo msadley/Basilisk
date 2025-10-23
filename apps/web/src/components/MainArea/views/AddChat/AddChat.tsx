@@ -2,8 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { ViewProps } from "../../../../types";
 import styles from "./AddChat.module.css";
 import { motion } from "framer-motion";
-import { useData } from "../../../../contexts/DataContext";
-import { Icon } from "@iconify/react";
+import { useLayout } from "../../../../contexts/LayoutContext";
 
 function AddChat({
   setHeader,
@@ -12,14 +11,12 @@ function AddChat({
   setRightPanel,
 }: ViewProps) {
   const [input, setInput] = useState("");
-  const [awaitChat, setAwaitingChat] = useState(false);
-  const { createChat } = useData();
+  const { onViewChange } = useLayout();
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setInput("");
-    setAwaitingChat(true);
-    createChat(input);
+    onViewChange({ type: "chat", id: input });
   };
 
   useEffect(() => {
@@ -29,7 +26,7 @@ function AddChat({
     setRightPanel(<></>);
   }, []);
 
-  return !awaitChat ? (
+  return (
     <motion.div
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -59,8 +56,6 @@ function AddChat({
         </div>
       </div>
     </motion.div>
-  ) : (
-    <Icon icon="mingcute:loading-3-fill"></Icon>
   );
 }
 

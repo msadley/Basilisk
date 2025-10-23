@@ -87,37 +87,15 @@ export interface Message {
 }
 
 /**
- * Represents the application's configuration.
- */
-export interface Config {
-  /** The private key used for node identification. */
-  privateKey: string;
-  /** The user's own profile. */
-  profile: Profile;
-}
-
-/**
- * The default configuration for the application.
- */
-export const defaultConfig: Config = {
-  privateKey: "to-be-generated",
-  profile: {
-    id: "",
-    name: "",
-    avatar: "",
-  },
-};
-
-/**
  * Represents a chat session, which can be either private or group.
  */
 export interface Chat {
   /** The unique identifier for the chat. */
-  id: string;
+  id?: string;
   /** The name of the chat. */
-  name: string;
+  name?: string;
   /** A URL or data URI for the chat's avatar. */
-  avatar: string;
+  avatar?: string;
   /** The type of chat. */
   type: "private" | "group";
 }
@@ -144,7 +122,8 @@ export type UIEvent =
     }
   | { type: "send-message"; payload: { toPeerId: string; text: string } }
   | { type: "get-profile"; payload: { peerId: string } }
-  | { type: "get-self-profile" };
+  | { type: "get-self-profile" }
+  | { type: "create-chat"; payload: { peerId: string } };
 
 /**
  * Represents an event sent from the core logic to the UI.

@@ -16,6 +16,8 @@ export class dbAdapter implements Database {
     // Initialize the sqlite3 WASM module
     const sqlite3 = await sqlite3InitModule();
 
+    console.log("Creating database...");
+
     // Use the Object-Oriented API (OO1)
     // This will create a persistent database named 'basilisk.db'
     // using the default VFS (likely IndexedDB).
@@ -31,6 +33,7 @@ export class dbAdapter implements Database {
   ): Promise<number> {
     // The OO1 API methods are synchronous.
     // The 'async' wrapper on this method handles the Promise.
+    console.log("Executing SQL:", sql);
     this.db.exec(sql, { bind: params });
 
     // Return the number of rows modified

@@ -13,7 +13,7 @@ import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import type { Libp2pOptions } from "libp2p";
-import { privateKeyFromCryptoKeyPair } from "@libp2p/crypto/keys";
+import { peerIdFromPrivateKey } from "@libp2p/peer-id";
 import { getAppKeyPair } from "./keys.js";
 
 export const baseConfig: Partial<Libp2pOptions> = {
@@ -76,7 +76,8 @@ export async function getLibp2pOptions(
     options.mode === "CLIENT"
       ? getClientConfig(options.bootstrapNodes)
       : getServerConfig(options.publicDns);
-  const keyPair = await getAppKeyPair();
+  const privateKey = await getAppKeyPair();
+  const peerId = await peerIdFromPrivateKey(privateKey);
   return {
     ...baseConfig,
     ...modeConfig,
@@ -84,7 +85,7 @@ export async function getLibp2pOptions(
       ...baseConfig.services,
       ...modeConfig.services,
     },
-    privateKey: await privateKeyFromCryptoKeyPair(keyPair),
+    peerId,
     start: false,
-  };
+  } as any;
 }

@@ -1,4 +1,5 @@
 import { Node, chatEvents } from "./node.js";
+import { clearKeys } from "./keys.js";
 import {
   setDb,
   createSchema,
@@ -59,8 +60,12 @@ export class Basilisk {
   public static async init(
     database: Database,
     uiCallback: SendToUiCallback,
-    bootstrapNodes: string[]
+    bootstrapNodes: string[],
+    debug: boolean = false
   ) {
+    if (debug) {
+      await clearKeys();
+    }
     console.log("INFO: Initializing Basilisk...");
     const node = await Node.init({ mode: "CLIENT", bootstrapNodes });
     return new Basilisk(node, database, uiCallback);

@@ -1,31 +1,31 @@
 import { openDB } from "idb";
+import { generateKeyPairFromSeed } from '@libp2p/crypto/keys';
+import type { PrivateKey } from '@libp2p/interface';
 
 const idbPromise = openDB("key-storage", 1, {
-  upgrade(db: { createObjectStore: (arg0: string) => void }) {
+  upgrade(db: { createObjectStore: (arg0: string) => void; }) {
     db.createObjectStore("keys");
   },
 });
 
-export async function getAppKeyPair(): Promise<CryptoKeyPair> {
+export async function getAppKeyPair(): Promise<PrivateKey> {
   const db = await idbPromise;
-  let keyPair: CryptoKeyPair | undefined = await db.get("keys", "appKeyPair");
+  let seed = await db.get("keys", "appKeySeed");
 
-  if (keyPair) {
-    console.log("Retrieved key from IndexedDB");
-    return keyPair;
+  if (!seed) {
+    console.log("Generating new seed...");
+    seed = crypto.getRandomValues(new Uint8Array(32));
+    await db.put("keys", seed, "appKeySeed");
+    console.log("New seed generated and stored");
+  } else {
+    console.log("Retrieved seed from IndexedDB");
   }
 
-  console.log("Generating new key...");
-  keyPair = await crypto.subtle.generateKey(
-    {
-      name: "ECDSA",
-      namedCurve: "P-256",
-    },
-    false,
-    ["sign", "verify"]
-  );
+  return await generateKeyPairFromSeed('Ed25519', seed);
+}
 
-  await db.put("keys", keyPair, "appKeyPair");
-  console.log("New key generated and stored");
-  return keyPair;
+export async function clearKeys(): Promise<void> {
+  const db = await idbPromise;
+  await db.clear("keys");
+  console.log("Keys cleared from IndexedDB");
 }
