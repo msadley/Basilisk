@@ -4,7 +4,7 @@ import SettingsButton from "./buttons/SettingsButton/SettingsButton";
 import AddChatButton from "./buttons/AddChatButton/AddChatButton";
 import HomeButton from "./buttons/HomeButton/HomeButton";
 import { Icon } from "@iconify/react";
-import type { Chat } from "../../types";
+import type { Chat } from "@basilisk/core";
 import { useData } from "../../contexts/DataContext";
 
 type SidebarProps = {
@@ -39,7 +39,7 @@ function Sidebar({ onViewChange }: SidebarProps) {
         <div className={styles.chatContainer}>{renderChats()}</div>
       </div>
       <div className={styles.footer}>
-        <AddChatButton onClick={() => onViewChange({ type: "add-chat" })} />
+        <AddChatButton onClick={() => onViewChange({ type: "addChat" })} />
         <SettingsButton onClick={() => onViewChange({ type: "settings" })} />
       </div>
     </div>

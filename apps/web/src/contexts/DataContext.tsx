@@ -18,6 +18,7 @@ interface DataContextType {
   peerId: string | null;
   sendMessage: (to: string, text: string) => void;
   getMessages: (peerId: string, page: number) => void;
+  createChat: (peerId: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -110,7 +111,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const value = { profiles, messages, chats, peerId, sendMessage, getMessages };
+  const createChat = (peerId: string) => {
+    worker.postMessage({
+      type: "create-chat",
+      payload: { peerId },
+    });
+  };
+
+  const value = {
+    profiles,
+    messages,
+    chats,
+    peerId,
+    sendMessage,
+    getMessages,
+    createChat,
+  };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

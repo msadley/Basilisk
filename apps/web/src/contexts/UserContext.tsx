@@ -6,8 +6,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { type Profile } from "../types";
-import type { SystemEvent } from "@basilisk/core";
+import type { SystemEvent, Profile } from "@basilisk/core";
 
 const worker = new Worker(new URL("../worker/worker.js", import.meta.url), {
   type: "module",

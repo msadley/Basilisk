@@ -1,9 +1,8 @@
-import Welcome from "./views/Welcome/Welcome";
+import Welcome from "./views/Home/Home";
 import Chat from "./views/Chat/Chat";
-/* import GroupChat from "./views/GroupChat";
-import Settings from "./views/Settings";
-import AddChat from "./views/AddChat"; */
-import type { View } from "../../types";
+import Settings from "./views/Settings/Settings";
+import AddChat from "./views/AddChat/AddChat";
+import type { View, ViewProps } from "../../types";
 import styles from "./MainArea.module.css";
 import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,40 +10,38 @@ import { motion, AnimatePresence } from "framer-motion";
 function MainArea({ view }: { view: View }) {
   const [header, setHeader] = useState<ReactNode>();
   const [footer, setFooter] = useState<ReactNode>();
+  const [leftPanel, setLeftPanel] = useState<ReactNode>();
+  const [rightPanel, setRightPanel] = useState<ReactNode>();
+
+  const viewControls: ViewProps = {
+    setHeader,
+    setFooter,
+    setLeftPanel,
+    setRightPanel,
+  };
 
   const body = () => {
     switch (view.type) {
       case "welcome":
-        return (
-          <Welcome key="welcome" setHeader={setHeader} setFooter={setFooter} />
-        );
+        return <Welcome key="welcome" {...viewControls} />;
 
       case "chat":
         if (view.id === undefined)
           throw new Error("ID do chat não foi fornecido.");
 
-        return (
-          <Chat
-            key={view.id}
-            id={view.id}
-            setHeader={setHeader}
-            setFooter={setFooter}
-          />
-        );
+        return <Chat key={view.id} id={view.id} {...viewControls} />;
 
-      /*
-      case "group":
-          body = <GroupChat ... setHeader={setHeader} setFooter={setFooter} />;
-          break;
+      case "addChat":
+        return <AddChat key="addChat" {...viewControls} />;
 
       case "settings":
-          body = <Settings ... setHeader={setHeader} setFooter={setFooter} />;
-          break;
-      */
+        return <Settings key="settings" {...viewControls} />;
 
       default:
         if (header) setHeader(null);
         if (footer) setFooter(null);
+        if (leftPanel) setLeftPanel(null);
+        if (rightPanel) setRightPanel(null);
         return null;
     }
   };

@@ -32,6 +32,7 @@
     "@libp2p/tcp": "^10.1.18",
     "@libp2p/websockets": "^9.2.18",
     "@multiformats/multiaddr": "^12.5.1",
+    "@sqlite.org/sqlite-wasm": "^3.50.4-build1",
     "@types/sql.js": "^1.4.9",
     "app-root-path": "^3.1.0",
     "core": "file:packages/core",

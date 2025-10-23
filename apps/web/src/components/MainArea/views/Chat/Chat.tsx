@@ -5,21 +5,27 @@ import {
   useRef,
   useState,
 } from "react";
-import styles from "./Chat.module.css";
-import InputBox from "./InputBox/InputBox";
-import type { ViewProps } from "../../../../types";
 import { Icon } from "@iconify/react";
-import Message from "./Message/Message";
-import { useUser } from "../../../../contexts/UserContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { useData } from "../../../../contexts/DataContext";
+import type { ViewProps } from "../../../../types";
 import type { Profile } from "@basilisk/core";
+import InputBox from "./InputBox/InputBox";
+import { useUser } from "../../../../contexts/UserContext";
+import { useData } from "../../../../contexts/DataContext";
+import Message from "./Message/Message";
+import styles from "./Chat.module.css";
 
 interface ChatProps extends ViewProps {
   id: string;
 }
 
-function Chat({ id, setHeader, setFooter }: ChatProps) {
+function Chat({
+  id,
+  setHeader,
+  setFooter,
+  setLeftPanel,
+  setRightPanel,
+}: ChatProps) {
   const { profile, isProfileLoading } = useUser();
   const { profiles, messages: allMessages, getMessages } = useData();
   const messages = allMessages[id] || [];
@@ -30,7 +36,13 @@ function Chat({ id, setHeader, setFooter }: ChatProps) {
   const [peerProfile, setPeerProfile] = useState<Profile>();
 
   useEffect(() => {
+    setLeftPanel(<></>);
+    setRightPanel(<></>);
+  }, []);
+
+  useEffect(() => {
     setPeerProfile(profiles[id]);
+    setHeader(<>{peerProfile!.name ?? peerProfile!.id}</>);
   }, [id, setHeader]);
 
   const containerRef = useRef<HTMLDivElement>(null);

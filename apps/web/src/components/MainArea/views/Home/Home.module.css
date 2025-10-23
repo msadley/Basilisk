@@ -1,4 +1,4 @@
-.welcome {
+.home {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -9,13 +9,13 @@
   background-color: var(--ctp-surface0);
 }
 
-.welcome img {
+.home img {
   width: 30%;
   height: 30%;
   background-color: transparent;
 }
 
-.welcome h1 {
+.home h1 {
   font-size: 24px;
   color: var(--ctp-text);
 }

@@ -180,7 +180,7 @@ export class Node {
 
   private async sendInfoToStream(stream: Stream, id: string) {
     try {
-      const profile = getMyProfile();
+      const profile = await getMyProfile();
       await pipe(
         [fromString(JSON.stringify(profile))],
         (source) => lp.encode(source),

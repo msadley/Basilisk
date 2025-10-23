@@ -7,6 +7,7 @@ import MainArea from "./components/MainArea/MainArea";
 import { UserProvider } from "./contexts/UserContext";
 import type { View } from "./types";
 import { DataProvider } from "./contexts/DataContext";
+import { LayoutProvider } from "./contexts/LayoutContext";
 
 function App() {
   const [activeView, setActiveView] = useState({ type: "welcome" });
@@ -18,10 +19,12 @@ function App() {
   return (
     <UserProvider>
       <DataProvider>
-        <div className={styles.app}>
-          <Sidebar onViewChange={handleChangeView} />
-          <MainArea view={activeView} />
-        </div>
+        <LayoutProvider>
+          <div className={styles.app}>
+            <Sidebar onViewChange={handleChangeView} />
+            <MainArea view={activeView} />
+          </div>
+        </LayoutProvider>
       </DataProvider>
     </UserProvider>
   );

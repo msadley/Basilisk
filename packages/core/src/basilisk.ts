@@ -82,6 +82,14 @@ export class Basilisk {
         await this.sendMessage(event.payload.toPeerId, event.payload.text);
         break;
 
+      case "get-self-profile":
+        const profile = await getMyProfile();
+        this.uiCallBack({
+          type: "self-profile-sent",
+          payload: { profile },
+        });
+        break;
+
       case "get-profile":
         await this.getProfile(event.payload.peerId);
         break;
