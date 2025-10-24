@@ -1,0 +1,41 @@
+.loadingScreen {
+  display: flex;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  padding: 8px;
+}
+
+.inner {
+  background-color: var(--ctp-crust);
+  border-radius: 26px;
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background-color: var(--ctp-base);
+  border-radius: 26px;
+  align-items: center;
+  justify-content: center;
+}
+
+.body svg {
+  height: 5rem;
+  width: 5rem;
+  animation: spin 1s infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,16 +1,14 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
-  useRef,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
 import type { SystemEvent, Message, Chat, Profile } from "@basilisk/core";
-
-const worker = new Worker(new URL("../worker/worker.js", import.meta.url), {
-  type: "module",
-});
+import { worker } from "../worker/client";
 
 interface DataContextType {
   profiles: Record<string, Profile>;
@@ -29,13 +27,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [peerId, setPeerId] = useState<string | null>(null);
 
-  const workerRef = useRef<Worker | null>(null);
-
   useEffect(() => {
-    if (workerRef.current) return;
-
-    workerRef.current = worker;
-
     const handleMessage = (event: MessageEvent<SystemEvent>) => {
       const { type, payload } = event.data;
 
@@ -80,6 +72,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           break;
 
         case "node-started":
+          console.log("node started...");
           setPeerId(payload.peerId);
           break;
 
@@ -100,14 +93,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const sendMessage = (to: string, text: string) => {
+  const sendMessage = useCallback((to: string, text: string) => {
     worker.postMessage({
       type: "send-message",
       payload: { toPeerId: to, text },
     });
-  };
+  }, []);
 
-  const getMessages = (peerId: string, page: number) => {
+  const getMessages = useCallback((peerId: string, page: number) => {
     worker.postMessage({
       type: "get-messages",
       payload: {
@@ -115,16 +108,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         page: page,
       },
     });
-  };
+  }, []);
 
-  const value = {
-    profiles,
-    messages,
-    chats,
-    peerId,
-    sendMessage,
-    getMessages,
-  };
+  const value = useMemo(
+    () => ({
+      profiles,
+      messages,
+      chats,
+      peerId,
+      sendMessage,
+      getMessages,
+    }),
+    [profiles, messages, chats, peerId]
+  );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

@@ -1,23 +1,25 @@
 import { Basilisk } from "@basilisk/core";
-import { dbAdapter } from "./dbAdapter";
+import { sqlite } from "./sqlite";
 
 let controller: Basilisk;
 
 self.onmessage = async (event) => {
+  console.log("Worker received message:", event.data);
   if (event.data.type === "start-node") {
     if (controller) return;
 
     console.log("Worker: Received start-node message");
 
-    const db = await dbAdapter.create();
+    const db = await sqlite.create();
     console.log("Worker: dbAdapter created");
 
     controller = await Basilisk.init(
       db,
       (event) => {
+        console.log("Worker sending message to UI:", event);
         self.postMessage(event);
       },
-      [import.meta.env.VITE_BOOTSTRAP_MULTIADDRS],
+      [import.meta.env.VITE_BOOTSTRAP_MULTIADDRS]
     );
 
     await controller.startNode();

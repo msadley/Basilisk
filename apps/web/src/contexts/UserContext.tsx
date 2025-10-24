@@ -7,10 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { SystemEvent, Profile } from "@basilisk/core";
-
-const worker = new Worker(new URL("../worker/worker.js", import.meta.url), {
-  type: "module",
-});
+import { worker } from "../worker/client";
 
 interface UserContextType {
   profile: Profile | null;
@@ -48,7 +45,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return () => {
       worker.removeEventListener("message", handleMessage);
     };
-  });
+  }, []);
 
   const value = useMemo(
     () => ({
