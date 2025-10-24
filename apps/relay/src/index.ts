@@ -2,4 +2,4 @@
 
 import { start } from "./relay.js";
 
-start();
+await start();
