@@ -152,7 +152,7 @@ async function getChatId(message: MessagePacket): Promise<string> {
   return message.to;
 }
 
-function getChatType(id: string): "private" | "group" {
+export function getChatType(id: string): "private" | "group" {
   if (id.includes("group-")) return "group";
   return "private";
 }
@@ -166,6 +166,18 @@ export async function getMyProfile(): Promise<Profile> {
     throw new Error("Profile not found in the database.");
   }
   return profile;
+}
+
+export async function setMyProfile(
+  id: string,
+  name?: string,
+  avatar?: string
+): Promise<void> {
+  const db = getDb();
+  await db.run(
+    "INSERT OR REPLACE INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
+    [id, name, avatar]
+  );
 }
 
 export async function getMessages(
@@ -217,4 +229,8 @@ export async function getChatMembers(chatId: string): Promise<Profile[]> {
 
 async function getId(): Promise<string> {
   return (await getMyProfile()).id;
+}
+
+export async function addChatToDb(chat: Chat) {
+  await upsertChat(chat);
 }

@@ -7,6 +7,9 @@ import {
   databaseEvents,
   saveMessage,
   getMessages,
+  setMyProfile,
+  addChatToDb,
+  getChatType,
 } from "./database.js";
 import type {
   Chat,
@@ -60,22 +63,23 @@ export class Basilisk {
   public static async init(
     database: Database,
     uiCallback: SendToUiCallback,
-    bootstrapNodes: string[],
+    relayAddr: string,
     debug: boolean = false
   ) {
     if (debug) {
       await clearKeys();
     }
     console.log("INFO: Initializing Basilisk...");
-    const node = await Node.init({ mode: "CLIENT", bootstrapNodes });
+    const node = await Node.init({ mode: "CLIENT", relayAddr });
     return new Basilisk(node, database, uiCallback);
   }
 
   public async startNode() {
     await this.node.start();
+    await setMyProfile(this.node.getPeerId());
     this.uiCallBack({
       type: "node-started",
-      payload: { peerId: this.node.getPeerId() },
+      payload: { profile: await getMyProfile() },
     });
   }
 
@@ -93,12 +97,39 @@ export class Basilisk {
         });
         break;
 
+      case "set-profile":
+        await setMyProfile(
+          event.payload.id,
+          event.payload.name,
+          event.payload.avatar
+        );
+        break;
+
       case "get-profile":
-        await this.getProfile(event.payload.peerId);
+        const peerProfile = await this.getProfile(event.payload.peerId);
+        this.uiCallBack({
+          type: "profile-updated",
+          payload: { profile: peerProfile },
+        });
         break;
 
       case "get-messages":
-        await this.getMessages(event.payload.peerId, event.payload.page);
+        const messages = await this.getMessages(
+          event.payload.peerId,
+          event.payload.page
+        );
+        this.uiCallBack({
+          type: "messages-retrieved",
+          payload: { messages },
+        });
+        break;
+
+      case "create-chat":
+        const chat = await this.createChat(event.payload.id);
+        this.uiCallBack({
+          type: "chat-created",
+          payload: { chat },
+        });
         break;
 
       default:
@@ -123,5 +154,28 @@ export class Basilisk {
 
   private async getProfile(peerId: string): Promise<Profile> {
     return await this.node.getPeerProfile(peerId);
+  }
+
+  private async createChat(id: string): Promise<Chat> {
+    const type = getChatType(id);
+    if (type === "private") {
+      const profile = await this.getProfile(id);
+      const chat = {
+        id: id,
+        name: profile.name,
+        avatar: profile.avatar,
+        type: type,
+      };
+      await addChatToDb(chat);
+      return chat;
+    } else {
+      console.log("Group chat not implemented yet...");
+      return {
+        id: id,
+        name: "Group Chat",
+        avatar: "",
+        type: "group",
+      };
+    }
   }
 }

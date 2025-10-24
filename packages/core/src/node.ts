@@ -1,3 +1,4 @@
+
 import { createLibp2p, type Libp2p } from "libp2p";
 import { type Multiaddr } from "@multiformats/multiaddr";
 import type { Stream } from "@libp2p/interface";
@@ -11,10 +12,13 @@ import { toString } from "uint8arrays/to-string";
 import { getPeerId, multiaddrFromPeerId } from "./peerId.js";
 import { getLibp2pOptions } from "./libp2p.js";
 import { Connection } from "./connection.js";
-import type { MessagePacket, Profile } from "./types.js";
+import type { MessagePacket, NodeConfig, Profile } from "./types.js";
 import { getMyProfile } from "./database.js";
+import { getAppKey } from './keys.js';
 
 export const chatEvents = new EventEmitter();
+
+let RELAY_ADDR: string;
 
 export class Node {
   private node: Libp2p;
@@ -29,18 +33,12 @@ export class Node {
     });
   }
 
-  static async init(
-    options:
-      | {
-          mode: "CLIENT";
-          bootstrapNodes: string[];
-        }
-      | { mode: "RELAY"; publicDns: string }
-  ): Promise<Node> {
+  static async init(options: NodeConfig): Promise<Node> {
     if (options.mode === "RELAY") {
       console.log("INFO", "Initializing relay node...");
 
-      const libp2pNode = await createLibp2p(await getLibp2pOptions(options));
+      const privateKey = await getAppKey();
+      const libp2pNode = await createLibp2p(await getLibp2pOptions(options, privateKey));
       const node = new Node(libp2pNode);
 
       await libp2pNode.start();
@@ -51,7 +49,10 @@ export class Node {
     }
     console.log("INFO", "Initializing node...");
 
-    const libp2pNode = await createLibp2p(await getLibp2pOptions(options));
+    RELAY_ADDR = options.relayAddr ?? "";
+
+    const privateKey = await getAppKey();
+    const libp2pNode = await createLibp2p(await getLibp2pOptions(options, privateKey));
     const node = new Node(libp2pNode);
 
     console.log("INFO", "Creating chat protocol...");
@@ -87,6 +88,11 @@ export class Node {
 
   async start() {
     await this.node.start();
+    console.log("Libp2p node started with id: " + this.node.peerId.toString());
+    console.log("Listening on:");
+    this.node.getMultiaddrs().forEach((addr) => {
+      console.log(addr.toString());
+    });
   }
 
   async stop() {
@@ -106,10 +112,10 @@ export class Node {
     if (this.chatConns.has(peerId)) return;
 
     try {
-      const stream = await this.node.dialProtocol(
-        multiaddrFromPeerId(this.node.getMultiaddrs()[0].toString(), peerId), // This is not ideal, we should get the relay address from a reliable source
-        "/chat/1.0.0"
-      );
+      const addr = multiaddrFromPeerId(RELAY_ADDR, peerId);
+      console.log("Dialing", addr.toString());
+
+      const stream = await this.node.dialProtocol(addr, "/chat/1.0.0");
       this.chatConns.set(peerId, new Connection(stream));
       console.log("INFO", `Chat connection created with ${peerId}.`);
     } catch (error: any) {
@@ -118,10 +124,9 @@ export class Node {
   }
 
   async getPeerProfile(peerId: string): Promise<Profile> {
-    const stream = await this.node.dialProtocol(
-      multiaddrFromPeerId(this.node.getMultiaddrs()[0].toString(), peerId), // This is not ideal, we should get the relay address from a reliable source
-      "/info/1.0.0"
-    );
+    const addr = multiaddrFromPeerId(RELAY_ADDR, peerId);
+    console.log("Dialing", addr.toString());
+    const stream = await this.node.dialProtocol(addr, "/info/1.0.0");
 
     const response = await pipe(
       [],
@@ -192,3 +197,4 @@ export class Node {
     }
   }
 }
+

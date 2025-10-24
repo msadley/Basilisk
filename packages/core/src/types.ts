@@ -42,6 +42,12 @@ export interface Database {
   ): Promise<T[]>;
 }
 
+export interface NodeConfig {
+  mode: "CLIENT" | "RELAY";
+  relayAddr?: string;
+  publicDns?: string;
+}
+
 /**
  * Represents a user profile.
  */
@@ -123,14 +129,19 @@ export type UIEvent =
   | { type: "send-message"; payload: { toPeerId: string; text: string } }
   | { type: "get-profile"; payload: { peerId: string } }
   | { type: "get-self-profile" }
-  | { type: "create-chat"; payload: { peerId: string } };
+  | { type: "create-chat"; payload: { id: string } }
+  | {
+      type: "set-profile";
+      payload: { id: string; name?: string; avatar?: string };
+    };
 
 /**
  * Represents an event sent from the core logic to the UI.
  */
 export type SystemEvent =
-  | { type: "node-started"; payload: { peerId: string } }
+  | { type: "node-started"; payload: { profile: Profile } }
   | { type: "chat-started"; payload: { chat: Chat } }
+  | { type: "chat-created"; payload: { chat: Chat } }
   | { type: "profile-updated"; payload: { profile: Profile } }
   | { type: "self-profile-sent"; payload: { profile: Profile } }
   | { type: "message-registered"; payload: { message: Message } }
