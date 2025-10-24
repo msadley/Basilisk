@@ -2,7 +2,7 @@
  * Represents the possible value types for SQL parameters.
  * Can be a string, number, null, or a byte array.
  */
-export type SqlValue = string | number | null | Uint8Array;
+export type SqlValue = string | number | null | Uint8Array | undefined;
 
 /**
  * Defines the interface for database operations.
