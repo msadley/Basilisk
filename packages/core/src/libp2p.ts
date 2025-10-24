@@ -50,7 +50,7 @@ export function getServerConfig(publicDns: string): Partial<Libp2pOptions> {
       listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
       announce: [
         `/dns4/${publicDns}/tcp/4001`,
-        `/dns4/${publicDns}/tcp/4002/ws`,
+        `/dns4/${publicDns}/tcp/443/wss`,
       ],
     },
     transports: [tcp(), webSockets()],
