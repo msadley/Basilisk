@@ -19,7 +19,7 @@ self.onmessage = async (event) => {
         console.log("Worker sending message to UI:", event);
         self.postMessage(event);
       },
-      [import.meta.env.VITE_BOOTSTRAP_MULTIADDRS]
+      import.meta.env.VITE_BOOTSTRAP_MULTIADDRS
     );
 
     await controller.startNode();
@@ -27,3 +27,5 @@ self.onmessage = async (event) => {
     await controller.handleUiCommand(event.data);
   }
 };
+
+console.log(import.meta.env.VITE_BOOTSTRAP_MULTIADDRS);

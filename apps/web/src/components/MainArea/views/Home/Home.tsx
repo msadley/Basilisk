@@ -10,7 +10,7 @@ function Home({
   setLeftPanel,
   setRightPanel,
 }: ViewProps) {
-  const { peerId } = useData();
+  const { profile } = useData();
 
   useEffect(() => {
     setHeader(<></>);
@@ -29,7 +29,7 @@ function Home({
     >
       <img src="/basilisk.svg" alt="logo" />
       <p>Bem-vindo ao Basilisk</p>
-      <p>Seu ID de Usuário: {peerId}</p>
+      <p>Seu ID de Usuário: {profile?.id}</p>
     </motion.div>
   );
 }

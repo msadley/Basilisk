@@ -14,9 +14,11 @@ interface DataContextType {
   profiles: Record<string, Profile>;
   messages: Record<string, Message[]>;
   chats: Chat[];
-  peerId: string | null;
+  profile: Profile | undefined;
+  isProfileLoading: boolean;
   sendMessage: (to: string, text: string) => void;
   getMessages: (peerId: string, page: number) => void;
+  createChat: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -25,7 +27,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [chats, setChats] = useState<Chat[]>([]);
-  const [peerId, setPeerId] = useState<string | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | undefined>(undefined);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent<SystemEvent>) => {
@@ -73,10 +76,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         case "node-started":
           console.log("node started...");
-          setPeerId(payload.peerId);
+          setProfile(payload.profile);
+          setIsProfileLoading(false);
           break;
 
         case "chat-started":
+          setChats((prevChats) => [...prevChats, payload.chat]);
+          break;
+
+        case "chat-created":
           setChats((prevChats) => [...prevChats, payload.chat]);
           break;
 
@@ -110,16 +118,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const createChat = useCallback((id: string) => {
+    worker.postMessage({
+      type: "create-chat",
+      payload: { id },
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       profiles,
       messages,
       chats,
-      peerId,
+      profile,
+      isProfileLoading,
       sendMessage,
       getMessages,
+      createChat,
     }),
-    [profiles, messages, chats, peerId]
+    [profiles, messages, chats, profile, isProfileLoading]
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

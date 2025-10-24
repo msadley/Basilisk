@@ -4,8 +4,11 @@ import {
   useState,
   useMemo,
   type ReactNode,
+  useEffect,
 } from "react";
 import type { View } from "../types";
+import { worker } from "../worker/client";
+import type { SystemEvent } from "@basilisk/core";
 
 interface LayoutContextType {
   onView: View;
@@ -16,6 +19,28 @@ const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({ children }: { children: ReactNode }) {
   const [onView, onViewChange] = useState<View>({ type: "welcome" });
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent<SystemEvent>) => {
+      const { type, payload } = event.data;
+
+      switch (type) {
+        case "chat-created":
+          onViewChange({ type: "chat", id: payload.chat.id });
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    worker.addEventListener("message", handleMessage);
+    worker.postMessage({ type: "start-node" });
+
+    return () => {
+      worker.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   const value = useMemo(
     () => ({

@@ -10,7 +10,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { ViewProps } from "../../../../types";
 import type { Profile } from "@basilisk/core";
 import InputBox from "./InputBox/InputBox";
-import { useUser } from "../../../../contexts/UserContext";
 import { useData } from "../../../../contexts/DataContext";
 import Message from "./Message/Message";
 import styles from "./Chat.module.css";
@@ -26,8 +25,13 @@ function Chat({
   setLeftPanel,
   setRightPanel,
 }: ChatProps) {
-  const { profile, isProfileLoading } = useUser();
-  const { profiles, messages: allMessages, getMessages } = useData();
+  const {
+    profiles,
+    messages: allMessages,
+    getMessages,
+    profile,
+    isProfileLoading,
+  } = useData();
   const messages = allMessages[id] || [];
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
