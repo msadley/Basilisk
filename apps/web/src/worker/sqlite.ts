@@ -12,7 +12,7 @@ export class sqlite implements Database {
   public static async create(dbName: string = "basilisk.db") {
     const sqlite3 = await sqlite3InitModule();
 
-    console.log("Creating database...");
+    console.debug("Creating database...");
 
     const db = new sqlite3.oo1.DB(dbName, "c");
 
@@ -23,7 +23,7 @@ export class sqlite implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<number> {
-    console.log("Executing SQL:", sql);
+    console.debug("Executing SQL:", sql);
     this.db.exec(sql, { bind: params });
 
     return this.db.changes();
@@ -33,6 +33,7 @@ export class sqlite implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T | undefined> {
+    console.debug("Executing SQL:", sql);
     const row = this.db.selectObject(sql, params) as T | undefined;
     return row;
   }
@@ -41,6 +42,7 @@ export class sqlite implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T[]> {
+    console.debug("Executing SQL:", sql);
     const rows = this.db.selectObjects(sql, params) as T[];
     return rows;
   }

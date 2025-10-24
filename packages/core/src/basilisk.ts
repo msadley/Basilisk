@@ -1,5 +1,4 @@
 import { Node, chatEvents } from "./node.js";
-import { clearKeys } from "./keys.js";
 import {
   setDb,
   createSchema,
@@ -63,13 +62,8 @@ export class Basilisk {
   public static async init(
     database: Database,
     uiCallback: SendToUiCallback,
-    relayAddr: string,
-    debug: boolean = false
+    relayAddr: string
   ) {
-    if (debug) {
-      await clearKeys();
-    }
-    console.log("INFO: Initializing Basilisk...");
     const node = await Node.init({ mode: "CLIENT", relayAddr });
     return new Basilisk(node, database, uiCallback);
   }
@@ -169,13 +163,7 @@ export class Basilisk {
       await addChatToDb(chat);
       return chat;
     } else {
-      console.log("Group chat not implemented yet...");
-      return {
-        id: id,
-        name: "Group Chat",
-        avatar: "",
-        type: "group",
-      };
+      throw new Error("group chat not implemented yet");
     }
   }
 }

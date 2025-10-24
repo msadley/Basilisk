@@ -23,7 +23,6 @@ function getDb(): Database {
 }
 
 export async function createSchema(): Promise<void> {
-  console.log("INFO: Creating database tables if they don't exist...");
   const db = getDb();
   await db.run(`
     CREATE TABLE IF NOT EXISTS profiles (
@@ -56,7 +55,6 @@ export async function createSchema(): Promise<void> {
       PRIMARY KEY (chat_id, profile_id)
     )
   `);
-  console.log("INFO: Database schema is up to date.");
 }
 
 export async function upsertProfile(profile: Profile): Promise<number> {
@@ -134,7 +132,7 @@ export async function saveMessage(message: MessagePacket): Promise<void> {
     [chatId, message.from.id, message.content, message.timestamp]
   );
 
-  console.log(`INFO: Message from ${message.from.id} saved to chat ${chatId}`);
+  console.info(`Message from ${message.from.id} saved to chat ${chatId}`);
 
   if (savedMessage) {
     databaseEvents.emit("message:register", savedMessage);

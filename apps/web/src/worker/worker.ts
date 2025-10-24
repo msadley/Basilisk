@@ -4,19 +4,16 @@ import { sqlite } from "./sqlite";
 let controller: Basilisk;
 
 self.onmessage = async (event) => {
-  console.log("Worker received message:", event.data);
+  console.debug("[WORKER] Received message:", event.data);
   if (event.data.type === "start-node") {
     if (controller) return;
 
-    console.log("Worker: Received start-node message");
-
     const db = await sqlite.create();
-    console.log("Worker: dbAdapter created");
 
     controller = await Basilisk.init(
       db,
       (event) => {
-        console.log("Worker sending message to UI:", event);
+        console.debug("[WORKER] Message sent to UI:", event);
         self.postMessage(event);
       },
       import.meta.env.VITE_BOOTSTRAP_MULTIADDRS
@@ -27,5 +24,3 @@ self.onmessage = async (event) => {
     await controller.handleUiCommand(event.data);
   }
 };
-
-console.log(import.meta.env.VITE_BOOTSTRAP_MULTIADDRS);

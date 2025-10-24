@@ -71,11 +71,7 @@ if (isBrowser) {
 export async function getAppKey(): Promise<PrivateKey> {
   let seed: Uint8Array | undefined = await store.get("appKeySeed");
 
-  console.log("Retrieved seed from store");
-  console.log(seed);
-
   if (!seed) {
-    console.log("Generating new seed...");
     if (isBrowser) {
       seed = crypto.getRandomValues(new Uint8Array(32));
     } else {
@@ -83,9 +79,7 @@ export async function getAppKey(): Promise<PrivateKey> {
       seed = crypto.randomBytes(32);
     }
     await store.put("appKeySeed", seed);
-    console.log("New seed generated and stored");
   } else {
-    console.log("Retrieved seed from store");
   }
 
   if (
@@ -103,9 +97,4 @@ export async function getAppKey(): Promise<PrivateKey> {
   }
 
   return await generateKeyPairFromSeed("Ed25519", seed);
-}
-
-export async function clearKeys(): Promise<void> {
-  await store.clear();
-  console.log("Keys cleared from store");
 }

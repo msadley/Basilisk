@@ -75,7 +75,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           break;
 
         case "node-started":
-          console.log("node started...");
+          console.info("Basilisk connection initialized");
           setProfile(payload.profile);
           setIsProfileLoading(false);
           break;

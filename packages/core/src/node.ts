@@ -1,4 +1,3 @@
-
 import { createLibp2p, type Libp2p } from "libp2p";
 import { type Multiaddr } from "@multiformats/multiaddr";
 import type { Stream } from "@libp2p/interface";
@@ -14,7 +13,7 @@ import { getLibp2pOptions } from "./libp2p.js";
 import { Connection } from "./connection.js";
 import type { MessagePacket, NodeConfig, Profile } from "./types.js";
 import { getMyProfile } from "./database.js";
-import { getAppKey } from './keys.js';
+import { getAppKey } from "./keys.js";
 
 export const chatEvents = new EventEmitter();
 
@@ -35,68 +34,52 @@ export class Node {
 
   static async init(options: NodeConfig): Promise<Node> {
     if (options.mode === "RELAY") {
-      console.log("INFO", "Initializing relay node...");
+      console.info("Initializing relay node...");
 
       const privateKey = await getAppKey();
-      const libp2pNode = await createLibp2p(await getLibp2pOptions(options, privateKey));
+      const libp2pNode = await createLibp2p(
+        await getLibp2pOptions(options, privateKey)
+      );
       const node = new Node(libp2pNode);
 
       await libp2pNode.start();
 
-      console.log("INFO", "Relay node initialized.");
+      console.info("Relay node initialized.");
 
       return node;
     }
-    console.log("INFO", "Initializing node...");
+
+    console.info("Initializing libp2p node");
 
     RELAY_ADDR = options.relayAddr ?? "";
 
     const privateKey = await getAppKey();
-    const libp2pNode = await createLibp2p(await getLibp2pOptions(options, privateKey));
+    const libp2pNode = await createLibp2p(
+      await getLibp2pOptions(options, privateKey)
+    );
     const node = new Node(libp2pNode);
 
-    console.log("INFO", "Creating chat protocol...");
-    await libp2pNode.handle(
-      "/chat/1.0.0",
-      async ({ stream, connection: conn }) => {
-        console.log(
-          "INFO",
-          `Chat stream opened with ${conn.remoteAddr.toString()}`
-        );
-        await node.retrieveMessageFromStream(
-          stream,
-          getPeerId(conn.remoteAddr)
-        );
-      }
-    );
+    await libp2pNode.handle("/chat/1.0.0", async ({ stream, connection }) => {
+      await node.retrieveMessageFromStream(
+        stream,
+        getPeerId(connection.remoteAddr)
+      );
+    });
 
-    console.log("INFO", "Creating info protocol...");
-    await libp2pNode.handle(
-      "/info/1.0.0",
-      async ({ stream, connection: conn }) => {
-        console.log(
-          "INFO",
-          `Info stream opened with ${conn.remoteAddr.toString()}`
-        );
-        await node.sendInfoToStream(stream, getPeerId(conn.remoteAddr));
-      }
-    );
-    console.log("INFO", "Node initialized.");
+    await libp2pNode.handle("/info/1.0.0", async ({ stream, connection }) => {
+      await node.sendInfoToStream(stream, getPeerId(connection.remoteAddr));
+    });
 
     return node;
   }
 
   async start() {
+    console.debug("Starting node...");
     await this.node.start();
-    console.log("Libp2p node started with id: " + this.node.peerId.toString());
-    console.log("Listening on:");
-    this.node.getMultiaddrs().forEach((addr) => {
-      console.log(addr.toString());
-    });
   }
 
   async stop() {
-    console.log("INFO", "Stopping node...");
+    console.debug("Stopping node...");
     await this.node.stop();
   }
 
@@ -113,19 +96,16 @@ export class Node {
 
     try {
       const addr = multiaddrFromPeerId(RELAY_ADDR, peerId);
-      console.log("Dialing", addr.toString());
 
       const stream = await this.node.dialProtocol(addr, "/chat/1.0.0");
       this.chatConns.set(peerId, new Connection(stream));
-      console.log("INFO", `Chat connection created with ${peerId}.`);
     } catch (error: any) {
-      console.log("Failed to create chat connection: " + error.message);
+      console.warn("Failed to create chat connection: " + error.message);
     }
   }
 
   async getPeerProfile(peerId: string): Promise<Profile> {
     const addr = multiaddrFromPeerId(RELAY_ADDR, peerId);
-    console.log("Dialing", addr.toString());
     const stream = await this.node.dialProtocol(addr, "/info/1.0.0");
 
     const response = await pipe(
@@ -140,13 +120,11 @@ export class Node {
         throw new Error("Stream ended without a response");
       }
     );
-    console.log("INFO", `Profile received from ${peerId}`);
     return response;
   }
 
   async closeChatConn(id: string) {
     this.chatConns.delete(id);
-    console.log("INFO", `Closed chat connection with ${id}.`);
   }
 
   async sendMessage(message: MessagePacket) {
@@ -155,7 +133,7 @@ export class Node {
     if (!conn)
       throw new Error(`Failed to create chat connection for ${message.to}`);
     conn.sendMessage(message);
-    console.log("INFO", `Message sent to ${message.to}.`);
+    console.info(`[INFO] Message sent to ${message.to}`);
   }
 
   async retrieveMessageFromStream(stream: Stream, peerId: string) {
@@ -168,14 +146,15 @@ export class Node {
         (source) =>
           map(source, (message: MessagePacket) => {
             if (message.from.id !== peerId)
-              console.log("WARN", "Message does not match specified sender");
+              console.warn("[WARN] Message does not match specified sender");
             else chatEvents.emit("message:receive", message);
           }),
         drain
       );
-      console.log("INFO", `Stream from ${peerId} processed successfully.`);
     } catch (err: any) {
-      console.log(`Error processing stream from ${peerId}: ${err.message}`);
+      console.warn(
+        `[WARN]Error processing stream from ${peerId}: ${err.message}`
+      );
     } finally {
       stream.close();
     }
@@ -189,12 +168,11 @@ export class Node {
         (source) => lp.encode(source),
         stream.sink
       );
-      console.log("INFO", `Profile sent to ${id}: ${JSON.stringify(profile)}`);
+      console.info(`Profile sent to ${id}: ${JSON.stringify(profile)}`);
     } catch (err: any) {
-      console.log("ERROR", `Error sending profile to ${id}: ${err.message}`);
+      console.warn(`Error sending profile to ${id}: ${err.message}`);
     } finally {
       stream.close();
     }
   }
 }
-
