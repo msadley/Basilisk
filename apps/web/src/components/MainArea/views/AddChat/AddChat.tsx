@@ -60,7 +60,13 @@ function AddChat({
       </div>
     </motion.div>
   ) : (
-    <Icon icon="mingcute:loading-3-fill"></Icon>
+    <div className={styles.loadingContainer}>
+      <Icon
+        className={styles.loadingIcon}
+        icon="mingcute:loading-3-fill"
+      ></Icon>
+      <p>Criando chat...</p>
+    </div>
   );
 }
 
