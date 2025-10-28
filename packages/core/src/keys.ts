@@ -3,12 +3,6 @@ import type { PrivateKey } from "@libp2p/interface";
 import { isBrowser } from "./utils.js";
 import { openDB } from "idb";
 
-interface KeyValueStore {
-  get<T>(key: string): Promise<T | undefined>;
-  put<T>(key: string, value: T): Promise<void>;
-  clear(): Promise<void>;
-}
-
 let store: KeyValueStore;
 
 if (isBrowser) {
