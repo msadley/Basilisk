@@ -35,7 +35,6 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
     };
 
     worker.addEventListener("message", handleMessage);
-    worker.postMessage({ type: "start-node" });
 
     return () => {
       worker.removeEventListener("message", handleMessage);
