@@ -1,4 +1,3 @@
-
 import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
 import { autoNAT } from "@libp2p/autonat";
@@ -14,7 +13,6 @@ import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import type { Libp2pOptions } from "libp2p";
-import { peerIdFromPrivateKey } from "@libp2p/peer-id";
 import type { NodeConfig } from "./types.js";
 import type { PrivateKey } from "@libp2p/interface";
 
@@ -72,7 +70,6 @@ export async function getLibp2pOptions(
     options.mode === "CLIENT"
       ? getClientConfig(options.relayAddr ?? "")
       : getServerConfig(options.publicDns ?? "");
-  const peerId = await peerIdFromPrivateKey(privateKey);
   return {
     ...baseConfig,
     ...modeConfig,
@@ -80,8 +77,7 @@ export async function getLibp2pOptions(
       ...baseConfig.services,
       ...modeConfig.services,
     },
-    peerId,
+    privateKey,
     start: false,
   } as any;
 }
-
