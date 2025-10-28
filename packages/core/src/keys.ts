@@ -67,6 +67,7 @@ export async function getAppKey(): Promise<PrivateKey> {
   let seed: Uint8Array | undefined = await store.get("appKeySeed");
 
   if (!seed) {
+    console.debug("Generating new seed...");
     if (isBrowser) {
       seed = crypto.getRandomValues(new Uint8Array(32));
     } else {
@@ -74,20 +75,9 @@ export async function getAppKey(): Promise<PrivateKey> {
       seed = crypto.randomBytes(32);
     }
     await store.put("appKeySeed", seed);
-  } else {
   }
 
-  if (
-    typeof seed === "object" &&
-    seed !== null &&
-    !(seed instanceof Uint8Array)
-  ) {
-    if ((seed as any).type === "Buffer" && Array.isArray((seed as any).data)) {
-      seed = new Uint8Array((seed as any).data);
-    }
-  }
-
-  if (!seed) {
+  if (!seed || !(seed instanceof Uint8Array)) {
     throw new Error("Failed to retrieve or generate seed");
   }
 
