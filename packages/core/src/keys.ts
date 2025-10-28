@@ -2,6 +2,7 @@ import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import type { PrivateKey } from "@libp2p/interface";
 import { isBrowser } from "./utils.js";
 import { openDB } from "idb";
+import type { KeyValueStore } from "./types.js";
 
 let store: KeyValueStore;
 

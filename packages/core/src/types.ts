@@ -4,7 +4,7 @@
  */
 export type SqlValue = string | number | null | Uint8Array | undefined;
 
-interface KeyValueStore {
+export interface KeyValueStore {
   get<T>(key: string): Promise<T | undefined>;
   put<T>(key: string, value: T): Promise<void>;
   clear(): Promise<void>;
