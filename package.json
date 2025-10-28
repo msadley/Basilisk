@@ -18,6 +18,7 @@
   "license": "ISC",
   "description": "A chat app built on top of libp2p, using TypeScript.",
   "dependencies": {
+    "@basilisk/core": "workspace:*",
     "@chainsafe/libp2p-noise": "^16.1.4",
     "@chainsafe/libp2p-yamux": "^7.0.4",
     "@libp2p/autonat": "^2.0.37",
@@ -33,7 +34,6 @@
     "@libp2p/websockets": "^9.2.18",
     "@multiformats/multiaddr": "^12.5.1",
     "@sqlite.org/sqlite-wasm": "^3.50.4-build1",
-    "core": "file:packages/core",
     "dotenv": "^17.2.3",
     "events": "^3.3.0",
     "framer-motion": "^12.23.24",
