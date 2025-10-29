@@ -39,7 +39,7 @@ You can get those [here](https://nodejs.org/en/download).
 
 To set up your own circuit-relay server, create your own pm2 config file at the project's root directory following the example file:
 
-```json
+```javascript
 // ecosystem.config.js.example
 
 module.exports = {
