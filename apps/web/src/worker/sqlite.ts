@@ -23,7 +23,7 @@ export class sqlite implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<number> {
-    console.debug("Executing SQL:", sql);
+    console.debug("Executing SQL:", sql, "Using params: ", params);
     this.db.exec(sql, { bind: params });
 
     return this.db.changes();
@@ -33,7 +33,7 @@ export class sqlite implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T | undefined> {
-    console.debug("Executing SQL:", sql);
+    console.debug("Executing SQL:", sql, "Using params: ", params);
     const row = this.db.selectObject(sql, params) as T | undefined;
     return row;
   }
@@ -42,7 +42,7 @@ export class sqlite implements Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T[]> {
-    console.debug("Executing SQL:", sql);
+    console.debug("Executing SQL:", sql, "Using params: ", params);
     const rows = this.db.selectObjects(sql, params) as T[];
     return rows;
   }
