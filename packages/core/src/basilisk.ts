@@ -7,8 +7,8 @@ import {
   saveMessage,
   getMessages,
   setMyProfile,
-  addChatToDb,
   getChatType,
+  upsertChat,
 } from "./database.js";
 import type {
   Chat,
@@ -160,7 +160,7 @@ export class Basilisk {
         avatar: profile.avatar,
         type: type,
       };
-      await addChatToDb(chat);
+      await upsertChat(chat);
       return chat;
     } else {
       throw new Error("group chat not implemented yet");
