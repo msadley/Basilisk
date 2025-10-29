@@ -1,7 +1,8 @@
 module.exports = {
   apps: [{
-    name: "basilisk-relay",
-    script: "./Basilisk/apps/relay/dist/index.js",
+    name: "relay",
+    cwd: "./apps/relay",
+    script: "./dist/index.js",
     watch: ["./Basilisk/apps/relay/dist"],
     cron_restart: "0 4 * * *",
     instances: "max",
