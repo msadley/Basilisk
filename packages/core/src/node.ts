@@ -107,10 +107,8 @@ export class Node {
   async getPeerProfile(peerId: string): Promise<Profile> {
     const addr = multiaddrFromPeerId(RELAY_ADDR, peerId);
     const stream = await this.node.dialProtocol(addr, "/info/1.0.0");
-
     const response = await pipe(
-      [],
-      stream,
+      stream.source,
       (source) => lp.decode(source),
       (source) => map(source, (buf) => toString(buf.subarray())),
       async function (source) {
@@ -120,6 +118,7 @@ export class Node {
         throw new Error("Stream ended without a response");
       }
     );
+
     return response;
   }
 
