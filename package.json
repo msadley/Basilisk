@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npx tsc -b",
+    "build": "npx lerna run build",
     "rest": "npm run build && npm run rest --prefix apps/rest",
     "rest2": "npm run build && npm run rest2 --prefix apps/rest",
     "vite": "npm run dev --prefix apps/web",

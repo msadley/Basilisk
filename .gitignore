@@ -11,17 +11,11 @@ tsconfig.tsbuildinfo
 # Lock files
 package-lock.json
 
-# User-specific directories
-basilisk_data
-peer_data
-
 # Environment variables
 .env
 
-notes.MD
-
-# Bruno rest api request
-.bruno
-
 # React Component Preview
 previewConfig.json
+
+# Pm2 configuration files
+ecosystem.config.js
