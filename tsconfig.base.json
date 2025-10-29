@@ -32,7 +32,6 @@
 
     "baseUrl": ".",
     "paths": {
-      "@basilisk/rest": ["apps/rest/src"],
       "@basilisk/relay": ["apps/relay/src"],
       "@basilisk/core": ["packages/core/src"]
     }
