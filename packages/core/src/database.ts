@@ -228,7 +228,3 @@ export async function getChatMembers(chatId: string): Promise<Profile[]> {
 async function getId(): Promise<string> {
   return (await getMyProfile()).id;
 }
-
-export async function addChatToDb(chat: Chat) {
-  await upsertChat(chat);
-}
