@@ -77,8 +77,8 @@ export async function getAppKey(): Promise<PrivateKey> {
     await store.put("appKeySeed", seed);
   }
 
-  if (!seed || !(seed instanceof Uint8Array)) {
-    throw new Error("Failed to retrieve or generate seed");
+  if (typeof seed === "object" && "data" in seed) {
+    seed = Uint8Array.from(seed.data as Array<number>);
   }
 
   return await generateKeyPairFromSeed("Ed25519", seed);
