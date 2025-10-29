@@ -61,12 +61,8 @@ export async function upsertProfile(profile: Profile): Promise<number> {
   const db = getDb();
 
   return db.run(
-    "INSERT INTO profiles (id, name, avatar) VALUES (@id, @name, @avatar) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
-    {
-      id: profile.id,
-      name: profile.name || "",
-      avatar: profile.avatar || "",
-    }
+    "INSERT INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
+    [profile.id, profile.name, profile.avatar]
   );
 }
 
@@ -78,20 +74,15 @@ export async function upsertChat(
 
   if (existing) {
     const changes = await db.run(
-      "UPDATE chats SET name = @name, avatar = @avatar, type = @type WHERE id = @id",
-      {
-        id: chat.id,
-        name: chat.name,
-        avatar: chat.avatar,
-        type: chat.type,
-      }
+      "UPDATE chats SET name = ?, avatar = ?, type = ? WHERE id = ?",
+      [chat.name, chat.avatar, chat.type, chat.id]
     );
     return { changes, created: false };
   }
 
   const changes = await db.run(
-    "INSERT INTO chats (id, name, avatar, type) VALUES (@id, @name, @avatar, @type)",
-    { id: chat.id, name: chat.name, avatar: chat.avatar, type: chat.type }
+    "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?)",
+    [chat.id, chat.name, chat.avatar, chat.type]
   );
   return { changes, created: true };
 }
@@ -160,7 +151,7 @@ export async function getMyProfile(): Promise<Profile> {
   const profile: Profile | undefined = await db.get<Profile>(
     "SELECT id, name, avatar FROM profiles LIMIT 1"
   );
-  if (!profile) {
+  if (!profile || profile.id === "") {
     throw new Error("Profile not found in the database.");
   }
   return profile;
