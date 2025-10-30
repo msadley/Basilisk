@@ -125,7 +125,7 @@ type EventsFromMap<T extends Record<string, any>> = {
         type: K;
         payload: T[K];
         id: `${string}-${string}-${string}-${string}-${string}`;
-        error: string;
+        error?: string;
       };
 }[keyof T];
 
