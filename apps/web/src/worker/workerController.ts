@@ -98,13 +98,13 @@ class WorkerController {
     });
   }
 
-  getMessages(chatId: string, pages: number) {
+  getMessages(chatId: string, page: number) {
     return new Promise<Message[]>((resolve, reject) => {
       const id = crypto.randomUUID();
       this.pendingRequests.set(id, { resolve, reject });
       this.worker.postMessage({
         type: "get-messages",
-        payload: { chatId, pages },
+        payload: { chatId, page },
         id,
       });
     });
