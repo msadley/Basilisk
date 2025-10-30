@@ -103,7 +103,7 @@ export interface Message {
  */
 export interface Chat {
   /** The unique identifier for the chat. */
-  id?: string;
+  id: string;
   /** The name of the chat. */
   name?: string;
   /** A URL or data URI for the chat's avatar. */
@@ -124,34 +124,47 @@ export interface GroupChat extends Chat {
   members: Profile[];
 }
 
+type EventsFromMap<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends void ? { type: K } : { type: K; payload: T[K] };
+}[keyof T];
+
 /**
  * Represents an event or command originating from the UI to the core logic.
  */
-export type UIEvent =
-  | {
-      type: "get-messages";
-      payload: { peerId: string; page: number };
-    }
-  | { type: "send-message"; payload: { toPeerId: string; text: string } }
-  | { type: "get-profile"; payload: { peerId: string } }
-  | { type: "get-self-profile" }
-  | { type: "create-chat"; payload: { id: string } }
-  | {
-      type: "set-profile";
-      payload: { id: string; name?: string; avatar?: string };
-    };
+export interface UIEventMap {
+  // Message events
+  "get-messages": { peerId: string; page: number };
+  "send-message": { chatId: string; content: string };
 
-/**
- * Represents an event sent from the core logic to the UI.
- */
-export type SystemEvent =
-  | { type: "node-started"; payload: { profile: Profile } }
-  | { type: "chat-started"; payload: { chat: Chat } }
-  | { type: "chat-created"; payload: { chat: Chat } }
-  | { type: "profile-updated"; payload: { profile: Profile } }
-  | { type: "self-profile-sent"; payload: { profile: Profile } }
-  | { type: "message-registered"; payload: { message: Message } }
-  | { type: "messages-retrieved"; payload: { messages: Message[] } };
+  // Profile events
+  "get-profile": { peerId: string };
+  "get-profile-self": void;
+  "patch-profile-self": { name?: string; avatar?: string };
+
+  // Chat events
+  "get-chats": void;
+  "create-chat": { chat: Chat };
+}
+
+export interface SystemEventMap {
+  // Node events
+  "node-started": { profile: Profile };
+
+  // Chat events
+  "chat-created": { chat: Chat };
+
+  // Profile events
+  "profile-updated": { profile: Profile };
+  "profile-retrieved": { profile: Profile };
+  "profile-retrieved-self": { profile: Profile };
+
+  // Message events
+  "message-received": { message: Message };
+  "messages-retrieved": { messages: Message[] };
+}
+
+export type UIEvent = EventsFromMap<UIEventMap>;
+export type SystemEvent = EventsFromMap<SystemEventMap>;
 
 /**
  * Defines the signature for the callback function that sends events to the UI.
