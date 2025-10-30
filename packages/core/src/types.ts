@@ -76,9 +76,9 @@ export interface MessagePacket {
   /** The timestamp of when the message was sent, in milliseconds since the epoch. */
   timestamp: number;
   /** The sender's profile. */
-  from: Profile;
+  from: string;
   /** The recipient's peer ID or the group ID. */
-  to: string;
+  chat: string;
 }
 
 /**
