@@ -1,5 +1,4 @@
 import { createLibp2p, type Libp2p } from "libp2p";
-import { type Multiaddr } from "@multiformats/multiaddr";
 import type { Stream } from "@libp2p/interface";
 import { EventEmitter } from "events";
 import map from "it-map";
