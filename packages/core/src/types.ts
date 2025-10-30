@@ -171,6 +171,16 @@ export interface SystemEventMap {
 export type UIEvent = EventsFromMap<UIEventMap>;
 export type SystemEvent = EventsFromMap<SystemEventMap>;
 
+export interface ResponseMap {
+  "get-messages": "messages-retrieved";
+  "send-message": "message-sent";
+  "get-profile": "profile-retrieved";
+  "get-profile-self": "profile-retrieved-self";
+  "patch-profile-self": "profile-updated-self";
+  "get-chats": "chats-retrieved";
+  "create-chat": "chat-created";
+}
+
 /**
  * Defines the signature for the callback function that sends events to the UI.
  */
