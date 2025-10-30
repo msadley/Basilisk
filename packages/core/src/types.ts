@@ -119,7 +119,7 @@ type EventsFromMap<T extends Record<string, any>> = {
     ? {
         type: K;
         id: `${string}-${string}-${string}-${string}-${string}`;
-        error: string;
+        error?: string;
       }
     : {
         type: K;
