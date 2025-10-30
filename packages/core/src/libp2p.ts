@@ -15,11 +15,13 @@ import { bootstrap } from "@libp2p/bootstrap";
 import type { Libp2pOptions } from "libp2p";
 import type { NodeConfig } from "./types.js";
 import type { PrivateKey } from "@libp2p/interface";
+import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 
 export const baseConfig: Partial<Libp2pOptions> = {
   connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
   services: {
+    pubsub: gossipsub(),
     ping: ping(),
     dht: kadDHT(),
     identify: identify(),
@@ -57,6 +59,9 @@ export function getServerConfig(publicDns: string): Partial<Libp2pOptions> {
         reservations: {
           applyDefaultLimit: false,
         },
+      }),
+      pubsub: gossipsub({
+        doPX: true,
       }),
     },
   };
