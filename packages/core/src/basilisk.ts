@@ -155,6 +155,6 @@ export class Basilisk {
 
   private async createChat(chat: Chat): Promise<void> {
     await upsertChat(chat);
-    if (chat.type === "group") await this.node.subscribe(chat.id);
+    if (chat.type === "group") this.node.subscribe(chat.id);
   }
 }

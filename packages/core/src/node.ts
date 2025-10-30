@@ -81,6 +81,10 @@ export class Node {
     return this.node.peerId.toString();
   }
 
+  subscribe(chatId: string): void {
+    (this.node.services as any).pubsub.subscribe(chatId)
+  }
+
   private async createChatConn(peerId: string) {
     if (this.chatConns.has(peerId)) return;
 
@@ -113,12 +117,12 @@ export class Node {
   }
 
   async sendMessage(message: MessagePacket) {
-    await this.createChatConn(message.to);
-    const conn = this.chatConns.get(message.to);
+    await this.createChatConn(message.chatId);
+    const conn = this.chatConns.get(message.chatId);
     if (!conn)
-      throw new Error(`Failed to create chat connection for ${message.to}`);
+      throw new Error(`Failed to create chat connection for ${message.chatId}`);
     conn.sendMessage(message);
-    console.info(`[INFO] Message sent to ${message.to}`);
+    console.info(`[INFO] Message sent to ${message.chatId}`);
   }
 
   private async retrieveMessageFromStream(stream: Stream, peerId: string) {
@@ -130,7 +134,7 @@ export class Node {
         (source) => map(source, (string) => JSON.parse(string)),
         (source) =>
           map(source, (message: MessagePacket) => {
-            if (message.from.id !== peerId)
+            if (message.from !== peerId)
               console.warn("[WARN] Message does not match specified sender");
             else chatEvents.emit("message:receive", message);
           }),

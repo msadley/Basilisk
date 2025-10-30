@@ -51,8 +51,7 @@ export async function createSchema(): Promise<void> {
   await db.run(`
     CREATE TABLE IF NOT EXISTS chat_members (
       chat_id TEXT NOT NULL,
-      profile_id TEXT NOT NULL,
-      PRIMARY KEY (chat_id, profile_id)
+      profile_id TEXT NOT NULL
     )
   `);
 }
@@ -68,11 +67,17 @@ export async function upsertProfile(profile: Profile): Promise<number> {
 
 export async function upsertChat(chat: Chat): Promise<number> {
   const db = getDb();
-
-  return await db.run(
-    "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
-    [chat.id, chat.name, chat.avatar, chat.type]
-  );
+  if (chat.type === "group") {
+    return await db.run(
+      "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
+      [chat.id, chat.name, chat.avatar, chat.type]
+    );
+  } else {
+    return await db.run("INSERT INTO chats (id, type) VALUES (?, ?)", [
+      chat.id,
+      chat.type,
+    ]);
+  }
 }
 
 async function chatExists(chatId: string): Promise<boolean> {

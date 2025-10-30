@@ -75,7 +75,7 @@ export interface MessagePacket {
   content: string;
   /** The timestamp of when the message was sent, in milliseconds since the epoch. */
   timestamp: number;
-  /** The sender's profile. */
+  /** The sender's peer ID. */
   from: string;
   /** The recipient's peer ID or the group ID. */
   chatId: string;
@@ -92,7 +92,7 @@ export interface Message {
   content: string;
   /** The timestamp of when the message was sent, in milliseconds since the epoch. */
   timestamp: number;
-  /** The ID of the sender's profile. */
+  /** The sender's peer ID. */
   from: string;
   /** The Id of the chat the message was sent. */
   chatId: string;
@@ -104,19 +104,14 @@ export interface Message {
 export interface Chat {
   /** The unique identifier for the chat. */
   id: string;
-  /** The type of chat. */
-  type: "private" | "group";
-}
-
-/** Represents a group chat with multiple members. */
-export interface GroupChat extends Chat {
   /** The name of the chat. */
   name?: string;
   /** A URL or data URI for the chat's avatar. */
   avatar?: string;
-  type: "group";
   /** A list of profiles of the group members. */
-  members: Profile[];
+  members?: Profile[];
+  /** The type of chat. */
+  type: "private" | "group";
 }
 
 type EventsFromMap<T extends Record<string, any>> = {
