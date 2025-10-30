@@ -116,8 +116,17 @@ export interface Chat {
 
 type EventsFromMap<T extends Record<string, any>> = {
   [K in keyof T]: T[K] extends void
-    ? { type: K; id: string; error: string }
-    : { type: K; payload: T[K]; id: string; error: string };
+    ? {
+        type: K;
+        id: `${string}-${string}-${string}-${string}-${string}`;
+        error: string;
+      }
+    : {
+        type: K;
+        payload: T[K];
+        id: `${string}-${string}-${string}-${string}-${string}`;
+        error: string;
+      };
 }[keyof T];
 
 /**
