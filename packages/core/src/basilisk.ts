@@ -58,6 +58,12 @@ export class Basilisk {
   public async startNode() {
     await this.node.start();
     await setMyProfile(this.node.getPeerId());
+
+    (await getChats())
+      .filter((chat) => chat.type === "group")
+      .map((chat) => chat.id)
+      .forEach((chatId) => this.node.subscribe(chatId));
+
     this.uiCallBack({
       type: "node-started",
       payload: { profile: await getMyProfile() },

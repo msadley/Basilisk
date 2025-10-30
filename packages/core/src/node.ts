@@ -29,6 +29,16 @@ export class Node {
       const remoteAddr = evt.detail.remoteAddr;
       this.chatConns.delete(remoteAddr.toString());
     });
+
+    (this.node.services as any).addEventListener(
+      "message",
+      (evt: { topic: string; detail: { data: Uint8Array } }) => {
+        const message = JSON.parse(
+          new TextDecoder().decode(evt.detail.data)
+        ) as MessagePacket;
+        chatEvents.emit("message:receive", message);
+      }
+    );
   }
 
   static async init(options: NodeConfig): Promise<Node> {
@@ -82,7 +92,7 @@ export class Node {
   }
 
   subscribe(chatId: string): void {
-    (this.node.services as any).pubsub.subscribe(chatId)
+    (this.node.services as any).pubsub.subscribe(chatId);
   }
 
   private async createChatConn(peerId: string) {
@@ -117,11 +127,20 @@ export class Node {
   }
 
   async sendMessage(message: MessagePacket) {
-    await this.createChatConn(message.chatId);
-    const conn = this.chatConns.get(message.chatId);
-    if (!conn)
-      throw new Error(`Failed to create chat connection for ${message.chatId}`);
-    conn.sendMessage(message);
+    if (message.chatId.includes("group-")) {
+      (this.node.services as any).pubsub.publish(
+        message.chatId,
+        new TextEncoder().encode(JSON.stringify(message))
+      );
+    } else {
+      await this.createChatConn(message.chatId);
+      const conn = this.chatConns.get(message.chatId);
+      if (!conn)
+        throw new Error(
+          `Failed to create chat connection for ${message.chatId}`
+        );
+      conn.sendMessage(message);
+    }
     console.info(`[INFO] Message sent to ${message.chatId}`);
   }
 
