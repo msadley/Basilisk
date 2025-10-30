@@ -153,6 +153,7 @@ export interface SystemEventMap {
 
   // Chat events
   "chat-created": { chat: Chat };
+  "chat-spawned": { chat: Chat };
   "chats-retrieved": { chats: Chat[] };
 
   // Profile events
