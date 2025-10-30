@@ -145,13 +145,14 @@ export async function getMyProfile(): Promise<Profile> {
 }
 
 export async function setMyProfile(
+  id: string,
   name?: string,
   avatar?: string
 ): Promise<void> {
   const db = getDb();
   await db.run(
     "INSERT OR REPLACE INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
-    [await getId(), name, avatar]
+    [id, name, avatar]
   );
 }
 
