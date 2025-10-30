@@ -19,6 +19,7 @@
   "description": "A chat app built on top of libp2p, using TypeScript.",
   "dependencies": {
     "@basilisk/core": "workspace:*",
+    "@chainsafe/libp2p-gossipsub": "^14.1.2",
     "@chainsafe/libp2p-noise": "^16.1.4",
     "@chainsafe/libp2p-yamux": "^7.0.4",
     "@libp2p/autonat": "^2.0.37",
@@ -41,6 +42,9 @@
     "it-drain": "^3.0.10",
     "it-pushable": "^3.2.3",
     "libp2p": "^2.9.0",
+    "mitt": "^3.0.1",
+    "mobx": "^6.15.0",
+    "mobx-react-lite": "^4.1.1",
     "react-intersection-observer": "^9.16.0",
     "react-stately": "^3.42.0",
     "zod": "^4.1.12"
