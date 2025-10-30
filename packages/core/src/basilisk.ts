@@ -108,7 +108,11 @@ export class Basilisk {
       }
 
       case "patch-profile-self": {
-        await setMyProfile(event.payload.name, event.payload.avatar);
+        await setMyProfile(
+          this.node.getPeerId(),
+          event.payload.name,
+          event.payload.avatar
+        );
         this.uiCallBack({
           type: "profile-updated-self",
           payload: { profile: await getMyProfile() },
