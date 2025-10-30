@@ -7,7 +7,7 @@ import {
   saveMessage,
   getMessages,
   setMyProfile,
-  getChatType,
+  chatType,
   upsertChat,
 } from "./database.js";
 import type {
@@ -37,23 +37,9 @@ export class Basilisk {
       await saveMessage(message);
     });
 
-    databaseEvents.on("message:register", async (message: Message) => {
+    databaseEvents.on("chat:create", async (chat: Chat) => {
       this.uiCallBack({
-        type: "message-registered",
-        payload: { message },
-      });
-    });
-
-    databaseEvents.on("profile:update", async (profile: Profile) => {
-      this.uiCallBack({
-        type: "profile-updated",
-        payload: { profile },
-      });
-    });
-
-    databaseEvents.on("chat:start", async (chat: Chat) => {
-      this.uiCallBack({
-        type: "chat-started",
+        type: "chat-created",
         payload: { chat },
       });
     });
@@ -151,7 +137,7 @@ export class Basilisk {
   }
 
   private async createChat(id: string): Promise<Chat> {
-    const type = getChatType(id);
+    const type = chatType(id);
     if (type === "private") {
       const profile = await this.getProfile(id);
       const chat = {

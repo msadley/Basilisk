@@ -60,88 +60,70 @@ export async function createSchema(): Promise<void> {
 export async function upsertProfile(profile: Profile): Promise<number> {
   const db = getDb();
 
-  return db.run(
+  return await db.run(
     "INSERT INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
     [profile.id, profile.name, profile.avatar]
   );
 }
 
-export async function upsertChat(
-  chat: Chat
-): Promise<{ changes: number; created: boolean }> {
+export async function upsertChat(chat: Chat): Promise<number> {
   const db = getDb();
-  const existing = await db.get("SELECT id FROM chats WHERE id = ?", [chat.id]);
 
-  if (existing) {
-    const changes = await db.run(
-      "UPDATE chats SET name = ?, avatar = ?, type = ? WHERE id = ?",
-      [chat.name, chat.avatar, chat.type, chat.id]
-    );
-    return { changes, created: false };
-  }
-
-  const changes = await db.run(
-    "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?)",
+  return await db.run(
+    "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
     [chat.id, chat.name, chat.avatar, chat.type]
   );
-  return { changes, created: true };
 }
 
-export async function saveMessage(message: MessagePacket): Promise<void> {
-  const chatId = await getChatId(message);
-  const chatType = getChatType(chatId);
-
-  const profileUpdated = await upsertProfile(message.from);
-
-  const chatCreated = await upsertChat({
-    id: chatId,
-    name: message.from.name ?? message.to,
-    avatar: message.from.avatar ?? "",
-    type: chatType,
-  });
-
-  if (profileUpdated) databaseEvents.emit("profile:update", message.from);
-
-  if (chatCreated) {
-    databaseEvents.emit("chat:start", {
-      id: chatId,
-      name: message.from.name ?? message.to,
-      avatar: message.from.avatar ?? "",
-      type: chatType,
-    });
-  }
-
+async function chatExists(chatId: string): Promise<boolean> {
   const db = getDb();
+
+  return (await db.run("SELECT id FROM CHATS WHERE id = ?", [chatId])) > 0;
+}
+
+/**
+ * Saves a message into the Database and returns its id
+ * @param message the message to be saved
+ */
+export async function saveMessage(message: MessagePacket): Promise<number> {
+  const db = getDb();
+
+  const chatId = await getChatId(message);
+  const type = chatType(chatId);
+
+  if (!(await chatExists(chatId))) {
+    const chat = {
+      id: chatId,
+      type,
+    };
+    upsertChat(chat);
+    databaseEvents.emit("chat:create", chat);
+  }
 
   await db.run(
     "INSERT INTO messages (chat_id, from_id, content, timestamp) VALUES (?, ?, ?, ?)",
-    [chatId, message.from.id, message.content, message.timestamp]
+    [chatId, message.from, message.content, message.timestamp]
   );
 
   const savedMessage = await db.get<Message>(
     "SELECT id, content, timestamp, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? AND from_id = ? AND content = ? AND timestamp = ? ORDER BY id DESC LIMIT 1",
-    [chatId, message.from.id, message.content, message.timestamp]
+    [chatId, message.from, message.content, message.timestamp]
   );
 
-  console.info(`Message from ${message.from.id} saved to chat ${chatId}`);
+  if (savedMessage === undefined)
+    console.warn(`A message received from ${message.from} could not be saved`);
 
-  if (savedMessage) {
-    databaseEvents.emit("message:register", savedMessage);
-  } else {
-    console.error(
-      "Could not retrieve the message immediately after saving it."
-    );
-  }
+  return savedMessage!.id;
 }
 
 async function getChatId(message: MessagePacket): Promise<string> {
-  if (message.to.includes("group-")) return message.to;
+  if (message.chat.includes("group-")) return message.chat;
   const myId = await getId();
-  if (message.to === myId) return message.from.id;
-  return message.to;
+  if (message.chat === myId) return message.from;
+  return message.chat;
 }
 
-export function getChatType(id: string): "private" | "group" {
+export function chatType(id: string): "private" | "group" {
   if (id.includes("group-")) return "group";
   return "private";
 }
