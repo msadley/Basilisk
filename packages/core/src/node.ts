@@ -78,20 +78,11 @@ export class Node {
     await this.node.start();
   }
 
-  async stop() {
-    console.debug("Stopping node...");
-    await this.node.stop();
-  }
-
   getPeerId(): string {
     return this.node.peerId.toString();
   }
 
-  getMultiaddrs(): Multiaddr[] {
-    return this.node.getMultiaddrs();
-  }
-
-  async createChatConn(peerId: string) {
+  private async createChatConn(peerId: string) {
     if (this.chatConns.has(peerId)) return;
 
     try {
@@ -122,10 +113,6 @@ export class Node {
     return response;
   }
 
-  async closeChatConn(id: string) {
-    this.chatConns.delete(id);
-  }
-
   async sendMessage(message: MessagePacket) {
     await this.createChatConn(message.to);
     const conn = this.chatConns.get(message.to);
@@ -135,7 +122,7 @@ export class Node {
     console.info(`[INFO] Message sent to ${message.to}`);
   }
 
-  async retrieveMessageFromStream(stream: Stream, peerId: string) {
+  private async retrieveMessageFromStream(stream: Stream, peerId: string) {
     try {
       await pipe(
         stream.source,
