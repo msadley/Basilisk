@@ -153,6 +153,7 @@ export class Basilisk {
         await this.createChat(event.payload.chat);
         this.uiCallBack({
           type: "chat-created",
+          payload: { chat: event.payload.chat },
           id: event.id,
         });
         break;

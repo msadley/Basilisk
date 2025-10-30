@@ -152,7 +152,7 @@ export interface SystemEventMap {
   "node-started": { profile: Profile };
 
   // Chat events
-  "chat-created": void;
+  "chat-created": { chat: Chat };
   "chat-spawned": { chat: Chat };
   "chats-retrieved": { chats: Chat[] };
 
