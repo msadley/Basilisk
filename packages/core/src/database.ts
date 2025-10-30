@@ -102,7 +102,7 @@ export async function saveMessage(message: MessagePacket): Promise<number> {
       type,
     };
     upsertChat(chat);
-    databaseEvents.emit("chat:create", chat);
+    databaseEvents.emit("chat:spawn", chat);
   }
 
   await db.run(

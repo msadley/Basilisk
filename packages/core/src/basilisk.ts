@@ -35,13 +35,24 @@ export class Basilisk {
     createSchema();
 
     chatEvents.on("message:receive", async (message: MessagePacket) => {
-      await saveMessage(message);
+      const id = await saveMessage(message);
+      this.uiCallBack({
+        type: "message-received",
+        payload: {
+          message: {
+            id,
+            ...message,
+          },
+        },
+        id: crypto.randomUUID(),
+      });
     });
 
-    databaseEvents.on("chat:create", async (chat: Chat) => {
+    databaseEvents.on("chat:spawn", async (chat: Chat) => {
       this.uiCallBack({
-        type: "chat-created",
+        type: "chat-spawned",
         payload: { chat },
+        id: crypto.randomUUID(), // XXX placeholder
       });
     });
   }
@@ -67,13 +78,22 @@ export class Basilisk {
     this.uiCallBack({
       type: "node-started",
       payload: { profile: await getMyProfile() },
+      id: crypto.randomUUID(), // XXX placeholder
     });
   }
 
   public async handleUiCommand(event: UIEvent) {
     switch (event.type) {
       case "send-message": {
-        await this.sendMessage(event.payload.chatId, event.payload.content);
+        const msgId = await this.sendMessage(
+          event.payload.chatId,
+          event.payload.content
+        );
+        this.uiCallBack({
+          type: "message-sent",
+          payload: { msgId },
+          id: event.id,
+        });
         break;
       }
 
@@ -82,6 +102,7 @@ export class Basilisk {
         this.uiCallBack({
           type: "profile-retrieved-self",
           payload: { profile },
+          id: event.id,
         });
         break;
       }
@@ -91,6 +112,7 @@ export class Basilisk {
         this.uiCallBack({
           type: "profile-updated-self",
           payload: { profile: await getMyProfile() },
+          id: event.id,
         });
         break;
       }
@@ -100,6 +122,7 @@ export class Basilisk {
         this.uiCallBack({
           type: "profile-retrieved",
           payload: { profile },
+          id: event.id,
         });
         break;
       }
@@ -112,6 +135,7 @@ export class Basilisk {
         this.uiCallBack({
           type: "messages-retrieved",
           payload: { messages },
+          id: event.id,
         });
         break;
       }
@@ -120,6 +144,7 @@ export class Basilisk {
         this.uiCallBack({
           type: "chats-retrieved",
           payload: { chats: await getChats() },
+          id: event.id,
         });
         break;
       }
@@ -128,7 +153,7 @@ export class Basilisk {
         await this.createChat(event.payload.chat);
         this.uiCallBack({
           type: "chat-created",
-          payload: { chat: event.payload.chat },
+          id: event.id,
         });
         break;
       }
@@ -139,7 +164,7 @@ export class Basilisk {
     }
   }
 
-  private async sendMessage(chatId: string, content: string) {
+  private async sendMessage(chatId: string, content: string): Promise<number> {
     const from = await getId();
     const message: MessagePacket = {
       from,
@@ -148,7 +173,7 @@ export class Basilisk {
       timestamp: Date.now(),
     };
     await this.node.sendMessage(message);
-    await saveMessage(message);
+    return await saveMessage(message);
   }
 
   private async getMessages(peerId: string, page: number): Promise<Message[]> {
