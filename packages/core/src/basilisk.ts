@@ -7,8 +7,9 @@ import {
   saveMessage,
   getMessages,
   setMyProfile,
-  chatType,
   upsertChat,
+  getChats,
+  getId,
 } from "./database.js";
 import type {
   Chat,
@@ -65,37 +66,41 @@ export class Basilisk {
 
   public async handleUiCommand(event: UIEvent) {
     switch (event.type) {
-      case "send-message":
-        await this.sendMessage(event.payload.toPeerId, event.payload.text);
+      case "send-message": {
+        await this.sendMessage(event.payload.chatId, event.payload.content);
         break;
+      }
 
-      case "get-self-profile":
+      case "get-profile-self": {
         const profile = await getMyProfile();
         this.uiCallBack({
-          type: "self-profile-sent",
+          type: "profile-retrieved-self",
           payload: { profile },
         });
         break;
+      }
 
-      case "set-profile":
-        await setMyProfile(
-          event.payload.id,
-          event.payload.name,
-          event.payload.avatar
-        );
-        break;
-
-      case "get-profile":
-        const peerProfile = await this.getProfile(event.payload.peerId);
+      case "patch-profile-self": {
+        await setMyProfile(event.payload.name, event.payload.avatar);
         this.uiCallBack({
-          type: "profile-updated",
-          payload: { profile: peerProfile },
+          type: "profile-updated-self",
+          payload: { profile: await getMyProfile() },
         });
         break;
+      }
 
-      case "get-messages":
+      case "get-profile": {
+        const profile = await this.getProfile(event.payload.peerId);
+        this.uiCallBack({
+          type: "profile-retrieved",
+          payload: { profile },
+        });
+        break;
+      }
+
+      case "get-messages": {
         const messages = await this.getMessages(
-          event.payload.peerId,
+          event.payload.chatId,
           event.payload.page
         );
         this.uiCallBack({
@@ -103,29 +108,41 @@ export class Basilisk {
           payload: { messages },
         });
         break;
+      }
 
-      case "create-chat":
-        const chat = await this.createChat(event.payload.id);
+      case "get-chats": {
         this.uiCallBack({
-          type: "chat-created",
-          payload: { chat },
+          type: "chats-retrieved",
+          payload: { chats: await getChats() },
         });
         break;
+      }
 
-      default:
+      case "create-chat": {
+        await this.createChat(event.payload.chat);
+        this.uiCallBack({
+          type: "chat-created",
+          payload: { chat: event.payload.chat },
+        });
         break;
+      }
+
+      default: {
+        break;
+      }
     }
   }
 
-  private async sendMessage(peerId: string, content: string) {
-    const from = await getMyProfile();
+  private async sendMessage(chatId: string, content: string) {
+    const from = await getId();
     const message: MessagePacket = {
-      from: from,
-      to: peerId,
-      content: content,
+      from,
+      chatId,
+      content,
       timestamp: Date.now(),
     };
     await this.node.sendMessage(message);
+    await saveMessage(message);
   }
 
   private async getMessages(peerId: string, page: number): Promise<Message[]> {
@@ -136,20 +153,8 @@ export class Basilisk {
     return await this.node.getPeerProfile(peerId);
   }
 
-  private async createChat(id: string): Promise<Chat> {
-    const type = chatType(id);
-    if (type === "private") {
-      const profile = await this.getProfile(id);
-      const chat = {
-        id: id,
-        name: profile.name,
-        avatar: profile.avatar,
-        type: type,
-      };
-      await upsertChat(chat);
-      return chat;
-    } else {
-      throw new Error("group chat not implemented yet");
-    }
+  private async createChat(chat: Chat): Promise<void> {
+    await upsertChat(chat);
+    if (chat.type === "group") await this.node.subscribe(chat.id);
   }
 }

@@ -117,10 +117,10 @@ export async function saveMessage(message: MessagePacket): Promise<number> {
 }
 
 async function getChatId(message: MessagePacket): Promise<string> {
-  if (message.chat.includes("group-")) return message.chat;
+  if (message.chatId.includes("group-")) return message.chatId;
   const myId = await getId();
-  if (message.chat === myId) return message.from;
-  return message.chat;
+  if (message.chatId === myId) return message.from;
+  return message.chatId;
 }
 
 export function chatType(id: string): "private" | "group" {
@@ -140,14 +140,13 @@ export async function getMyProfile(): Promise<Profile> {
 }
 
 export async function setMyProfile(
-  id: string,
   name?: string,
   avatar?: string
 ): Promise<void> {
   const db = getDb();
   await db.run(
     "INSERT OR REPLACE INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
-    [id, name, avatar]
+    [await getId(), name, avatar]
   );
 }
 
@@ -198,6 +197,9 @@ export async function getChatMembers(chatId: string): Promise<Profile[]> {
   );
 }
 
-async function getId(): Promise<string> {
+/**
+ * @returns the node's peerID
+ */
+export async function getId(): Promise<string> {
   return (await getMyProfile()).id;
 }

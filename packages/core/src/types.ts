@@ -78,7 +78,7 @@ export interface MessagePacket {
   /** The sender's profile. */
   from: string;
   /** The recipient's peer ID or the group ID. */
-  chat: string;
+  chatId: string;
 }
 
 /**
@@ -95,7 +95,7 @@ export interface Message {
   /** The ID of the sender's profile. */
   from: string;
   /** The Id of the chat the message was sent. */
-  chat: string;
+  chatId: string;
 }
 
 /**
@@ -104,21 +104,16 @@ export interface Message {
 export interface Chat {
   /** The unique identifier for the chat. */
   id: string;
-  /** The name of the chat. */
-  name?: string;
-  /** A URL or data URI for the chat's avatar. */
-  avatar?: string;
   /** The type of chat. */
   type: "private" | "group";
 }
 
-/** Represents a one-to-one private chat. */
-export interface PrivateChat extends Chat {
-  type: "private";
-}
-
 /** Represents a group chat with multiple members. */
 export interface GroupChat extends Chat {
+  /** The name of the chat. */
+  name?: string;
+  /** A URL or data URI for the chat's avatar. */
+  avatar?: string;
   type: "group";
   /** A list of profiles of the group members. */
   members: Profile[];
@@ -133,7 +128,7 @@ type EventsFromMap<T extends Record<string, any>> = {
  */
 export interface UIEventMap {
   // Message events
-  "get-messages": { peerId: string; page: number };
+  "get-messages": { chatId: string; page: number };
   "send-message": { chatId: string; content: string };
 
   // Profile events
@@ -152,9 +147,11 @@ export interface SystemEventMap {
 
   // Chat events
   "chat-created": { chat: Chat };
+  "chats-retrieved": { chats: Chat[] };
 
   // Profile events
   "profile-updated": { profile: Profile };
+  "profile-updated-self": { profile: Profile };
   "profile-retrieved": { profile: Profile };
   "profile-retrieved-self": { profile: Profile };
 
