@@ -22,6 +22,7 @@
     "@chainsafe/libp2p-gossipsub": "^14.1.2",
     "@chainsafe/libp2p-noise": "^16.1.4",
     "@chainsafe/libp2p-yamux": "^7.0.4",
+    "@hookform/resolvers": "^5.2.2",
     "@libp2p/autonat": "^2.0.37",
     "@libp2p/bootstrap": "^11.0.46",
     "@libp2p/circuit-relay-v2": "^3.2.23",
@@ -35,6 +36,7 @@
     "@libp2p/websockets": "^9.2.18",
     "@multiformats/multiaddr": "^12.5.1",
     "@sqlite.org/sqlite-wasm": "^3.50.4-build1",
+    "babel-plugin-observing-components": "^0.2.0",
     "dotenv": "^17.2.3",
     "events": "^3.3.0",
     "framer-motion": "^12.23.24",
@@ -45,8 +47,10 @@
     "mitt": "^3.0.1",
     "mobx": "^6.15.0",
     "mobx-react-lite": "^4.1.1",
+    "react-hook-form": "^7.65.0",
     "react-intersection-observer": "^9.16.0",
     "react-stately": "^3.42.0",
+    "remove": "^0.1.5",
     "zod": "^4.1.12"
   },
   "devDependencies": {
