@@ -30,7 +30,7 @@ export class Node {
       this.chatConns.delete(remoteAddr.toString());
     });
 
-    (this.node.services as any).addEventListener(
+    (this.node.services as any).pubsub.addEventListener(
       "message",
       (evt: { topic: string; detail: { data: Uint8Array } }) => {
         const message = JSON.parse(
@@ -85,6 +85,15 @@ export class Node {
   async start() {
     console.debug("Starting node...");
     await this.node.start();
+  }
+
+  async stop() {
+    console.debug("Stopping node...");
+    await this.node.stop();
+  }
+
+  getMultiaddrs() {
+    return this.node.getMultiaddrs();
   }
 
   getPeerId(): string {
