@@ -1,10 +1,17 @@
 import type { ReactNode } from "react";
 
-export type View = {
-  type: string;
-  id?: string;
-  name?: string;
-};
+type ViewsFromMap<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends void ? { type: K } : { type: K; details: T[K] };
+}[keyof T];
+
+interface ViewMap {
+  home: void;
+  "add-chat": void;
+  settings: void;
+  chat: { chatId: string };
+}
+
+export type View = ViewsFromMap<ViewMap>;
 
 export interface ViewProps {
   setHeader: (element: ReactNode) => void;

@@ -1,25 +1,40 @@
-import { useEffect, useState, type FormEvent } from "react";
-import type { ViewProps } from "../../../../types";
+import { useEffect, useState } from "react";
+import type { View, ViewProps } from "../../../../types";
 import styles from "./AddChat.module.css";
-import { motion } from "framer-motion";
-import { useData } from "../../../../contexts/DataContext";
+import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@iconify/react";
+import ButtonArray from "./ButtonArray/ButtonArray";
+import PrivateForm from "./PrivateForm/PrivateForm";
+import { chatStore } from "../../../../stores/ChatStore";
+import type { Chat } from "@basilisk/core";
+
+export interface AddChatViewProps extends ViewProps {
+  setView: (view: View) => void;
+}
+
+export type FormProps = {
+  createChat: (chat: Chat) => Promise<void>;
+  setIsLoading: (value: boolean) => void;
+  setView: (view: View) => void;
+};
 
 function AddChat({
   setHeader,
   setFooter,
   setLeftPanel,
   setRightPanel,
-}: ViewProps) {
-  const [input, setInput] = useState("");
-  const [awaitChat, setAwaitingChat] = useState(false);
-  const { createChat } = useData();
+  setView,
+}: AddChatViewProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const createChat = chatStore.createChat;
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setInput("");
-    setAwaitingChat(true);
-    createChat(input);
+  // 0 para privado e 1 para grupo
+  const [activeButton, setActiveButton] = useState<number>(0);
+
+  const formProps: FormProps = {
+    createChat,
+    setIsLoading,
+    setView,
   };
 
   useEffect(() => {
@@ -29,36 +44,33 @@ function AddChat({
     setRightPanel(<></>);
   }, []);
 
-  return !awaitChat ? (
-    <motion.div
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0 }}
-      transition={{ type: "spring", duration: 0.5 }}
-      className={styles.addChat}
-    >
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <div className={styles.wrapper}>
-            <p>Add Chat</p>
-          </div>
-          <div className={styles.spacer}></div>
-        </div>
-        <div className={styles.inputContainer}>
-          <form onSubmit={handleSubmit}>
-            <input
-              className={styles.input}
-              type="text"
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Digite o id do chat"
-            ></input>
-            <button type="submit" className={styles.button}>
-              Enviar
-            </button>
-          </form>
-        </div>
-      </div>
-    </motion.div>
+  return !isLoading ? (
+    <AnimatePresence mode="popLayout">
+      <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0 }}
+        transition={{ type: "spring", duration: 0.5 }}
+        className={styles.addChat}
+      >
+        <motion.div className={styles.container}>
+          <ButtonArray
+            activeButtonIndex={activeButton}
+            setActiveButtonIndex={setActiveButton}
+          />
+          <motion.div layout className={styles.formContainer}>
+            <motion.div layout className={styles.form}>
+              {!activeButton ? (
+                <PrivateForm {...formProps} />
+              ) : (
+                <p>Menu de grupos em construção!</p>
+              )}
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   ) : (
     <div className={styles.loadingContainer}>
       <Icon

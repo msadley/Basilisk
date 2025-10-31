@@ -1,4 +1,4 @@
-import Welcome from "./views/Home/Home";
+import Home from "./views/Home/Home";
 import Chat from "./views/Chat/Chat";
 import Settings from "./views/Settings/Settings";
 import AddChat from "./views/AddChat/AddChat";
@@ -6,16 +6,15 @@ import type { ViewProps } from "../../types";
 import styles from "./MainArea.module.css";
 import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLayout } from "../../contexts/LayoutContext";
+import { layoutStore } from "../../stores/LayoutStore";
+import { observer } from "mobx-react-lite";
 
-// Isso precisa saber qual é a view
-
-function MainArea() {
+const MainArea = observer(() => {
   const [header, setHeader] = useState<ReactNode>();
   const [footer, setFooter] = useState<ReactNode>();
   const [leftPanel, setLeftPanel] = useState<ReactNode>();
   const [rightPanel, setRightPanel] = useState<ReactNode>();
-  const { onView } = useLayout();
+  const { view, setView } = layoutStore;
 
   const viewControls: ViewProps = {
     setHeader,
@@ -25,18 +24,24 @@ function MainArea() {
   };
 
   const body = () => {
-    switch (onView.type) {
-      case "welcome":
-        return <Welcome key="welcome" {...viewControls} />;
+    switch (view.type) {
+      case "home":
+        return <Home key="home" {...viewControls} />;
 
       case "chat":
-        if (onView.id === undefined)
+        if (view.details.chatId === undefined)
           throw new Error("ID do chat não foi fornecido.");
 
-        return <Chat key={onView.id} id={onView.id} {...viewControls} />;
+        return (
+          <Chat
+            key={view.details.chatId}
+            id={view.details.chatId}
+            {...viewControls}
+          />
+        );
 
-      case "addChat":
-        return <AddChat key="addChat" {...viewControls} />;
+      case "add-chat":
+        return <AddChat key="add-chat" {...viewControls} setView={setView} />;
 
       case "settings":
         return <Settings key="settings" {...viewControls} />;
@@ -54,7 +59,7 @@ function MainArea() {
     <div className={styles.mainArea}>
       <AnimatePresence mode="popLayout">
         <motion.div
-          key={onView.id}
+          key={view.type}
           layout
           className={styles.header}
           initial={{ y: -10, opacity: 0 }}
@@ -81,7 +86,7 @@ function MainArea() {
 
       <AnimatePresence mode="popLayout">
         <motion.div
-          key={onView.id}
+          key={view.type}
           layout
           className={styles.footer}
           transition={{
@@ -93,6 +98,6 @@ function MainArea() {
       </AnimatePresence>
     </div>
   );
-}
+});
 
 export default MainArea;

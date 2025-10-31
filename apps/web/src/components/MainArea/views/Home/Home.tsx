@@ -2,7 +2,7 @@ import styles from "./Home.module.css";
 import type { ViewProps } from "../../../../types";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import { useData } from "../../../../contexts/DataContext";
+import { userStore } from "../../../../stores/UserStore";
 
 function Home({
   setHeader,
@@ -10,7 +10,7 @@ function Home({
   setLeftPanel,
   setRightPanel,
 }: ViewProps) {
-  const { profile } = useData();
+  const profile = userStore.userProfile;
 
   useEffect(() => {
     setHeader(<></>);

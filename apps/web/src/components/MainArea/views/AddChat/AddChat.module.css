@@ -11,78 +11,24 @@
   flex-direction: column;
   justify-content: center;
   width: 70%;
-  background-color: var(--ctp-crust);
+  background-color: var(--ctp-mantle);
   border-radius: 26px;
   overflow: hidden;
 }
 
-.header {
+.formContainer {
   display: flex;
-  flex-direction: row;
-  background-color: var(--ctp-crust);
-}
-
-.wrapper {
-  background-color: var(--ctp-mantle);
-}
-
-.header p {
-  margin: 0;
-  padding: 6px;
-  padding-inline: 2rem;
-  border-bottom-right-radius: 1rem;
-  background-color: var(--ctp-crust);
-}
-
-.spacer {
-  border-top-left-radius: 1rem;
   flex: 1;
-  background-color: var(--ctp-mantle);
+  background-color: var(--ctp-crust);
 }
 
-.inputContainer {
+.form {
   display: flex;
   flex: 1;
   height: 100%;
   background-color: var(--ctp-mantle);
   border-top-left-radius: 12px;
   padding: 1rem;
-}
-
-.inputContainer form {
-  flex: 1;
-  display: flex;
-  background-color: var(--ctp-crust);
-  border-radius: 26px;
-}
-
-.input {
-  outline: none;
-  flex: 1;
-  z-index: 1;
-  height: 100%;
-  padding: 6px;
-  padding-left: 1rem;
-  background: var(--ctp-base);
-  border: none;
-  border-radius: 26px;
-  border-top-right-radius: 30px;
-  border-bottom-right-radius: 30px;
-}
-
-.button {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 6px;
-  padding-inline: 1rem;
-  background: var(--ctp-crust);
-  height: 100%;
-  cursor: pointer;
-  border: none;
-  border-radius: 26px;
-  border-top-right-radius: 8px;
-  text-align: right;
 }
 
 .loadingContainer {

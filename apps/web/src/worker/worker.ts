@@ -1,5 +1,5 @@
 import { Basilisk } from "@basilisk/core";
-import { sqlite } from "./sqlite";
+import { sqlite } from "../utils/sqlite";
 
 let controller: Basilisk;
 

@@ -8,11 +8,12 @@ import {
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { ViewProps } from "../../../../types";
-import type { Profile } from "@basilisk/core";
 import InputBox from "./InputBox/InputBox";
-import { useData } from "../../../../contexts/DataContext";
 import Message from "./Message/Message";
 import styles from "./Chat.module.css";
+import { profileStore } from "../../../../stores/ProfileStore";
+import { messageStore } from "../../../../stores/MessageStore";
+import { userStore } from "../../../../stores/UserStore";
 
 interface ChatProps extends ViewProps {
   id: string;
@@ -25,19 +26,23 @@ function Chat({
   setLeftPanel,
   setRightPanel,
 }: ChatProps) {
-  const {
-    profiles,
-    messages: allMessages,
-    getMessages,
-    profile,
-    isProfileLoading,
-  } = useData();
-  const messages = allMessages[id] || [];
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [peerProfile, setPeerProfile] = useState<Profile>();
+
+  const getMessages = messageStore.loadMore;
+
+  const sendTextMessage = async (message: string) => {
+    await messageStore.sendMessage(id, message);
+  };
+
+  // Verificar race conditions aqui
+  const isProfileLoading = userStore.isProfileLoading;
+  const profile = userStore.userProfile;
+
+  const peerProfile = profileStore.profiles.get(id);
+  const messages = messageStore.messages.get(id) || [];
 
   useEffect(() => {
     setLeftPanel(<></>);
@@ -45,8 +50,16 @@ function Chat({
   }, []);
 
   useEffect(() => {
-    setPeerProfile(profiles[id]);
-    setHeader(<>{peerProfile!.name ?? peerProfile!.id}</>);
+    if (!peerProfile) profileStore.getProfile(id);
+  }, [id, peerProfile, profileStore]);
+
+  useEffect(() => {
+    const getProfile = async () => {
+      let peerProfile = profileStore.profiles.get(id);
+      if (!peerProfile) await profileStore.getProfile(id);
+    };
+    getProfile();
+    setHeader(<>{peerProfile?.name ?? id}</>);
   }, [id, setHeader]);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -123,7 +136,7 @@ function Chat({
   }, [messages]);
 
   useEffect(() => {
-    setFooter(<InputBox />);
+    setFooter(<InputBox sendMessage={sendTextMessage} />);
 
     return () => {
       setFooter(undefined);
