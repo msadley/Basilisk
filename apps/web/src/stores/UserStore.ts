@@ -8,7 +8,6 @@ class UserStore {
 
   constructor() {
     makeAutoObservable(this);
-    workerController.on("node-started", this.initialLoad);
   }
 
   initialLoad = async () => {
