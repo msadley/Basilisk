@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { View, ViewProps } from "../../../../types";
 import styles from "./AddChat.module.css";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import ButtonArray from "./ButtonArray/ButtonArray";
 import PrivateForm from "./PrivateForm/PrivateForm";
@@ -45,32 +45,30 @@ function AddChat({
   }, []);
 
   return !isLoading ? (
-    <AnimatePresence mode="popLayout">
-      <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0 }}
-        transition={{ type: "spring", duration: 0.5 }}
-        className={styles.addChat}
-      >
-        <motion.div className={styles.container}>
-          <ButtonArray
-            activeButtonIndex={activeButton}
-            setActiveButtonIndex={setActiveButton}
-          />
-          <motion.div layout className={styles.formContainer}>
-            <motion.div layout className={styles.form}>
-              {!activeButton ? (
-                <PrivateForm {...formProps} />
-              ) : (
-                <p>Menu de grupos em construção!</p>
-              )}
-            </motion.div>
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0 }}
+      transition={{ type: "spring", duration: 0.5 }}
+      className={styles.addChat}
+    >
+      <motion.div className={styles.container}>
+        <ButtonArray
+          activeButtonIndex={activeButton}
+          setActiveButtonIndex={setActiveButton}
+        />
+        <motion.div layout className={styles.formContainer}>
+          <motion.div layout className={styles.form}>
+            {!activeButton ? (
+              <PrivateForm {...formProps} />
+            ) : (
+              <p>Menu de grupos em construção!</p>
+            )}
           </motion.div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </motion.div>
   ) : (
     <div className={styles.loadingContainer}>
       <Icon
