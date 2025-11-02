@@ -4,7 +4,7 @@ import { sqlite } from "../utils/sqlite";
 let controller: Basilisk;
 
 self.onmessage = async (event) => {
-  console.debug("[WORKER] Received message:", event.data);
+  console.debug("[worker] Message sent to node:", event.data);
   if (event.data.type === "start-node") {
     if (controller) return;
 
@@ -13,7 +13,7 @@ self.onmessage = async (event) => {
     controller = await Basilisk.init(
       db,
       (event) => {
-        console.debug("[WORKER] Message sent to UI:", event);
+        console.debug("[worker] Message sent to UI:", event);
         self.postMessage(event);
       },
       import.meta.env.VITE_BOOTSTRAP_MULTIADDRS
