@@ -1,7 +1,5 @@
 import { makeAutoObservable } from "mobx";
 import { workerController } from "../worker/workerController";
-import { chatStore } from "./ChatStore";
-import { userStore } from "./UserStore";
 
 class RootStore {
   constructor() {
@@ -10,8 +8,11 @@ class RootStore {
   }
 
   loadSequence = async () => {
+    const { chatStore } = await import("./ChatStore");
+    const { userStore } = await import("./UserStore");
+
     await Promise.all([userStore.initialLoad(), chatStore.initialLoad()]);
   };
 }
 
-new RootStore();
+export const rootStore = new RootStore();
