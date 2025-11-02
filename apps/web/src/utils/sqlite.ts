@@ -45,4 +45,8 @@ export class sqlite implements DatabaseAdapter {
     const rows = this.db.selectObjects(sql, params) as T[];
     return rows;
   }
+
+  async close(): Promise<void> {
+    this.db.close();
+  }
 }

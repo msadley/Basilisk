@@ -15,7 +15,7 @@ export function setDb(database: Database) {
   db = database;
 }
 
-function getDb(): Database {
+export function getDb(): Database {
   if (!db) {
     throw new Error("Database not initialized. Call init() first.");
   }

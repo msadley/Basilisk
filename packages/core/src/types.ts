@@ -26,6 +26,7 @@ export interface Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<number>;
+
   /**
    * Executes an SQL statement and returns the first row.
    * @param sql The SQL query to execute.
@@ -36,6 +37,7 @@ export interface Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T | undefined>;
+
   /**
    * Executes an SQL statement and returns all resulting rows.
    * @param sql The SQL query to execute.
@@ -46,6 +48,11 @@ export interface Database {
     sql: string,
     params?: SqlValue[] | Record<string, SqlValue>
   ): Promise<T[]>;
+
+  /**
+   * Closes the database
+   */
+  close(): Promise<void>;
 }
 
 export interface NodeConfig {
@@ -145,6 +152,9 @@ export interface UIEventMap {
   // Chat events
   "get-chats": void;
   "create-chat": { chat: Chat };
+
+  // Database events
+  "close-database": void;
 }
 
 export interface SystemEventMap {
@@ -166,6 +176,9 @@ export interface SystemEventMap {
   "message-sent": { msgId: number };
   "message-received": { message: Message };
   "messages-retrieved": { messages: Message[] };
+
+  // Database events
+  "database-closed": void;
 }
 
 export type UIEvent = EventsFromMap<UIEventMap>;
@@ -179,6 +192,7 @@ export interface ResponseMap {
   "patch-profile-self": "profile-updated-self";
   "get-chats": "chats-retrieved";
   "create-chat": "chat-created";
+  "close-database": "database-closed";
 }
 
 /**

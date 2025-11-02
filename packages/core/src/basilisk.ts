@@ -10,6 +10,7 @@ import {
   upsertChat,
   getChats,
   getId,
+  getDb,
 } from "./database.js";
 import type {
   Chat,
@@ -159,6 +160,15 @@ export class Basilisk {
           type: "chat-created",
           payload: { chat: event.payload.chat },
           id: event.id,
+        });
+        break;
+      }
+
+      case "close-database": {
+        await getDb().close();
+        this.uiCallBack({
+          type: "database-closed",
+          id: crypto.randomUUID(),
         });
         break;
       }

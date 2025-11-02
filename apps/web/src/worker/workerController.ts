@@ -106,6 +106,10 @@ class WorkerController {
     return (await this.requestWorker("send-message", { chatId, content }))
       .msgId;
   }
+
+  async closeDatabase(): Promise<void> {
+    await this.requestWorker("close-database");
+  }
 }
 
 export const workerController = new WorkerController();
