@@ -10,4 +10,5 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>
 );
 
+// Calls the constructor and triggers the store system
 rootStore;
