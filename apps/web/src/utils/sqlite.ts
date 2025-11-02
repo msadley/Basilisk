@@ -15,7 +15,8 @@ export class sqlite implements DatabaseAdapter {
 
     console.debug("Creating database...");
 
-    const db = new sqlite3.oo1.DB(dbName, "c");
+    await sqlite3.installOpfsSAHPoolVfs({});
+    const db: Database = new sqlite3.oo1.DB(dbName, "c");
 
     return new sqlite(db);
   }
