@@ -1,15 +1,16 @@
-import type { Database, SqlValue } from "@basilisk/core";
+import type { Database as DatabaseAdapter, SqlValue } from "@basilisk/core";
+import type { Database } from "@sqlite.org/sqlite-wasm";
 
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 
-export class sqlite implements Database {
-  private db;
+export class sqlite implements DatabaseAdapter {
+  private db: Database;
 
   private constructor(db: any) {
     this.db = db;
   }
 
-  public static async create(dbName: string = "basilisk.db") {
+  public static async create(dbName: string = "/basilisk.db") {
     const sqlite3 = await sqlite3InitModule();
 
     console.debug("Creating database...");
