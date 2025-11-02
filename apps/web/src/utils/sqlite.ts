@@ -10,13 +10,12 @@ export class sqlite implements DatabaseAdapter {
     this.db = db;
   }
 
-  public static async create(dbName: string = "/basilisk.db") {
+  public static async create(dbName: string = "basilisk.db") {
     const sqlite3 = await sqlite3InitModule();
 
-    console.debug("Creating database...");
-
-    await sqlite3.installOpfsSAHPoolVfs({});
-    const db: Database = new sqlite3.oo1.DB(dbName, "c");
+    const dbPath = `file:${dbName}?vfs=opfs-sahpool`;
+    
+    const db: Database = new sqlite3.oo1.DB(dbPath, "cw");
 
     return new sqlite(db);
   }
