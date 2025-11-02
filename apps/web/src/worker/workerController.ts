@@ -27,7 +27,8 @@ class WorkerController {
   }
 
   handleWorkerEvent = (event: MessageEvent<SystemEvent>) => {
-    const { type, payload, id, error } = event.data;
+    const { type, id, error } = event.data;
+    const payload = "payload" in event.data ? event.data.payload : undefined;
 
     if (id && this.pendingRequests.has(id)) {
       if (error) this.pendingRequests.get(id)?.reject(error);
