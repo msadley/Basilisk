@@ -39,6 +39,7 @@ class ChatStore {
       runInAction(() => {
         this.chats.push(newChat);
       });
+      return newChat;
     } catch (e) {
       console.error("Failed to create chat", e);
     }

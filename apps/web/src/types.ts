@@ -1,3 +1,4 @@
+import type { Chat } from "@basilisk/core";
 import type { ReactNode } from "react";
 
 type ViewsFromMap<T extends Record<string, any>> = {
@@ -6,9 +7,9 @@ type ViewsFromMap<T extends Record<string, any>> = {
 
 interface ViewMap {
   home: void;
-  "add-chat": void;
+  addChat: void;
   settings: void;
-  chat: { chatId: string };
+  chat: { chat: Chat };
 }
 
 export type View = ViewsFromMap<ViewMap>;

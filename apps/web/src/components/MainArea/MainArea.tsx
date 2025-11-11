@@ -8,6 +8,7 @@ import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { layoutStore } from "../../stores/LayoutStore";
 import { observer } from "mobx-react-lite";
+import Indicator from "./Indicator/Indicator";
 
 const MainArea = observer(() => {
   const [header, setHeader] = useState<ReactNode>();
@@ -29,18 +30,18 @@ const MainArea = observer(() => {
         return <Home key="home" {...viewControls} />;
 
       case "chat":
-        if (view.details.chatId === undefined)
-          throw new Error("ID do chat não foi fornecido.");
+        if (view.details.chat === undefined)
+          throw new Error("Chat não foi fornecido.");
 
         return (
           <Chat
-            key={view.details.chatId}
-            id={view.details.chatId}
+            key={view.details.chat.id}
+            chat={view.details.chat}
             {...viewControls}
           />
         );
 
-      case "add-chat":
+      case "addChat":
         return <AddChat key="add-chat" {...viewControls} setView={setView} />;
 
       case "settings":

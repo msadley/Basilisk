@@ -56,8 +56,9 @@ const PrivateForm = ({ createChat, setIsLoading, setView }: FormProps) => {
     };
 
     setIsLoading(true);
-    await createChat(chat);
-    setView({ type: "chat", details: { chatId: data.peerId } });
+    const newChat = await createChat(chat);
+    setView({ type: "chat", details: { chat: newChat! } });
+    // XXX
   };
 
   return (

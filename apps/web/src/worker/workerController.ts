@@ -7,6 +7,7 @@ import type {
   SystemEventMap,
   UIEventMap,
 } from "@basilisk/core";
+import type { UUID } from "crypto";
 import mitt, { type Handler } from "mitt";
 
 type PromiseControls = {
@@ -27,11 +28,12 @@ class WorkerController {
   }
 
   handleWorkerEvent = (event: MessageEvent<SystemEvent>) => {
-    const { type, id, error } = event.data;
+    const { type, id } = event.data;
     const payload = "payload" in event.data ? event.data.payload : undefined;
 
     if (id && this.pendingRequests.has(id)) {
-      if (error) this.pendingRequests.get(id)?.reject(error);
+      if ("error" in event.data)
+        this.pendingRequests.get(id)?.reject(event.data.error);
       else this.pendingRequests.get(id)?.resolve(payload);
     } else {
       // Só emitir se não houver promessa;
@@ -47,15 +49,15 @@ class WorkerController {
     this.emitter.off(type, handler);
   }
 
-  private requestWorker<K extends keyof ResponseMap>(
+  private requestWorkerSetId<K extends keyof ResponseMap>(
+    id: UUID,
     type: K,
     ...args: UIEventMap[K] extends void ? [] : [UIEventMap[K]]
   ): Promise<SystemEventMap[ResponseMap[K]]> {
     return new Promise((resolve, reject) => {
-      const id = crypto.randomUUID();
       this.pendingRequests.set(id, { resolve, reject });
 
-      const message: { type: string; id: string; payload?: any } = { type, id };
+      const message: { type: string; id: UUID; payload?: any } = { type, id };
 
       if (args.length > 0) {
         message.payload = args[0];
@@ -63,6 +65,13 @@ class WorkerController {
 
       this.worker.postMessage(message);
     });
+  }
+
+  private requestWorker<K extends keyof ResponseMap>(
+    type: K,
+    ...args: UIEventMap[K] extends void ? [] : [UIEventMap[K]]
+  ): Promise<SystemEventMap[ResponseMap[K]]> {
+    return this.requestWorkerSetId(crypto.randomUUID(), type, ...args);
   }
 
   async getProfile(peerId: string): Promise<Profile> {
@@ -74,7 +83,7 @@ class WorkerController {
   }
 
   async getUserProfile(): Promise<Profile> {
-    return (await this.requestWorker("get-profile-self")).profile;
+    return (await this.requestWorker("get-profile-user")).profile;
   }
 
   async patchUserProfile(name?: string, avatar?: string): Promise<Profile> {
@@ -103,13 +112,22 @@ class WorkerController {
     ).messages;
   }
 
-  async sendMessage(chatId: string, content: string): Promise<number> {
-    return (await this.requestWorker("send-message", { chatId, content }))
-      .msgId;
+  async sendMessage(
+    chatId: string,
+    content: string,
+    uuid: UUID
+  ): Promise<Message> {
+    return (
+      await this.requestWorkerSetId(uuid, "send-message", { chatId, content })
+    ).message;
   }
 
   async closeDatabase(): Promise<void> {
     await this.requestWorker("close-database");
+  }
+
+  async pingRelay(): Promise<number> {
+    return (await this.requestWorker("ping-relay")).latency;
   }
 }
 

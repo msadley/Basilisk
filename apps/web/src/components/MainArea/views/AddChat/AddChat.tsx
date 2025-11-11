@@ -13,7 +13,7 @@ export interface AddChatViewProps extends ViewProps {
 }
 
 export type FormProps = {
-  createChat: (chat: Chat) => Promise<void>;
+  createChat: (chat: Chat) => Promise<Chat | undefined>;
   setIsLoading: (value: boolean) => void;
   setView: (view: View) => void;
 };

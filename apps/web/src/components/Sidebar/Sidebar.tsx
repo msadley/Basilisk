@@ -31,7 +31,7 @@ const Sidebar = observer(() => {
         <div className={styles.chatContainer}>{renderChats()}</div>
       </div>
       <div className={styles.footer}>
-        <AddChatButton onClick={() => setView({ type: "add-chat" })} />
+        <AddChatButton onClick={() => setView({ type: "addChat" })} />
         <SettingsButton onClick={() => setView({ type: "settings" })} />
       </div>
     </div>
