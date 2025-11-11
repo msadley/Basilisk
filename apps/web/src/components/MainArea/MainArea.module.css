@@ -8,8 +8,16 @@
   border-radius: 26px;
 }
 
+.headerContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
 .header {
   display: flex;
+  flex: 1;
+  flex-direction: row;
   justify-content: center;
   align-content: center;
   overflow: hidden;

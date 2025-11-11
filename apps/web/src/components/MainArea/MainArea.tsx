@@ -57,23 +57,25 @@ const MainArea = observer(() => {
 
   return (
     <div className={styles.mainArea}>
-      <AnimatePresence mode="popLayout">
-        <motion.div
-          key={view.type}
-          layout
-          className={styles.header}
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -10, opacity: 0 }}
-          transition={{
-            layout: { duration: 0.5 },
-            opacity: { duration: 0.3 },
-          }}
-        >
-          {header}
-        </motion.div>
-      </AnimatePresence>
-
+      <div className={styles.headerContainer}>
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={view.type}
+            layout
+            className={styles.header}
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -10, opacity: 0 }}
+            transition={{
+              layout: { duration: 0.5 },
+              opacity: { duration: 0.3 },
+            }}
+          >
+            {header}
+          </motion.div>
+        </AnimatePresence>
+        <Indicator />
+      </div>
       <motion.div
         layout
         className={styles.body}
