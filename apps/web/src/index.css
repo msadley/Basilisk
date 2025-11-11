@@ -25,6 +25,9 @@
   --ctp-base: #1e1e2e;
   --ctp-mantle: #181825;
   --ctp-crust: #11111b;
+
+  /* Custom set ones */
+  --ctp-error: #f04f4f80;
 }
 
 body,
@@ -51,4 +54,16 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
 }
