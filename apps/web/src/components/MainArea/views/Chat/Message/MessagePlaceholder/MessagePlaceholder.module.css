@@ -1,0 +1,39 @@
+.message {
+  width: fit-content;
+  max-width: 60%;
+  padding: 8px 1rem;
+  background: var(--ctp-crust);
+  color: var(--ctp-text);
+  border-radius: 26px;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+.container {
+  display: flex;
+  height: fit-content;
+  flex-direction: row-reverse;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.avatarContainer {
+  display: flex;
+  height: 2rem;
+  margin-inline: 4px;
+}
+
+.container svg {
+  height: 40px;
+  aspect-ratio: 1;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
