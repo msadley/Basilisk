@@ -1,5 +1,5 @@
 import type { Profile } from "@basilisk/core";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { workerController } from "../worker/workerController";
 
 class ProfileStore {
@@ -9,8 +9,18 @@ class ProfileStore {
     makeAutoObservable(this);
   }
 
-  getProfile = async (peerId: string) => {
-    this.profiles.set(peerId, await workerController.getProfile(peerId));
+  getProfile = async (peerId: string): Promise<Profile> => {
+    if (this.profiles.get(peerId)) return this.profiles.get(peerId)!;
+
+    try {
+      const profile = await workerController.getProfile(peerId);
+      runInAction(() => {
+        this.profiles.set(peerId, profile);
+      });
+      return profile;
+    } catch (e: any) {
+      throw new Error("Profile could not be retrieved", e);
+    }
   };
 }
 
