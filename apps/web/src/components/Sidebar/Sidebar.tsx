@@ -2,11 +2,11 @@ import styles from "./Sidebar.module.css";
 import SettingsButton from "./buttons/SettingsButton/SettingsButton";
 import AddChatButton from "./buttons/AddChatButton/AddChatButton";
 import HomeButton from "./buttons/HomeButton/HomeButton";
-import { Icon } from "@iconify/react";
 import type { Chat } from "@basilisk/core";
 import { layoutStore } from "../../stores/LayoutStore";
 import { chatStore } from "../../stores/ChatStore";
 import { observer } from "mobx-react-lite";
+import Avatar from "../Avatar/Avatar";
 
 const Sidebar = observer(() => {
   const chats = chatStore.chats;
@@ -14,17 +14,11 @@ const Sidebar = observer(() => {
 
   function renderChats() {
     return chats.map((chat: Chat) => (
-      <div
+      <Avatar
         key={chat.id}
-        className={styles.chat}
-        onClick={() => setView({ type: "chat", details: { chatId: chat.id } })}
-      >
-        {chat.avatar ? (
-          <img src={chat.avatar} alt="Profile" />
-        ) : (
-          <Icon icon="mingcute:user-2-fill" />
-        )}
-      </div>
+        onClick={() => setView({ type: "chat", details: { chat } })}
+        chat={chat}
+      />
     ));
   }
 
