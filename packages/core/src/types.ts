@@ -1,3 +1,5 @@
+import type { UUID } from "crypto";
+
 /**
  * Represents the possible value types for SQL parameters.
  * Can be a string, number, null, or a byte array.
@@ -125,15 +127,38 @@ type EventsFromMap<T extends Record<string, any>> = {
   [K in keyof T]: T[K] extends void
     ? {
         type: K;
-        id: `${string}-${string}-${string}-${string}-${string}`;
-        error?: string;
+        id: UUID;
       }
     : {
         type: K;
         payload: T[K];
-        id: `${string}-${string}-${string}-${string}-${string}`;
-        error?: string;
+        id: UUID;
       };
+}[keyof T];
+
+type SystemEventsFromMap<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends void
+    ?
+        | {
+            type: K;
+            id: UUID;
+          }
+        | {
+            type: K;
+            id: UUID;
+            error: string;
+          }
+    :
+        | {
+            type: K;
+            payload: T[K];
+            id: UUID;
+          }
+        | {
+            type: K;
+            id: UUID;
+            error: string;
+          };
 }[keyof T];
 
 /**
@@ -146,7 +171,7 @@ export interface UIEventMap {
 
   // Profile events
   "get-profile": { peerId: string };
-  "get-profile-self": void;
+  "get-profile-user": void;
   "patch-profile-self": { name?: string; avatar?: string };
 
   // Chat events
@@ -155,6 +180,9 @@ export interface UIEventMap {
 
   // Database events
   "close-database": void;
+
+  // Miscellaneous events
+  "ping-relay": void;
 }
 
 export interface SystemEventMap {
@@ -170,29 +198,35 @@ export interface SystemEventMap {
   "profile-updated": { profile: Profile };
   "profile-updated-self": { profile: Profile };
   "profile-retrieved": { profile: Profile };
-  "profile-retrieved-self": { profile: Profile };
+  "profile-retrieved-user": { profile: Profile };
 
   // Message events
-  "message-sent": { msgId: number };
+  "message-sent": { message: Message };
   "message-received": { message: Message };
   "messages-retrieved": { messages: Message[] };
 
   // Database events
   "database-closed": void;
+
+  // Miscellaneous events
+  "pong-relay": { latency: number };
+  "relay-found": void;
+  "relay-lost": void;
 }
 
 export type UIEvent = EventsFromMap<UIEventMap>;
-export type SystemEvent = EventsFromMap<SystemEventMap>;
+export type SystemEvent = SystemEventsFromMap<SystemEventMap>;
 
 export interface ResponseMap {
   "get-messages": "messages-retrieved";
   "send-message": "message-sent";
   "get-profile": "profile-retrieved";
-  "get-profile-self": "profile-retrieved-self";
+  "get-profile-user": "profile-retrieved-user";
   "patch-profile-self": "profile-updated-self";
   "get-chats": "chats-retrieved";
   "create-chat": "chat-created";
   "close-database": "database-closed";
+  "ping-relay": "pong-relay";
 }
 
 /**

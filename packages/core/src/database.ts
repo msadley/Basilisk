@@ -83,7 +83,12 @@ export async function upsertChat(chat: Chat): Promise<number> {
 async function chatExists(chatId: string): Promise<boolean> {
   const db = getDb();
 
-  return (await db.run("SELECT id FROM CHATS WHERE id = ?", [chatId])) > 0;
+  const result = await db.get<{ id: string }>(
+    "SELECT id FROM CHATS WHERE id = ?",
+    [chatId]
+  );
+
+  return result !== undefined;
 }
 
 /**
@@ -101,7 +106,7 @@ export async function saveMessage(message: MessagePacket): Promise<number> {
       id: chatId,
       type,
     };
-    upsertChat(chat);
+    await upsertChat(chat);
     databaseEvents.emit("chat:spawn", chat);
   }
 

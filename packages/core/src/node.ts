@@ -13,8 +13,9 @@ import { Connection } from "./connection.js";
 import type { MessagePacket, NodeConfig, Profile } from "./types.js";
 import { getMyProfile } from "./database.js";
 import { getAppKey } from "./keys.js";
+import { multiaddr } from "@multiformats/multiaddr";
 
-export const chatEvents = new EventEmitter();
+export const nodeEvents = new EventEmitter();
 
 let RELAY_ADDR: string;
 
@@ -36,14 +37,26 @@ export class Node {
         const message = JSON.parse(
           new TextDecoder().decode(evt.detail.data)
         ) as MessagePacket;
-        chatEvents.emit("message:receive", message);
+        nodeEvents.emit("message:receive", message);
       }
     );
+
+    this.node.addEventListener("peer:connect", (evt) => {
+      if (evt.detail.toString() === getPeerId(multiaddr(RELAY_ADDR))) {
+        nodeEvents.emit("relay:connect");
+      }
+    });
+
+    this.node.addEventListener("peer:disconnect", (evt) => {
+      if (evt.detail.toString() === getPeerId(multiaddr(RELAY_ADDR))) {
+        nodeEvents.emit("relay:disconnect");
+      }
+    });
   }
 
   static async init(options: NodeConfig): Promise<Node> {
     if (options.mode === "RELAY") {
-      console.info("Initializing relay node...");
+      console.debug("Initializing relay node...");
 
       const privateKey = await getAppKey();
       const libp2pNode = await createLibp2p(
@@ -53,12 +66,12 @@ export class Node {
 
       await libp2pNode.start();
 
-      console.info("Relay node initialized.");
+      console.debug("Relay node initialized.");
 
       return node;
     }
 
-    console.info("Initializing libp2p node");
+    console.debug("[libp2p] Initializing libp2p node");
 
     RELAY_ADDR = options.relayAddr ?? "";
 
@@ -83,17 +96,28 @@ export class Node {
   }
 
   async start() {
-    console.debug("Starting node...");
+    console.debug("[libp2p] Starting node...");
     await this.node.start();
   }
 
   async stop() {
-    console.debug("Stopping node...");
+    console.debug("[libp2p] Stopping node...");
     await this.node.stop();
   }
 
   getMultiaddrs() {
     return this.node.getMultiaddrs();
+  }
+
+  async pingRelay(): Promise<number> {
+    try {
+      const latency: number = await (this.node.services.ping as any).ping(
+        multiaddr(RELAY_ADDR)
+      );
+      return latency;
+    } catch (e: any) {
+      throw new Error("Error when pinging relay server", e);
+    }
   }
 
   getPeerId(): string {
@@ -113,7 +137,9 @@ export class Node {
       const stream = await this.node.dialProtocol(addr, "/chat/1.0.0");
       this.chatConns.set(peerId, new Connection(stream));
     } catch (error: any) {
-      console.warn("Failed to create chat connection: " + error.message);
+      console.warn(
+        "[libp2p] Failed to create chat connection: " + error.message
+      );
     }
   }
 
@@ -128,7 +154,7 @@ export class Node {
         for await (const msg of source) {
           return JSON.parse(msg) as Profile;
         }
-        throw new Error("Stream ended without a response");
+        throw new Error("[libp2p] Stream ended without a response");
       }
     );
 
@@ -150,7 +176,7 @@ export class Node {
         );
       conn.sendMessage(message);
     }
-    console.info(`[INFO] Message sent to ${message.chatId}`);
+    console.debug(`[libp2p] Message sent to ${message.chatId}`);
   }
 
   private async retrieveMessageFromStream(stream: Stream, peerId: string) {
@@ -163,14 +189,17 @@ export class Node {
         (source) =>
           map(source, (message: MessagePacket) => {
             if (message.from !== peerId)
-              console.warn("[WARN] Message does not match specified sender");
-            else chatEvents.emit("message:receive", message);
+              console.warn("[libp2p] Message does not match specified sender", {
+                messageSenderId: message.from,
+                streamSenderId: peerId,
+              });
+            else nodeEvents.emit("message:receive", message);
           }),
         drain
       );
     } catch (err: any) {
       console.warn(
-        `[WARN]Error processing stream from ${peerId}: ${err.message}`
+        `[libp2p] Error processing stream from ${peerId}: ${err.message}`
       );
     } finally {
       stream.close();
@@ -185,9 +214,11 @@ export class Node {
         (source) => lp.encode(source),
         stream.sink
       );
-      console.info(`Profile sent to ${id}: ${JSON.stringify(profile)}`);
+      console.debug(
+        `[libp2p] Profile sent to ${id}: ${JSON.stringify(profile)}`
+      );
     } catch (err: any) {
-      console.warn(`Error sending profile to ${id}: ${err.message}`);
+      console.warn(`[libp2p] Error sending profile to ${id}: ${err.message}`);
     } finally {
       stream.close();
     }

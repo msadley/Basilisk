@@ -1,4 +1,4 @@
-import { Node, chatEvents } from "./node.js";
+import { Node, nodeEvents } from "./node.js";
 import {
   setDb,
   createSchema,
@@ -35,7 +35,7 @@ export class Basilisk {
     setDb(database);
     createSchema();
 
-    chatEvents.on("message:receive", async (message: MessagePacket) => {
+    nodeEvents.on("message:receive", async (message: MessagePacket) => {
       const id = await saveMessage(message);
       this.uiCallBack({
         type: "message-received",
@@ -45,6 +45,20 @@ export class Basilisk {
             ...message,
           },
         },
+        id: crypto.randomUUID(),
+      });
+    });
+
+    nodeEvents.on("relay:connect", () => {
+      this.uiCallBack({
+        type: "relay-found",
+        id: crypto.randomUUID(),
+      });
+    });
+
+    nodeEvents.on("relay:disconnect", () => {
+      this.uiCallBack({
+        type: "relay-lost",
         id: crypto.randomUUID(),
       });
     });
@@ -85,23 +99,49 @@ export class Basilisk {
 
   public async handleUiCommand(event: UIEvent) {
     switch (event.type) {
-      case "send-message": {
-        const msgId = await this.sendMessage(
-          event.payload.chatId,
-          event.payload.content
-        );
-        this.uiCallBack({
-          type: "message-sent",
-          payload: { msgId },
-          id: event.id,
-        });
+      case "ping-relay": {
+        try {
+          const latency = await this.node.pingRelay();
+          this.uiCallBack({
+            type: "pong-relay",
+            payload: { latency },
+            id: event.id,
+          });
+        } catch (e: any) {
+          this.uiCallBack({
+            type: "pong-relay",
+            id: event.id,
+            error: e.toString(),
+          });
+        }
         break;
       }
 
-      case "get-profile-self": {
+      case "send-message": {
+        try {
+          const message = await this.sendMessage(
+            event.payload.chatId,
+            event.payload.content
+          );
+          this.uiCallBack({
+            type: "message-sent",
+            payload: { message },
+            id: event.id,
+          });
+        } catch (e: any) {
+          this.uiCallBack({
+            type: "message-sent",
+            id: event.id,
+            error: e.toString(),
+          });
+        }
+        break;
+      }
+
+      case "get-profile-user": {
         const profile = await getMyProfile();
         this.uiCallBack({
-          type: "profile-retrieved-self",
+          type: "profile-retrieved-user",
           payload: { profile },
           id: event.id,
         });
@@ -123,12 +163,20 @@ export class Basilisk {
       }
 
       case "get-profile": {
-        const profile = await this.getProfile(event.payload.peerId);
-        this.uiCallBack({
-          type: "profile-retrieved",
-          payload: { profile },
-          id: event.id,
-        });
+        try {
+          const profile = await this.getProfile(event.payload.peerId);
+          this.uiCallBack({
+            type: "profile-retrieved",
+            payload: { profile },
+            id: event.id,
+          });
+        } catch (e: any) {
+          this.uiCallBack({
+            type: "profile-retrieved",
+            id: event.id,
+            error: e.toString(),
+          });
+        }
         break;
       }
 
@@ -179,16 +227,24 @@ export class Basilisk {
     }
   }
 
-  private async sendMessage(chatId: string, content: string): Promise<number> {
+  private async sendMessage(chatId: string, content: string): Promise<Message> {
     const from = await getId();
+    const timestamp = Date.now();
     const message: MessagePacket = {
       from,
       chatId,
       content,
-      timestamp: Date.now(),
+      timestamp,
     };
     await this.node.sendMessage(message);
-    return await saveMessage(message);
+    const msgId = await saveMessage(message);
+    return {
+      id: msgId,
+      content,
+      timestamp,
+      from,
+      chatId,
+    };
   }
 
   private async getMessages(peerId: string, page: number): Promise<Message[]> {
