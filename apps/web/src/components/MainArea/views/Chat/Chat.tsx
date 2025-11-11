@@ -6,196 +6,148 @@ import {
   useState,
 } from "react";
 import { Icon } from "@iconify/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import type { ViewProps } from "../../../../types";
 import InputBox from "./InputBox/InputBox";
-import Message from "./Message/Message";
 import styles from "./Chat.module.css";
 import { profileStore } from "../../../../stores/ProfileStore";
 import { messageStore } from "../../../../stores/MessageStore";
-import { userStore } from "../../../../stores/UserStore";
+import type { Profile } from "@basilisk/core";
+import { observer } from "mobx-react-lite";
+import Message from "./Message/Message";
+import type { Chat as ChatType } from "@basilisk/core";
+import MessagePlaceholder from "./Message/MessagePlaceholder/MessagePlaceholder";
 
 interface ChatProps extends ViewProps {
-  id: string;
+  chat: ChatType;
 }
 
-function Chat({
-  id,
-  setHeader,
-  setFooter,
-  setLeftPanel,
-  setRightPanel,
-}: ChatProps) {
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+const Chat = observer(
+  ({ chat, setHeader, setFooter, setLeftPanel, setRightPanel }: ChatProps) => {
+    const [peerProfile, setPeerProfile] = useState<Profile>();
+    const [peerProfileError, setPeerProfileError] = useState<Error>();
 
-  const getMessages = messageStore.loadMore;
+    const messages = messageStore.getChatMessages(chat.id);
+    const messagePlaceholders = messageStore.getSendingMessages(chat.id);
+    const chatState = messageStore.getChatState(chat.id);
 
-  const sendTextMessage = async (message: string) => {
-    await messageStore.sendMessage(id, message);
-  };
+    // Only one scroll container
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const loaderRef = useRef<HTMLDivElement>(null);
+    const prevScrollHeight = useRef<number | null>(null);
 
-  // Verificar race conditions aqui
-  const isProfileLoading = userStore.isProfileLoading;
-  const profile = userStore.userProfile;
+    useEffect(() => {
+      setLeftPanel(<></>);
+      setRightPanel(<></>);
+    }, [setLeftPanel, setRightPanel]);
 
-  const peerProfile = profileStore.profiles.get(id);
-  const messages = messageStore.messages.get(id) || [];
+    useLayoutEffect(() => {
+      const scrollEl = scrollRef.current;
+      if (!scrollEl) return;
 
-  useEffect(() => {
-    setLeftPanel(<></>);
-    setRightPanel(<></>);
-  }, []);
+      const { scrollHeight, scrollTop } = scrollEl;
+      const oldScrollHeight = prevScrollHeight.current;
 
-  useEffect(() => {
-    if (!peerProfile) profileStore.getProfile(id);
-  }, [id, peerProfile, profileStore]);
+      if (oldScrollHeight !== null) {
+        const delta = scrollHeight - oldScrollHeight;
 
-  useEffect(() => {
-    const getProfile = async () => {
-      let peerProfile = profileStore.profiles.get(id);
-      if (!peerProfile) await profileStore.getProfile(id);
-    };
-    getProfile();
-    setHeader(<>{peerProfile?.name ?? id}</>);
-  }, [id, setHeader]);
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<number | null>(null);
-  const prevMessageCountRef = useRef(0);
-
-  const loadMoreMessages = useCallback(() => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    if (containerRef.current) {
-      scrollRef.current = containerRef.current.scrollHeight;
-    }
-    prevMessageCountRef.current = messages.length;
-    getMessages(id, page);
-  }, [id, page, getMessages, isLoading, hasMore, messages.length]);
-
-  useEffect(() => {
-    if (isLoading || isInitialLoad) {
-      const newMessagesCount = messages.length - prevMessageCountRef.current;
-      if (newMessagesCount < 20) {
-        setHasMore(false);
+        if (delta > 0) scrollEl.scrollTop = scrollTop + delta;
       }
-      setPage((prevPage) => prevPage + 1);
-      if (isLoading) setIsLoading(false);
-      if (isInitialLoad) setIsInitialLoad(false);
-    }
-  }, [messages, isLoading, isInitialLoad]);
 
-  useEffect(() => {
-    setHasMore(true);
-    setPage(1);
-    setIsInitialLoad(true);
-    setIsLoading(false);
-    prevMessageCountRef.current = 0;
+      prevScrollHeight.current = scrollHeight;
 
-    getMessages(id, 1);
-  }, [id, getMessages]);
+    }, [messages.length, messagePlaceholders]);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadMoreMessages();
+    const loadMore = useCallback(async () => {
+      if (!chatState.hasMore || chatState.isLoading) return;
+
+      await messageStore.loadMore(chat.id);
+    }, [chat.id, chatState.hasMore, chatState.isLoading]);
+
+    useEffect(() => {
+      const scrollEl = scrollRef.current;
+      const sentinel = loaderRef.current;
+      if (!scrollEl || !sentinel) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            loadMore();
+          }
+        },
+        {
+          root: scrollEl,
+          rootMargin: "400px 0px 0px 0px",
+          threshold: 1.0,
         }
+      );
+
+      observer.observe(sentinel);
+
+      return () => {
+        observer.disconnect();
+      };
+    }, [loadMore]);
+
+    const sendTextMessage = useCallback(
+      async (message: string) => {
+        await messageStore.sendMessage(chat.id, message);
       },
-      {
-        root: containerRef.current,
-        threshold: 0,
-        rootMargin: "120% 0px 0px 0px",
-      }
+      [chat.id]
     );
 
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
-    }
+    useEffect(() => {
+      if (chat.type === "group") return;
 
-    return () => {
-      observer.disconnect();
-    };
-  }, [loadMoreMessages, hasMore, isLoading]);
+      const getPeerProfile = async (peerId: string) => {
+        try {
+          const profile = await profileStore.getProfile(peerId);
+          setPeerProfile(profile);
+        } catch (e: any) {
+          setPeerProfileError(e);
+        }
+      };
 
-  useLayoutEffect(() => {
-    if (!containerRef.current) return;
+      getPeerProfile(chat.id);
+    }, [chat.id]);
 
-    if (scrollRef.current) {
-      const newScrollHeight = containerRef.current.scrollHeight;
-      containerRef.current.scrollTop = newScrollHeight - scrollRef.current;
-      scrollRef.current = null;
-    } else {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  }, [messages]);
+    useEffect(() => {
+      const headerText = peerProfileError
+        ? peerProfileError.message
+        : peerProfile?.name ?? chat.id;
+      setHeader(<>{headerText}</>);
+    }, [chat.id, setHeader, peerProfile, peerProfileError]);
 
-  useEffect(() => {
-    setFooter(<InputBox sendMessage={sendTextMessage} />);
+    useEffect(() => {
+      setFooter(<InputBox sendMessage={sendTextMessage} />);
+      return () => setFooter(undefined);
+    }, [setFooter, sendTextMessage]);
 
-    return () => {
-      setFooter(undefined);
-    };
-  }, [setFooter]);
-
-  return (
-    <div
-      className={styles.chat}
-      ref={containerRef}
-      style={{
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column-reverse",
-        height: "100%",
-      }}
-    >
-      {messages.map((msg) =>
-        !isProfileLoading ? (
-          <AnimatePresence propagate>
-            <motion.div
-              key={msg.id}
-              className={styles.messageContainer}
-              style={{
-                alignItems:
-                  msg.from === profile?.id ? "flex-end" : "flex-start",
-              }}
-              initial={{
-                opacity: 0,
-                x: (msg.from === profile?.id ? 1 : -1) * 20,
-              }}
-              animate={{
-                opacity: 1,
-                x: 0,
-              }}
-              exit={{
-                opacity: 0,
-                x: (msg.from === profile?.id ? 1 : -1) * 20,
-              }}
-              transition={{ type: "spring", duration: 0.5 }}
-            >
-              <Message content={msg.content} timestamp={msg.timestamp} />
-            </motion.div>
-          </AnimatePresence>
-        ) : null
-      )}
-
-      <div ref={sentinelRef} style={{ height: "1px" }}>
-        {hasMore && isLoading && (
-          <div className={styles.loadingContainer}>
-            <Icon
-              className={styles.loadingIcon}
-              icon="mingcute:loading-3-fill"
-            />
-          </div>
-        )}
+    // === RENDER ===
+    return (
+      <div className={styles.chat} ref={scrollRef}>
+        <div ref={loaderRef} className={styles.sentinel}>
+          {chatState.isLoading && (
+            <div className={styles.loadingContainer}>
+              <Icon
+                className={styles.loadingIcon}
+                icon="mingcute:loading-3-fill"
+              />
+            </div>
+          )}
+        </div>
+        <AnimatePresence>
+          {messages.map((msg) => (
+            <Message key={msg.id} message={msg} chat={chat} />
+          ))}
+          {messagePlaceholders.map((msg) => (
+            <MessagePlaceholder key={msg.id} messagePlaceholder={msg} />
+          ))}
+        </AnimatePresence>
+        <div className={styles.footer} />
       </div>
-    </div>
-  );
-}
+    );
+  }
+);
 
 export default Chat;
