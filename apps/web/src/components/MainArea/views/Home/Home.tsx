@@ -7,7 +7,7 @@ import { observer } from "mobx-react-lite";
 import { Icon } from "@iconify/react";
 
 const Home = observer(
-  ({ setHeader, setFooter, setLeftPanel, setRightPanel }: ViewProps) => {
+  ({ setHeader, setFooter }: ViewProps) => {
     const [idVisible, setIdVisible] = useState<boolean>(false);
     const profile = userStore.userProfile;
 
@@ -23,9 +23,7 @@ const Home = observer(
     useEffect(() => {
       setHeader(<></>);
       setFooter(<></>);
-      setLeftPanel(<></>);
-      setRightPanel(<></>);
-    }, [setHeader, setFooter, setLeftPanel, setRightPanel]);
+    }, [setHeader, setFooter]);
 
     return (
       <motion.div

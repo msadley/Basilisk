@@ -9,10 +9,7 @@
   scrollbar-width: none;
   gap: 8px;
   padding-inline: 8px;
-}
-
-.footer {
-  height: 0px;
+  padding-bottom: 8px;
 }
 
 .sentinel {

@@ -29,29 +29,25 @@ export async function createSchema(): Promise<void> {
       id TEXT PRIMARY KEY,
       name TEXT,
       avatar TEXT
-    )
-  `);
-  await db.run(`
+    );
+
     CREATE TABLE IF NOT EXISTS chats (
       id TEXT PRIMARY KEY,
       name TEXT,
       avatar TEXT,
       type TEXT NOT NULL CHECK(type IN ('private', 'group'))
-    )
-  `);
-  await db.run(`
+    );
+
     CREATE TABLE IF NOT EXISTS messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid TEXT PRIMARY KEY,
       chat_id TEXT NOT NULL,
-      from_id TEXT NOT NULL,
-      content TEXT NOT NULL,
-      timestamp INTEGER NOT NULL
-    )
-  `);
-  await db.run(`
-    CREATE TABLE IF NOT EXISTS chat_members (
+      from_id TEXT,
+      content TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS group_members (
       chat_id TEXT NOT NULL,
-      profile_id TEXT NOT NULL
+      profile_id TEXT
     )
   `);
 }
@@ -80,7 +76,7 @@ export async function upsertChat(chat: Chat): Promise<number> {
   }
 }
 
-async function chatExists(chatId: string): Promise<boolean> {
+/* async function chatExists(chatId: string): Promise<boolean> {
   const db = getDb();
 
   const result = await db.get<{ id: string }>(
@@ -89,41 +85,26 @@ async function chatExists(chatId: string): Promise<boolean> {
   );
 
   return result !== undefined;
-}
+} */
 
-/**
- * Saves a message into the Database and returns its id
- * @param message the message to be saved
- */
-export async function saveMessage(message: MessagePacket): Promise<number> {
+export async function saveMessage(message: MessagePacket): Promise<void> {
   const db = getDb();
 
   const chatId = await getChatId(message);
   const type = chatType(chatId);
 
-  if (!(await chatExists(chatId))) {
-    const chat = {
-      id: chatId,
-      type,
-    };
-    await upsertChat(chat);
+  try {
+    await db.run("INSERT INTO chats (id, type) VALUES (?, ?)", [chatId, type]);
+    const chat = { id: chatId, type };
     databaseEvents.emit("chat:spawn", chat);
+  } catch (e: any) {
+    if (!e.message.includes("SQLITE_CONSTRAINT_FOREIGNKEY")) console.error(e);
   }
 
   await db.run(
-    "INSERT INTO messages (chat_id, from_id, content, timestamp) VALUES (?, ?, ?, ?)",
-    [chatId, message.from, message.content, message.timestamp]
+    "INSERT INTO messages (uuid, chat_id, from_id, content) VALUES (?, ?, ?, ?)",
+    [message.uuid, chatId, message.from, message.content]
   );
-
-  const savedMessage = await db.get<Message>(
-    "SELECT id, content, timestamp, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? AND from_id = ? AND content = ? AND timestamp = ? ORDER BY id DESC LIMIT 1",
-    [chatId, message.from, message.content, message.timestamp]
-  );
-
-  if (savedMessage === undefined)
-    console.warn(`A message received from ${message.from} could not be saved`);
-
-  return savedMessage!.id;
 }
 
 async function getChatId(message: MessagePacket): Promise<string> {
@@ -169,7 +150,7 @@ export async function getMessages(
   const limit = 20;
   const offset = (Math.max(1, page) - 1) * limit;
   return db.all<Message>(
-    "SELECT id, content, timestamp, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+    "SELECT uuid, content, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? ORDER BY uuid DESC LIMIT ? OFFSET ?",
     [peerId, limit, offset]
   );
 }
@@ -180,12 +161,12 @@ export async function getMessage(
 ): Promise<Message> {
   const db = getDb();
   const message = await db.get<Message>(
-    "SELECT id, content, timestamp, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? AND id = ?",
+    "SELECT uuid, content, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? AND uuid = ?",
     [peerId, msgId]
   );
 
   if (!message) {
-    throw new Error(`Message with id ${msgId} not found in chat ${peerId}`);
+    throw new Error(`Message with uuid ${msgId} not found in chat ${peerId}`);
   }
   return message;
 }

@@ -1,21 +1,19 @@
-import type { Message } from "@basilisk/core";
 import { makeAutoObservable, observable, runInAction } from "mobx";
 import { workerController } from "../worker/workerController";
-import type { UUID } from "crypto";
+import { userStore } from "./UserStore";
+import { v7 as uuidv7 } from "uuid";
 
-export type MessagePlaceholder = {
-  id: UUID;
-  chatId: string;
+export type Message = {
+  uuid: string;
   content: string;
-  error: boolean;
+  from: string;
+  chatId: string;
+  status: "sending" | "error" | "ok";
 };
 
 class ChatState {
-  messages = observable.map<number, Message>();
-
-  ids = observable.array<number>();
-
-  messagePlaceholders = observable.map<string, MessagePlaceholder>();
+  messages = observable.map<string, Message>();
+  ids = observable.array<string>();
 
   page: number = 0;
   hasMore: boolean = true;
@@ -26,13 +24,12 @@ class ChatState {
   }
 
   get sortedMessages(): Message[] {
-    return this.ids.map((id) => this.messages.get(id)!);
+    return this.ids.map((time) => this.messages.get(time)!);
   }
 }
 
 class MessageStore {
   chats = new Map<string, ChatState>();
-  pendingRequests: number = 0;
 
   constructor() {
     makeAutoObservable(this);
@@ -40,14 +37,6 @@ class MessageStore {
 
   getChatMessages(chatId: string): Message[] {
     return this.getChatState(chatId).sortedMessages;
-  }
-
-  getSendingMessages(chatId: string): MessagePlaceholder[] {
-    const sendingMessages = [
-      ...this.getChatState(chatId).messagePlaceholders.values(),
-    ];
-    if (!sendingMessages) return [];
-    return sendingMessages;
   }
 
   getChatState(chatId: string): ChatState {
@@ -67,9 +56,9 @@ class MessageStore {
     const state = this.getChatState(chatId);
 
     runInAction(() => {
-      if (!state.messages.has(message.id)) {
-        state.messages.set(message.id, message);
-        state.ids.push(message.id);
+      if (!state.messages.has(message.uuid)) {
+        state.messages.set(message.uuid, { ...message, status: "ok" });
+        state.ids.push(message.uuid);
       }
     });
   };
@@ -89,23 +78,22 @@ class MessageStore {
       const newMsgs = await workerController.getMessages(chatId, state.page);
 
       runInAction(() => {
-        // Create a Set of existing IDs for O(1) lookup
-        const existingIds = new Set(state.ids);
+        const timestamps = new Set(state.ids);
+        const uniqueNewMsgs = newMsgs.filter(
+          (msg) => !timestamps.has(msg.uuid)
+        );
 
-        // Filter out messages that already exist
-        const uniqueNewMsgs = newMsgs.filter((msg) => !existingIds.has(msg.id));
-
-        // Add messages to the map
         uniqueNewMsgs.forEach((msg) => {
-          state.messages.set(msg.id, msg);
+          state.messages.set(msg.uuid, {
+            ...msg,
+            status: "ok",
+          });
         });
 
-        // Add IDs to the front of the array (older messages)
         uniqueNewMsgs.forEach((msg) => {
-          state.ids.unshift(msg.id);
+          state.ids.unshift(msg.uuid);
         });
 
-        // Update pagination state
         if (newMsgs.length < 20) {
           state.hasMore = false;
         } else {
@@ -122,41 +110,33 @@ class MessageStore {
   };
 
   sendMessage = async (chatId: string, content: string) => {
-    const uuid = crypto.randomUUID();
-    const placeholder = {
-      id: uuid,
+    const uuid = uuidv7();
+    const newMessage: Message = {
+      uuid,
       chatId,
       content,
+      from: userStore.userProfile!.id,
+      status: "sending",
     };
     runInAction(() => {
-      this.getChatState(chatId).messagePlaceholders.set(uuid, {
-        ...placeholder,
-        error: false,
-      });
+      const chat = this.getChatState(chatId);
+      chat.messages.set(uuid, newMessage);
+      chat.ids.push(uuid);
     });
 
     try {
-      const sentMessage = await workerController.sendMessage(
-        chatId,
-        content,
-        uuid
-      );
-
-      const state = this.getChatState(chatId);
-
+      await workerController.sendMessage(uuid, newMessage);
       runInAction(() => {
-        if (!state.messages.has(sentMessage.id)) {
-          state.messages.set(sentMessage.id, sentMessage);
-          state.ids.push(sentMessage.id);
-        }
+        const state = this.getChatState(chatId);
+        const message = state.messages.get(uuid)!;
+        state.messages.set(uuid, { ...message, status: "ok" });
       });
     } catch (e: any) {
       console.error(`Could not send message to ${chatId}: ${e}`);
       runInAction(() => {
-        this.getChatState(chatId).messagePlaceholders.set(uuid, {
-          ...placeholder,
-          error: true,
-        });
+        const state = this.getChatState(chatId);
+        const message = state.messages.get(uuid)!;
+        state.messages.set(uuid, { ...message, status: "error" });
       });
     }
   };

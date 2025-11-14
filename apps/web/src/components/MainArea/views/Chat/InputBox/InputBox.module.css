@@ -1,16 +1,21 @@
 .inputBox {
   display: flex;
   flex: 1;
-  height: 100%;
+  min-height: 100%;
+  max-height: fit-content;
   background-color: var(--ctp-crust);
   border-radius: 26px;
+  scrollbar-width: none;
 }
 
-.inputBox input {
-  outline: none;
+.inputBox textarea {
+  all: unset;
+  box-sizing: border-box;
   flex: 1;
+  font-size: 0.8rem;
   z-index: 1;
-  height: 100%;
+  min-height: 100%;
+  max-height: fit-content;
   padding: 6px;
   padding-left: 1rem;
   background: var(--ctp-mantle);

@@ -7,6 +7,24 @@
   border-radius: 26px;
   hyphens: auto;
   overflow-wrap: break-word;
+  position: relative;
+  white-space: pre-wrap;
+}
+
+.message.error::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  border-radius: 26px;
+
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--ctp-error) 0,
+    var(--ctp-error) 4px,
+    /* 4px dash */ transparent 4px,
+    transparent 8px /* 4px gap (8px - 4px) */
+  );
 }
 
 .container {
@@ -19,4 +37,11 @@
   display: flex;
   height: 2rem;
   margin-inline: 4px;
+}
+
+.statusContainer {
+  display: flex;
+  margin-inline: 4px;
+  align-items: center;
+  height: 100%;
 }

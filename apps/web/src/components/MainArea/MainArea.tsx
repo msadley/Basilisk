@@ -1,6 +1,5 @@
 import Home from "./views/Home/Home";
 import Chat from "./views/Chat/Chat";
-import Settings from "./views/Settings/Settings";
 import AddChat from "./views/AddChat/AddChat";
 import type { ViewProps } from "../../types";
 import styles from "./MainArea.module.css";
@@ -13,15 +12,11 @@ import Indicator from "./Indicator/Indicator";
 const MainArea = observer(() => {
   const [header, setHeader] = useState<ReactNode>();
   const [footer, setFooter] = useState<ReactNode>();
-  const [leftPanel, setLeftPanel] = useState<ReactNode>();
-  const [rightPanel, setRightPanel] = useState<ReactNode>();
-  const { view, setView } = layoutStore;
+  const { mainView: view, setMainView: setView } = layoutStore;
 
   const viewControls: ViewProps = {
     setHeader,
     setFooter,
-    setLeftPanel,
-    setRightPanel,
   };
 
   const body = () => {
@@ -44,14 +39,9 @@ const MainArea = observer(() => {
       case "addChat":
         return <AddChat key="add-chat" {...viewControls} setView={setView} />;
 
-      case "settings":
-        return <Settings key="settings" {...viewControls} />;
-
       default:
         if (header) setHeader(null);
         if (footer) setFooter(null);
-        if (leftPanel) setLeftPanel(null);
-        if (rightPanel) setRightPanel(null);
         return null;
     }
   };

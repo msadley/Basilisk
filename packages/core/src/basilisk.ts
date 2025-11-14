@@ -9,7 +9,6 @@ import {
   setMyProfile,
   upsertChat,
   getChats,
-  getId,
   getDb,
 } from "./database.js";
 import type {
@@ -18,8 +17,10 @@ import type {
   Profile,
   SendToUiCallback,
   UIEvent,
+  Database,
+  MessagePacket,
 } from "./types.js";
-import { type Database, type MessagePacket } from "./types.js";
+import { v7 as uuidv7 } from "uuid";
 
 export class Basilisk {
   private node: Node;
@@ -36,30 +37,27 @@ export class Basilisk {
     createSchema();
 
     nodeEvents.on("message:receive", async (message: MessagePacket) => {
-      const id = await saveMessage(message);
+      await saveMessage(message);
       this.uiCallBack({
         type: "message-received",
         payload: {
-          message: {
-            id,
-            ...message,
-          },
+          message,
         },
-        id: crypto.randomUUID(),
+        id: uuidv7(),
       });
     });
 
     nodeEvents.on("relay:connect", () => {
       this.uiCallBack({
         type: "relay-found",
-        id: crypto.randomUUID(),
+        id: uuidv7(),
       });
     });
 
     nodeEvents.on("relay:disconnect", () => {
       this.uiCallBack({
         type: "relay-lost",
-        id: crypto.randomUUID(),
+        id: uuidv7(),
       });
     });
 
@@ -67,7 +65,7 @@ export class Basilisk {
       this.uiCallBack({
         type: "chat-spawned",
         payload: { chat },
-        id: crypto.randomUUID(), // XXX placeholder
+        id: uuidv7(),
       });
     });
   }
@@ -93,7 +91,7 @@ export class Basilisk {
     this.uiCallBack({
       type: "node-started",
       payload: { profile: await getMyProfile() },
-      id: crypto.randomUUID(), // XXX placeholder
+      id: uuidv7(),
     });
   }
 
@@ -119,13 +117,9 @@ export class Basilisk {
 
       case "send-message": {
         try {
-          const message = await this.sendMessage(
-            event.payload.chatId,
-            event.payload.content
-          );
+          await this.sendMessage(event.payload.message);
           this.uiCallBack({
             type: "message-sent",
-            payload: { message },
             id: event.id,
           });
         } catch (e: any) {
@@ -216,7 +210,7 @@ export class Basilisk {
         await getDb().close();
         this.uiCallBack({
           type: "database-closed",
-          id: crypto.randomUUID(),
+          id: uuidv7(),
         });
         break;
       }
@@ -227,24 +221,9 @@ export class Basilisk {
     }
   }
 
-  private async sendMessage(chatId: string, content: string): Promise<Message> {
-    const from = await getId();
-    const timestamp = Date.now();
-    const message: MessagePacket = {
-      from,
-      chatId,
-      content,
-      timestamp,
-    };
+  private async sendMessage(message: MessagePacket): Promise<void> {
     await this.node.sendMessage(message);
-    const msgId = await saveMessage(message);
-    return {
-      id: msgId,
-      content,
-      timestamp,
-      from,
-      chatId,
-    };
+    await saveMessage(message);
   }
 
   private async getMessages(peerId: string, page: number): Promise<Message[]> {

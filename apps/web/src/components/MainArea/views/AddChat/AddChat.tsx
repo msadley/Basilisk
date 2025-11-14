@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { View, ViewProps } from "../../../../types";
+import type { MainView, ViewProps } from "../../../../types";
 import styles from "./AddChat.module.css";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
@@ -9,20 +9,18 @@ import { chatStore } from "../../../../stores/ChatStore";
 import type { Chat } from "@basilisk/core";
 
 export interface AddChatViewProps extends ViewProps {
-  setView: (view: View) => void;
+  setView: (view: MainView) => void;
 }
 
 export type FormProps = {
   createChat: (chat: Chat) => Promise<Chat | undefined>;
   setIsLoading: (value: boolean) => void;
-  setView: (view: View) => void;
+  setView: (view: MainView) => void;
 };
 
 function AddChat({
   setHeader,
   setFooter,
-  setLeftPanel,
-  setRightPanel,
   setView,
 }: AddChatViewProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,8 +38,6 @@ function AddChat({
   useEffect(() => {
     setHeader(<></>);
     setFooter(<></>);
-    setLeftPanel(<></>);
-    setRightPanel(<></>);
   }, []);
 
   return !isLoading ? (

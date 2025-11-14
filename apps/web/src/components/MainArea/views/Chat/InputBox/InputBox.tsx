@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import styles from "./InputBox.module.css";
 import { useForm, type SubmitHandler } from "react-hook-form";
+import TextareaAutosize from "react-textarea-autosize";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
@@ -35,14 +36,22 @@ const InputBox = ({ sendMessage }: InputBoxProps) => {
     if (isSubmitSuccessful) reset();
   }, [isSubmitSuccessful, reset]);
 
+  const handleKeyDown = (e: any) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(onSubmit)();
+    }
+  };
+
   return (
     <div className={styles.inputBox}>
       <form
         onSubmit={handleSubmit(onSubmit)}
         style={{ display: "flex", flex: 1 }}
       >
-        <input
-          type="text"
+        <TextareaAutosize
+          rows={10}
+          onKeyDown={handleKeyDown}
           placeholder="Digite uma mensagem..."
           {...register("messageText")}
         />

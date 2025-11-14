@@ -1,15 +1,20 @@
 import { makeAutoObservable } from "mobx";
-import type { View } from "../types";
+import type { MainView, SidePanelView } from "../types";
 
 class LayoutStore {
-  view: View = { type: "home" };
+  mainView: MainView = { type: "home" };
+  sidePanelView: SidePanelView = { type: "none" };
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  setView = (view: View) => {
-    this.view = view;
+  setMainView = (view: MainView) => {
+    this.mainView = view;
+  };
+
+  setSidePanelView = (view: SidePanelView) => {
+    this.sidePanelView = view;
   };
 }
 

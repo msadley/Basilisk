@@ -6,6 +6,7 @@ class RootStore {
     makeAutoObservable(this);
     workerController.on("node-started", this.loadSequence);
     workerController.on("message-received", this.messageReceive);
+    workerController.on("chat-spawned", this.spawnChat);
     workerController.on("relay-lost", this.setIndicatorOff);
     workerController.on("relay-found", this.setIndicatorOn);
   }
@@ -33,6 +34,12 @@ class RootStore {
     const { connectionStore } = await import("./ConnectionStore");
 
     connectionStore.setConnectionTrue();
+  };
+
+  spawnChat = async (event: any) => {
+    const { chatStore } = await import("./ChatStore");
+
+    chatStore.handleChatSpawn(event.chat);
   };
 }
 

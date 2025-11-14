@@ -1,5 +1,3 @@
-import type { UUID } from "crypto";
-
 /**
  * Represents the possible value types for SQL parameters.
  * Can be a string, number, null, or a byte array.
@@ -80,10 +78,9 @@ export interface Profile {
  * It contains the full profile of the sender.
  */
 export interface MessagePacket {
+  uuid: string;
   /** The content of the message. */
   content: string;
-  /** The timestamp of when the message was sent, in milliseconds since the epoch. */
-  timestamp: number;
   /** The sender's peer ID. */
   from: string;
   /** The recipient's peer ID or the group ID. */
@@ -96,11 +93,9 @@ export interface MessagePacket {
  */
 export interface Message {
   /** The unique identifier for the message in the database. */
-  id: number;
+  uuid: string;
   /** The content of the message. */
   content: string;
-  /** The timestamp of when the message was sent, in milliseconds since the epoch. */
-  timestamp: number;
   /** The sender's peer ID. */
   from: string;
   /** The Id of the chat the message was sent. */
@@ -127,12 +122,12 @@ type EventsFromMap<T extends Record<string, any>> = {
   [K in keyof T]: T[K] extends void
     ? {
         type: K;
-        id: UUID;
+        id: string;
       }
     : {
         type: K;
         payload: T[K];
-        id: UUID;
+        id: string;
       };
 }[keyof T];
 
@@ -141,22 +136,22 @@ type SystemEventsFromMap<T extends Record<string, any>> = {
     ?
         | {
             type: K;
-            id: UUID;
+            id: string;
           }
         | {
             type: K;
-            id: UUID;
+            id: string;
             error: string;
           }
     :
         | {
             type: K;
             payload: T[K];
-            id: UUID;
+            id: string;
           }
         | {
             type: K;
-            id: UUID;
+            id: string;
             error: string;
           };
 }[keyof T];
@@ -167,7 +162,7 @@ type SystemEventsFromMap<T extends Record<string, any>> = {
 export interface UIEventMap {
   // Message events
   "get-messages": { chatId: string; page: number };
-  "send-message": { chatId: string; content: string };
+  "send-message": { message: MessagePacket };
 
   // Profile events
   "get-profile": { peerId: string };
@@ -201,7 +196,7 @@ export interface SystemEventMap {
   "profile-retrieved-user": { profile: Profile };
 
   // Message events
-  "message-sent": { message: Message };
+  "message-sent": void;
   "message-received": { message: Message };
   "messages-retrieved": { messages: Message[] };
 

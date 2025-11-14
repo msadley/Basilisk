@@ -1,14 +1,15 @@
 import type {
   Chat,
   Message,
+  MessagePacket,
   Profile,
   ResponseMap,
   SystemEvent,
   SystemEventMap,
   UIEventMap,
 } from "@basilisk/core";
-import type { UUID } from "crypto";
 import mitt, { type Handler } from "mitt";
+import { v7 as uuidv7 } from "uuid";
 
 type PromiseControls = {
   resolve: (value: any) => void;
@@ -50,14 +51,14 @@ class WorkerController {
   }
 
   private requestWorkerSetId<K extends keyof ResponseMap>(
-    id: UUID,
+    id: string,
     type: K,
     ...args: UIEventMap[K] extends void ? [] : [UIEventMap[K]]
   ): Promise<SystemEventMap[ResponseMap[K]]> {
     return new Promise((resolve, reject) => {
       this.pendingRequests.set(id, { resolve, reject });
 
-      const message: { type: string; id: UUID; payload?: any } = { type, id };
+      const message: { type: string; id: string; payload?: any } = { type, id };
 
       if (args.length > 0) {
         message.payload = args[0];
@@ -71,7 +72,7 @@ class WorkerController {
     type: K,
     ...args: UIEventMap[K] extends void ? [] : [UIEventMap[K]]
   ): Promise<SystemEventMap[ResponseMap[K]]> {
-    return this.requestWorkerSetId(crypto.randomUUID(), type, ...args);
+    return this.requestWorkerSetId(uuidv7(), type, ...args);
   }
 
   async getProfile(peerId: string): Promise<Profile> {
@@ -112,14 +113,8 @@ class WorkerController {
     ).messages;
   }
 
-  async sendMessage(
-    chatId: string,
-    content: string,
-    uuid: UUID
-  ): Promise<Message> {
-    return (
-      await this.requestWorkerSetId(uuid, "send-message", { chatId, content })
-    ).message;
+  async sendMessage(uuid: string, message: MessagePacket): Promise<void> {
+    return await this.requestWorkerSetId(uuid, "send-message", { message });
   }
 
   async closeDatabase(): Promise<void> {

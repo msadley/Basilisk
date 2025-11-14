@@ -1,14 +1,20 @@
 import type { Chat } from "@basilisk/core";
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable, observable, runInAction } from "mobx";
 import { workerController } from "../worker/workerController";
 
 class ChatStore {
-  chats: Chat[] = [];
+  chats = observable.array<Chat>();
   isLoading: boolean = true;
 
   constructor() {
     makeAutoObservable(this);
   }
+
+  handleChatSpawn = async (chat: Chat) => {
+    runInAction(() => {
+      this.chats.push(chat);
+    });
+  };
 
   initialLoad = async () => {
     await this.getChats();
@@ -22,7 +28,7 @@ class ChatStore {
     try {
       const chats = await workerController.getChats();
       runInAction(() => {
-        this.chats = chats;
+        this.chats = observable.array(chats);
         this.isLoading = false;
       });
     } catch (e) {

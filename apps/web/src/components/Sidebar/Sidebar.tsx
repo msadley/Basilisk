@@ -10,13 +10,14 @@ import Avatar from "../Avatar/Avatar";
 
 const Sidebar = observer(() => {
   const chats = chatStore.chats;
-  const setView = layoutStore.setView;
+  const setMainView = layoutStore.setMainView;
+  const setSidePanelView = layoutStore.setSidePanelView;
 
   function renderChats() {
     return chats.map((chat: Chat) => (
       <Avatar
         key={chat.id}
-        onClick={() => setView({ type: "chat", details: { chat } })}
+        onClick={() => setMainView({ type: "chat", details: { chat } })}
         chat={chat}
       />
     ));
@@ -25,14 +26,16 @@ const Sidebar = observer(() => {
   return (
     <div className={styles.sidebar}>
       <div className={styles.header}>
-        <HomeButton onClick={() => setView({ type: "home" })} />
+        <HomeButton onClick={() => setMainView({ type: "home" })} />
       </div>
       <div className={styles.body}>
         <div className={styles.chatContainer}>{renderChats()}</div>
       </div>
       <div className={styles.footer}>
-        <AddChatButton onClick={() => setView({ type: "addChat" })} />
-        <SettingsButton onClick={() => setView({ type: "settings" })} />
+        <AddChatButton onClick={() => setMainView({ type: "addChat" })} />
+        <SettingsButton
+          onClick={() => setSidePanelView({ type: "settings" })}
+        />
       </div>
     </div>
   );
