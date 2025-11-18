@@ -1,20 +1,22 @@
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 
-export function getPeerId(addr: Multiaddr): string {
-  let components = addr.getComponents();
+export function getPeerId(addr: string): string {
+  const components = addr.split("/");
 
-  const circuitIndex = components.findIndex((c) => c.code === 290); // 290 is p2p-circuit
-  if (circuitIndex > -1) {
-    components = components.slice(circuitIndex + 1);
-  }
+  const p2pComponent = components.find((c) => c === "p2p");
 
-  const p2pComponent = components.find((c) => c.code === 421); // 421 is p2p
-
-  if (p2pComponent?.value == null) {
+  if (!p2pComponent) {
     throw new Error("Error when parsing peerId from multiaddr.");
   }
 
-  return p2pComponent.value;
+  const p2pComponentIndex = components.indexOf(p2pComponent);
+  const peerId = components[p2pComponentIndex + 1];
+
+  if (!peerId) {
+    throw new Error("Error when parsing peerId from multiaddr.");
+  }
+
+  return peerId;
 }
 
 export function multiaddrFromPeerId(

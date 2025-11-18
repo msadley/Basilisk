@@ -42,13 +42,13 @@ export class Node {
     );
 
     this.node.addEventListener("peer:connect", (evt) => {
-      if (evt.detail.toString() === getPeerId(multiaddr(RELAY_ADDR))) {
+      if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
         nodeEvents.emit("relay:connect");
       }
     });
 
     this.node.addEventListener("peer:disconnect", (evt) => {
-      if (evt.detail.toString() === getPeerId(multiaddr(RELAY_ADDR))) {
+      if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
         nodeEvents.emit("relay:disconnect");
       }
     });
@@ -84,12 +84,15 @@ export class Node {
     await libp2pNode.handle("/chat/1.0.0", async ({ stream, connection }) => {
       await node.retrieveMessageFromStream(
         stream,
-        getPeerId(connection.remoteAddr)
+        getPeerId(connection.remoteAddr.toString())
       );
     });
 
     await libp2pNode.handle("/info/1.0.0", async ({ stream, connection }) => {
-      await node.sendInfoToStream(stream, getPeerId(connection.remoteAddr));
+      await node.sendInfoToStream(
+        stream,
+        getPeerId(connection.remoteAddr.toString())
+      );
     });
 
     return node;
