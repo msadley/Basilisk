@@ -98,7 +98,6 @@ export async function saveMessage(message: MessagePacket): Promise<void> {
     const chat = { id: chatId, type };
     databaseEvents.emit("chat:spawn", chat);
   } catch (e: any) {
-    if (!e.message.includes("SQLITE_CONSTRAINT_FOREIGNKEY")) console.error(e);
   }
 
   await db.run(
