@@ -41,17 +41,19 @@ export class Node {
       }
     );
 
-    this.node.addEventListener("peer:connect", (evt) => {
-      if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
-        nodeEvents.emit("relay:connect");
-      }
-    });
+    if (RELAY_ADDR) {
+      this.node.addEventListener("peer:connect", (evt) => {
+        if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
+          nodeEvents.emit("relay:connect");
+        }
+      });
 
-    this.node.addEventListener("peer:disconnect", (evt) => {
-      if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
-        nodeEvents.emit("relay:disconnect");
-      }
-    });
+      this.node.addEventListener("peer:disconnect", (evt) => {
+        if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
+          nodeEvents.emit("relay:disconnect");
+        }
+      });
+    }
   }
 
   static async init(options: NodeConfig): Promise<Node> {
