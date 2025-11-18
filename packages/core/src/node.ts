@@ -20,7 +20,7 @@ export const nodeEvents = new EventEmitter();
 let RELAY_ADDR: string;
 
 export class Node {
-  private node: Libp2p;
+  public node: Libp2p;
   private chatConns: Map<string, Connection> = new Map();
 
   private constructor(nodeInstance: Libp2p) {
