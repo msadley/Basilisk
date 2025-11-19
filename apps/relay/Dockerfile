@@ -18,6 +18,5 @@ WORKDIR /Basilisk/apps/relay
 
 EXPOSE 4001
 EXPOSE 4002
-EXPOSE 443
 
 CMD ["node", "dist/index.js"] 
