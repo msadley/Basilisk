@@ -19,5 +19,3 @@ previewConfig.json
 
 # Pm2 configuration files
 ecosystem.config.js
-
-image.png
