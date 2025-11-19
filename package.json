@@ -53,19 +53,18 @@
     "react-textarea-autosize": "^8.5.9",
     "react-virtuoso": "^4.14.1",
     "remove": "^0.1.5",
-    "zod": "^4.1.12",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@pm2/io": "^6.1.0",
     "@types/events": "^3.0.3",
     "@types/node": "^24.2.0",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "cross-env": "^10.0.0",
     "nodemon": "^3.1.10",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "@types/uuid": "^10.0.0",
     "typescript": "^5.9.2"
   }
 }
