@@ -3,7 +3,7 @@ import styles from "./Indicator.module.css";
 import { observer } from "mobx-react-lite";
 
 const Indicator = observer(() => {
-  const indicatorState = connectionStore.isConnected;
+  const indicatorState = connectionStore.isUserConnected;
 
   return (
     <div className={styles.container}>

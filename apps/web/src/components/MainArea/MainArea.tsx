@@ -8,6 +8,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { layoutStore } from "../../stores/LayoutStore";
 import { observer } from "mobx-react-lite";
 import Indicator from "./Indicator/Indicator";
+import Toast from "../Toast/Toast";
+
+const headerVariants = {
+  hidden: {
+    y: -10,
+    opacity: 0,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      layout: {
+        duration: 1,
+      },
+      opacity: {
+        duration: 0.5,
+      },
+    },
+  },
+};
 
 const MainArea = observer(() => {
   const [header, setHeader] = useState<ReactNode>();
@@ -54,19 +74,17 @@ const MainArea = observer(() => {
             key={view.type}
             layout
             className={styles.header}
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -10, opacity: 0 }}
-            transition={{
-              layout: { duration: 0.5 },
-              opacity: { duration: 0.3 },
-            }}
+            variants={headerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
           >
             {header}
           </motion.div>
         </AnimatePresence>
         <Indicator />
       </div>
+
       <motion.div
         layout
         className={styles.body}
@@ -74,10 +92,11 @@ const MainArea = observer(() => {
           layout: { duration: 0.5 },
         }}
       >
+        <Toast />
         <AnimatePresence mode="wait">{body()}</AnimatePresence>
       </motion.div>
 
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence mode="wait">
         <motion.div
           key={view.type}
           layout

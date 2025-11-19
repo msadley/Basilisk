@@ -1,37 +1,11 @@
 .chat {
-  display: flex;
-  flex-direction: column;
   flex: 1;
   height: 100%;
-  overflow: hidden;
-  overflow-y: auto;
-  background: var(--ctp-surface0);
-  scrollbar-width: none;
-  gap: 8px;
-  padding-inline: 8px;
-  padding-bottom: 8px;
 }
 
-.sentinel {
-  display: flex;
-  flex-direction: column;
-  min-height: 20%;
+.virtuoso {
   flex: 1;
-  text-align: center;
-  color: var(--ctp-subtext0);
-}
-
-.loadingIcon {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  height: 40px;
-  aspect-ratio: 1;
-  animation: spin 0.5s ease-in-out infinite;
-}
-
-.loadingIcon svg {
-  color: var(--ctp-lavender);
+  scrollbar-width: none;
 }
 
 @keyframes spin {

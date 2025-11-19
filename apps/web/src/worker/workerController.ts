@@ -124,6 +124,10 @@ class WorkerController {
   async pingRelay(): Promise<number> {
     return (await this.requestWorker("ping-relay")).latency;
   }
+
+  async subscribeToPeer(peerId: string): Promise<void> {
+    await this.requestWorker("subscribe-to-peer", { peerId });
+  }
 }
 
 export const workerController = new WorkerController();

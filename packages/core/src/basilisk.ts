@@ -61,6 +61,22 @@ export class Basilisk {
       });
     });
 
+    nodeEvents.on("peer:connect", (peerId) => {
+      this.uiCallBack({
+        type: "peer-found",
+        payload: { peerId },
+        id: uuidv7(),
+      });
+    });
+
+    nodeEvents.on("peer:disconnect", (peerId) => {
+      this.uiCallBack({
+        type: "peer-lost",
+        payload: { peerId },
+        id: uuidv7(),
+      });
+    });
+
     databaseEvents.on("chat:spawn", async (chat: Chat) => {
       this.uiCallBack({
         type: "chat-spawned",
@@ -210,7 +226,16 @@ export class Basilisk {
         await getDb().close();
         this.uiCallBack({
           type: "database-closed",
-          id: uuidv7(),
+          id: event.id,
+        });
+        break;
+      }
+
+      case "subscribe-to-peer": {
+        await this.subscribeToPeer(event.payload.peerId);
+        this.uiCallBack({
+          type: "subscribed-to-peer",
+          id: event.id,
         });
         break;
       }
@@ -237,5 +262,9 @@ export class Basilisk {
   private async createChat(chat: Chat): Promise<void> {
     await upsertChat(chat);
     if (chat.type === "group") this.node.subscribe(chat.id);
+  }
+
+  private async subscribeToPeer(peerId: string) {
+    await this.node.addPeerListener(peerId);
   }
 }

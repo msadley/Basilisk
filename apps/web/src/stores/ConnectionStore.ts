@@ -1,18 +1,33 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, observable } from "mobx";
+import { workerController } from "../worker/workerController";
 
 class ConnectionStore {
-  isConnected: boolean = false;
+  isUserConnected: boolean = false;
+  connectionStatuses = observable.map<string, boolean | undefined>();
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  setConnectionFalse = () => {
-    this.isConnected = false;
+  setUserConnectionFalse = () => {
+    this.isUserConnected = false;
   };
 
-  setConnectionTrue = () => {
-    this.isConnected = true;
+  setUserConnectionTrue = () => {
+    this.isUserConnected = true;
+  };
+
+  addConnectionListener = (peerId: string) => {
+    this.connectionStatuses.set(peerId, undefined);
+    workerController.subscribeToPeer(peerId);
+  };
+
+  setConnectionFalse = (peerId: string) => {
+    this.connectionStatuses.set(peerId, false);
+  };
+
+  setConnectionTrue = (peerId: string) => {
+    this.connectionStatuses.set(peerId, true);
   };
 }
 

@@ -76,17 +76,6 @@ export async function upsertChat(chat: Chat): Promise<number> {
   }
 }
 
-/* async function chatExists(chatId: string): Promise<boolean> {
-  const db = getDb();
-
-  const result = await db.get<{ id: string }>(
-    "SELECT id FROM CHATS WHERE id = ?",
-    [chatId]
-  );
-
-  return result !== undefined;
-} */
-
 export async function saveMessage(message: MessagePacket): Promise<void> {
   const db = getDb();
 

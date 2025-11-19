@@ -22,6 +22,7 @@ let RELAY_ADDR: string;
 export class Node {
   public node: Libp2p;
   private chatConns: Map<string, Connection> = new Map();
+  private chatListeners: Set<string> = new Set();
 
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
@@ -45,13 +46,15 @@ export class Node {
       this.node.addEventListener("peer:connect", (evt) => {
         if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
           nodeEvents.emit("relay:connect");
-        }
+        } else if (this.chatListeners.has(evt.detail.toString()))
+          nodeEvents.emit("peer:connect", evt.detail.toString());
       });
 
       this.node.addEventListener("peer:disconnect", (evt) => {
         if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
           nodeEvents.emit("relay:disconnect");
-        }
+        } else if (this.chatListeners.has(evt.detail.toString()))
+          nodeEvents.emit("peer:disconnect", evt.detail.toString());
       });
     }
   }
@@ -110,6 +113,10 @@ export class Node {
     await this.node.stop();
   }
 
+  async addPeerListener(peerId: string) {
+    this.chatListeners.add(peerId);
+  }
+
   getMultiaddrs() {
     return this.node.getMultiaddrs();
   }
@@ -133,6 +140,7 @@ export class Node {
     (this.node.services as any).pubsub.subscribe(chatId);
   }
 
+  // XXX
   private async createChatConn(peerId: string) {
     if (this.chatConns.has(peerId)) return;
 

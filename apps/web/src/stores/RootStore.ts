@@ -9,6 +9,8 @@ class RootStore {
     workerController.on("chat-spawned", this.spawnChat);
     workerController.on("relay-lost", this.setIndicatorOff);
     workerController.on("relay-found", this.setIndicatorOn);
+    workerController.on("peer-found", this.setPeerFound);
+    workerController.on("peer-lost", this.setPeerLost);
   }
 
   loadSequence = async () => {
@@ -27,13 +29,25 @@ class RootStore {
   setIndicatorOff = async () => {
     const { connectionStore } = await import("./ConnectionStore");
 
-    connectionStore.setConnectionFalse();
+    connectionStore.setUserConnectionFalse();
   };
 
   setIndicatorOn = async () => {
     const { connectionStore } = await import("./ConnectionStore");
 
-    connectionStore.setConnectionTrue();
+    connectionStore.setUserConnectionTrue();
+  };
+
+  setPeerFound = async (event: any) => {
+    const { connectionStore } = await import("./ConnectionStore");
+
+    connectionStore.setConnectionTrue(event.peerId);
+  };
+
+  setPeerLost = async (event: any) => {
+    const { connectionStore } = await import("./ConnectionStore");
+
+    connectionStore.setConnectionFalse(event.peerId);
   };
 
   spawnChat = async (event: any) => {

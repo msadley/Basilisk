@@ -31,6 +31,8 @@
   display: flex;
   height: fit-content;
   flex-direction: column;
+  padding-bottom: 8px;
+  padding-inline: 8px;
 }
 
 .avatarContainer {

@@ -32,3 +32,10 @@ export interface ViewProps {
 export interface ButtonProps {
   onClick: () => void;
 }
+
+export interface ToastMessage {
+  id: string;
+  message: string;
+  type: "success" | "error" | "info";
+  duration?: number;
+}

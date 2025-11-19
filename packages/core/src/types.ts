@@ -176,8 +176,9 @@ export interface UIEventMap {
   // Database events
   "close-database": void;
 
-  // Miscellaneous events
+  // Connection events
   "ping-relay": void;
+  "subscribe-to-peer": { peerId: string };
 }
 
 export interface SystemEventMap {
@@ -203,10 +204,13 @@ export interface SystemEventMap {
   // Database events
   "database-closed": void;
 
-  // Miscellaneous events
+  // Connection events
   "pong-relay": { latency: number };
   "relay-found": void;
   "relay-lost": void;
+  "subscribed-to-peer": void;
+  "peer-found": { peerId: string };
+  "peer-lost": { peerId: string };
 }
 
 export type UIEvent = EventsFromMap<UIEventMap>;
@@ -222,6 +226,7 @@ export interface ResponseMap {
   "create-chat": "chat-created";
   "close-database": "database-closed";
   "ping-relay": "pong-relay";
+  "subscribe-to-peer": "subscribed-to-peer";
 }
 
 /**
