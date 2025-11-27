@@ -1,3 +1,8 @@
+@font-face {
+  font-family: Inter;
+  src: url("../assets/fonts/Inter-VariableFont_opsz\,wght.ttf");
+}
+
 :root {
   --ctp-rosewater: #f5e0dc;
   --ctp-flamingo: #f2cdcd;
@@ -42,8 +47,8 @@ body {
   color: var(--ctp-text);
   color-scheme: dark;
 
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -52,16 +57,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 :focus:not(:focus-visible) {
   outline: none;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 }
 
 html {
