@@ -6,8 +6,8 @@ services:
     container_name: basilisk_relay
     restart: unless-stopped
     ports:
-      - "9001:4001"
-      - "9002:4002"
+      - "4001:4001"
+      - "4002:4002"
     volumes:
       - ${HOME}/.basilisk:/root/.basilisk
     env_file:
