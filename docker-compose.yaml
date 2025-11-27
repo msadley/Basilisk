@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     ports:
       - "4001:4001"
-      - "4002:4002"
+      - "127.0.0.1:4002:4002"
     volumes:
       - ${HOME}/.basilisk:/root/.basilisk
     env_file:
