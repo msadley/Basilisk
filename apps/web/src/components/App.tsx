@@ -6,15 +6,22 @@ import { observer } from "mobx-react-lite";
 
 import { userStore as user } from "../stores/UserStore";
 import { chatStore as chat } from "../stores/ChatStore";
+import { AnimatePresence } from "framer-motion";
 
 const App = observer(() => {
-  return user.isProfileLoading || chat.areChatsLoading ? (
-    <LoadingScreen />
-  ) : (
-    <div className={styles.app}>
-      <Sidebar />
-      <MainArea />
-    </div>
+  const isLoading = user.isProfileLoading || chat.areChatsLoading;
+
+  return (
+    <AnimatePresence mode="wait">
+      {isLoading ? (
+        <LoadingScreen key="loader" />
+      ) : (
+        <div className={styles.app}>
+          <Sidebar />
+          <MainArea />
+        </div>
+      )}
+    </AnimatePresence>
   );
 });
 

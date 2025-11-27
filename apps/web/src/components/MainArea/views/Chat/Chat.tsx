@@ -10,6 +10,7 @@ import Message from "./Message/Message";
 import type { Chat as ChatType, Profile } from "@basilisk/core";
 import { Virtuoso } from "react-virtuoso";
 import { layoutStore } from "../../../../stores/LayoutStore";
+import Header from "./Header/Header";
 
 interface ChatProps extends ViewProps {
   chat: ChatType;
@@ -68,21 +69,24 @@ const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
 
   return (
     <div className={styles.chat}>
-      <Virtuoso
-        className={styles.virtuoso}
-        components={{ Header: () => <div style={{ height: "35%" }} /> }}
-        startReached={loadMore}
-        alignToBottom
-        followOutput
-        seamless
-        increaseViewportBy={200}
-        data={messages}
-        itemContent={(_, msg) => (
-          <AnimatePresence>
-            {<Message key={msg.uuid} message={msg} chat={chat} />}
-          </AnimatePresence>
-        )}
-      />
+      <AnimatePresence propagate mode="wait">
+        <Virtuoso
+          className={styles.virtuoso}
+          startReached={loadMore}
+          
+          components={{ Header }}
+          alignToBottom
+          followOutput
+          seamless
+          increaseViewportBy={200}
+          data={messages}
+          itemContent={(_, msg) => (
+            <AnimatePresence>
+              {<Message key={msg.uuid} message={msg} chat={chat} />}
+            </AnimatePresence>
+          )}
+        />
+      </AnimatePresence>
     </div>
   );
 });

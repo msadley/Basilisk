@@ -26,7 +26,7 @@ const ButtonArray = ({
           }}
           transition={{ duration: 0.2 }}
         >
-          Chat privado
+          Privado
         </motion.button>
 
         <motion.button
@@ -39,7 +39,7 @@ const ButtonArray = ({
           }}
           transition={{ duration: 0.2 }}
         >
-          Chat em grupo
+          Grupo
         </motion.button>
         <div className={styles.spacer}></div>
       </div>

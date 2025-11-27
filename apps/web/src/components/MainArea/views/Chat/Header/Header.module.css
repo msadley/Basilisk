@@ -1,0 +1,35 @@
+.wrapper {
+  padding: 20px;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-items: center;
+  align-items: center;
+}
+
+.nebulaOrb {
+  z-index: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ctp-mauve), var(--ctp-blue));
+  box-shadow: 0 0 20px rgba(203, 166, 247, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.2);
+
+  animation: pulse-ooze 4s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-ooze {
+  0% {
+    transform: scale(1) rotate(0deg);
+    border-radius: 50% 50% 50% 50%;
+  }
+  50% {
+    border-radius: 45% 55% 50% 50%;
+  }
+  100% {
+    transform: scale(1.15) rotate(10deg);
+    border-radius: 50% 50% 55% 45%;
+  }
+}

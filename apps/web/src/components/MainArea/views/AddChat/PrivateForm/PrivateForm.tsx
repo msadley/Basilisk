@@ -52,7 +52,6 @@ const PrivateForm = ({ createChat, setIsLoading, setView }: FormProps) => {
     } catch (e: any) {
       console.error("Failed to create chat:", e);
       setError("root", { message: "Could not create chat." });
-    } finally {
       setIsLoading(false);
     }
   };

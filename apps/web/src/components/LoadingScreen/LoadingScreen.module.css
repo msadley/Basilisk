@@ -4,6 +4,7 @@
   width: 100vw;
   height: 100vh;
   padding: 8px;
+  position: fixed;
 }
 
 .inner {
@@ -18,11 +19,13 @@
 .body {
   display: flex;
   flex: 1;
+  flex-direction: column;
   overflow: hidden;
   background-color: var(--ctp-base);
   border-radius: 26px;
   align-items: center;
   justify-content: center;
+  gap: 8px;
 }
 
 .body svg {

@@ -45,9 +45,6 @@ const MainArea = observer(() => {
         return <Home key="home" {...viewControls} />;
 
       case "chat":
-        if (view.details.chat === undefined)
-          throw new Error("Chat não foi fornecido.");
-
         return (
           <Chat
             key={view.details.chat.id}

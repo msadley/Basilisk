@@ -9,6 +9,7 @@
 }
 
 .headerContainer {
+  padding-left: 1rem;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
@@ -18,8 +19,6 @@
   display: flex;
   flex: 1;
   flex-direction: row;
-  justify-content: center;
-  align-content: center;
   overflow: hidden;
   min-height: 26px;
   padding: 6px;

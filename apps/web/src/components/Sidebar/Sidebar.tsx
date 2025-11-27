@@ -8,27 +8,22 @@ import { chatStore } from "../../stores/ChatStore";
 import { observer } from "mobx-react-lite";
 import Avatar from "../Avatar/Avatar";
 import { connectionStore } from "../../stores/ConnectionStore";
+import { useEffect } from "react";
 
 const Sidebar = observer(() => {
   const chats = chatStore.chats;
   const setMainView = layoutStore.setMainView;
   const setSidePanelView = layoutStore.setSidePanelView;
 
-  const chatComponents = () => {
+  useEffect(() => {
     chats.forEach((chat: Chat) => {
       if (chat.type === "private") {
-        connectionStore.addConnectionListener(chat.id);
+        if (!connectionStore.connectionStatuses.has(chat.id)) {
+          connectionStore.addConnectionListener(chat.id);
+        }
       }
     });
-    return chats.map((chat: Chat) => (
-      <Avatar
-        key={chat.id}
-        onClick={() => setMainView({ type: "chat", details: { chat } })}
-        chat={chat}
-        indicator={chat.type === "private"}
-      />
-    ));
-  };
+  }, []);
 
   return (
     <div className={styles.sidebar}>
@@ -36,7 +31,16 @@ const Sidebar = observer(() => {
         <HomeButton onClick={() => setMainView({ type: "home" })} />
       </div>
       <div className={styles.body}>
-        <div className={styles.chatContainer}>{chatComponents()}</div>
+        <div className={styles.chatContainer}>
+          {chats.map((chat: Chat) => (
+            <Avatar
+              key={chat.id}
+              onClick={() => setMainView({ type: "chat", details: { chat } })}
+              chat={chat}
+              indicator={chat.type === "private"}
+            />
+          ))}
+        </div>
       </div>
       <div className={styles.footer}>
         <AddChatButton onClick={() => setMainView({ type: "addChat" })} />
