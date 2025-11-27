@@ -17,7 +17,7 @@ type PromiseControls = {
 };
 
 class WorkerController {
-  worker: Worker = new Worker(new URL("./worker.js", import.meta.url), {
+  worker: Worker = new Worker(new URL("./worker.ts", import.meta.url), {
     type: "module",
   });
   emitter = mitt();
