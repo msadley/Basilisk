@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -31,7 +30,6 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
-    "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2"
   }
 }
