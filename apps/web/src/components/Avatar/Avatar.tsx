@@ -12,7 +12,6 @@ type AvatarProps = {
 };
 
 const bgColors = [
-  "var(--ctp-rosewater)",
   "var(--ctp-flamingo)",
   "var(--ctp-pink)",
   "var(--ctp-mauve)",
