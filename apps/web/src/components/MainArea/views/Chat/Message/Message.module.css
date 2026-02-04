@@ -1,4 +1,6 @@
 .message {
+  all: unset;
+  box-sizing: border-box;
   width: fit-content;
   max-width: 60%;
   padding: 8px 1rem;
@@ -9,6 +11,10 @@
   overflow-wrap: break-word;
   position: relative;
   white-space: pre-wrap;
+}
+
+.message.error {
+  cursor: pointer;
 }
 
 .message.error::before {

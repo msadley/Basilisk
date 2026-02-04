@@ -80,7 +80,7 @@ class MessageStore {
       runInAction(() => {
         const timestamps = new Set(state.ids);
         const uniqueNewMsgs = newMsgs.filter(
-          (msg) => !timestamps.has(msg.uuid)
+          (msg) => !timestamps.has(msg.uuid),
         );
 
         uniqueNewMsgs.forEach((msg) => {
@@ -138,6 +138,26 @@ class MessageStore {
         const message = state.messages.get(uuid)!;
         state.messages.set(uuid, { ...message, status: "error" });
       });
+    }
+  };
+
+  resendMessage = async (chatId: string, messageId: string) => {
+    let message: Message | undefined;
+
+    runInAction(() => {
+      message = this.chats.get(chatId)?.messages.get(messageId);
+    });
+
+    if (!message) {
+      console.error(
+        "Impossible case where an unexisting message called its own resend function",
+      );
+    } else {
+      runInAction(() => {
+        const msgIdx = this.chats.get(chatId)?.ids.indexOf(messageId);
+        if (msgIdx) this.chats.get(chatId)?.ids.splice(msgIdx, 1);
+      });
+      this.sendMessage(chatId, message.content);
     }
   };
 }

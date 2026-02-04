@@ -33,7 +33,7 @@ const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
     async (content: string) => {
       await messageStore.sendMessage(chat.id, content);
     },
-    [chat.id]
+    [chat.id],
   );
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
   useEffect(() => {
     const headerText = peerProfileError
       ? peerProfileError.message
-      : peerProfile?.name ?? chat.id;
+      : (peerProfile?.name ?? chat.id);
     setHeader(<>{headerText}</>);
   }, [chat.id, setHeader, peerProfile, peerProfileError]);
 
@@ -73,7 +73,6 @@ const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
         <Virtuoso
           className={styles.virtuoso}
           startReached={loadMore}
-          
           components={{ Header }}
           alignToBottom
           followOutput

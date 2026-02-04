@@ -1,10 +1,10 @@
 import { observer } from "mobx-react-lite";
 import styles from "./Message.module.css";
 import type { Chat } from "@basilisk/core";
-import type { Message } from "../../../../../stores/MessageStore";
+import { messageStore, type Message } from "../../../../../stores/MessageStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { userStore } from "../../../../../stores/UserStore";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Icon } from "@iconify/react";
 // import Avatar from "../../../../Avatar/Avatar";
 
@@ -13,8 +13,12 @@ type MessageProps = {
   chat: Chat;
 };
 
-const Message = observer(({ message /*chat*/ }: MessageProps) => {
+const Message = observer(({ message, chat }: MessageProps) => {
   const profile = userStore.userProfile;
+
+  const resend = useCallback(async () => {
+    await messageStore.resendMessage(chat.id, message.uuid);
+  }, [chat.id]);
 
   const messageClasses = `
     ${styles.message}
@@ -70,13 +74,18 @@ const Message = observer(({ message /*chat*/ }: MessageProps) => {
               icon={
                 message.status === "sending"
                   ? "mingcute:loading-3-fill"
-                  : "mingcute:warning-fill"
+                  : "cuida:rotate-left-outline"
               }
             />
           </motion.div>
         )}
       </AnimatePresence>
-      <div className={messageClasses}>{message.content}</div>
+      <button
+        onClick={message.status === "error" ? () => resend() : undefined}
+        className={messageClasses}
+      >
+        {message.content}
+      </button>
     </motion.div>
   );
 });
