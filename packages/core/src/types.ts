@@ -24,7 +24,7 @@ export interface Database {
    */
   run(
     sql: string,
-    params?: SqlValue[] | Record<string, SqlValue>
+    params?: SqlValue[] | Record<string, SqlValue>,
   ): Promise<number>;
 
   /**
@@ -35,7 +35,7 @@ export interface Database {
    */
   get<T>(
     sql: string,
-    params?: SqlValue[] | Record<string, SqlValue>
+    params?: SqlValue[] | Record<string, SqlValue>,
   ): Promise<T | undefined>;
 
   /**
@@ -46,7 +46,7 @@ export interface Database {
    */
   all<T>(
     sql: string,
-    params?: SqlValue[] | Record<string, SqlValue>
+    params?: SqlValue[] | Record<string, SqlValue>,
   ): Promise<T[]>;
 
   /**
@@ -175,6 +175,7 @@ export interface UIEventMap {
 
   // Database events
   "close-database": void;
+  "wipe-database": void;
 
   // Connection events
   "ping-relay": void;
@@ -203,6 +204,7 @@ export interface SystemEventMap {
 
   // Database events
   "database-closed": void;
+  "database-wiped": void;
 
   // Connection events
   "pong-relay": { latency: number };
@@ -227,6 +229,7 @@ export interface ResponseMap {
   "close-database": "database-closed";
   "ping-relay": "pong-relay";
   "subscribe-to-peer": "subscribed-to-peer";
+  "wipe-database": "database-wiped";
 }
 
 /**

@@ -52,12 +52,24 @@ export async function createSchema(): Promise<void> {
   `);
 }
 
+export async function wipeDatabase(): Promise<void> {
+  const db = getDb();
+
+  const tables = ["profiles", "chats", "messages", "group_members"];
+
+  tables.forEach((table: string) => {
+    db.run(`DROP TABLE IF EXISTS ${table};`);
+  });
+
+  db.run("VACUUM;");
+}
+
 export async function upsertProfile(profile: Profile): Promise<number> {
   const db = getDb();
 
   return await db.run(
     "INSERT INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
-    [profile.id, profile.name, profile.avatar]
+    [profile.id, profile.name, profile.avatar],
   );
 }
 
@@ -66,7 +78,7 @@ export async function upsertChat(chat: Chat): Promise<number> {
   if (chat.type === "group") {
     return await db.run(
       "INSERT INTO chats (id, name, avatar, type) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
-      [chat.id, chat.name, chat.avatar, chat.type]
+      [chat.id, chat.name, chat.avatar, chat.type],
     );
   } else {
     return await db.run("INSERT INTO chats (id, type) VALUES (?, ?)", [
@@ -86,12 +98,11 @@ export async function saveMessage(message: MessagePacket): Promise<void> {
     await db.run("INSERT INTO chats (id, type) VALUES (?, ?)", [chatId, type]);
     const chat = { id: chatId, type };
     databaseEvents.emit("chat:spawn", chat);
-  } catch (e: any) {
-  }
+  } catch (e: any) {}
 
   await db.run(
     "INSERT INTO messages (uuid, chat_id, from_id, content) VALUES (?, ?, ?, ?)",
-    [message.uuid, chatId, message.from, message.content]
+    [message.uuid, chatId, message.from, message.content],
   );
 }
 
@@ -110,7 +121,7 @@ export function chatType(id: string): "private" | "group" {
 export async function getMyProfile(): Promise<Profile> {
   const db = getDb();
   const profile: Profile | undefined = await db.get<Profile>(
-    "SELECT id, name, avatar FROM profiles LIMIT 1"
+    "SELECT id, name, avatar FROM profiles LIMIT 1",
   );
   if (!profile || profile.id === "") {
     throw new Error("Profile not found in the database.");
@@ -121,36 +132,36 @@ export async function getMyProfile(): Promise<Profile> {
 export async function setMyProfile(
   id: string,
   name?: string,
-  avatar?: string
+  avatar?: string,
 ): Promise<void> {
   const db = getDb();
   await db.run(
     "INSERT OR REPLACE INTO profiles (id, name, avatar) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, avatar = excluded.avatar",
-    [id, name, avatar]
+    [id, name, avatar],
   );
 }
 
 export async function getMessages(
   peerId: string,
-  page: number
+  page: number,
 ): Promise<Message[]> {
   const db = getDb();
   const limit = 20;
   const offset = (Math.max(1, page) - 1) * limit;
   return db.all<Message>(
     "SELECT uuid, content, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? ORDER BY uuid DESC LIMIT ? OFFSET ?",
-    [peerId, limit, offset]
+    [peerId, limit, offset],
   );
 }
 
 export async function getMessage(
   peerId: string,
-  msgId: number
+  msgId: number,
 ): Promise<Message> {
   const db = getDb();
   const message = await db.get<Message>(
     "SELECT uuid, content, from_id as 'from', chat_id as 'chat' FROM messages WHERE chat_id = ? AND uuid = ?",
-    [peerId, msgId]
+    [peerId, msgId],
   );
 
   if (!message) {
@@ -173,7 +184,7 @@ export async function getChatMembers(chatId: string): Promise<Profile[]> {
     JOIN chat_members cm ON p.id = cm.profile_id
     WHERE cm.chat_id = ?
   `,
-    [chatId]
+    [chatId],
   );
 }
 

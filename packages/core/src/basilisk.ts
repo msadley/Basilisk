@@ -10,6 +10,7 @@ import {
   upsertChat,
   getChats,
   getDb,
+  wipeDatabase,
 } from "./database.js";
 import type {
   Chat,
@@ -29,7 +30,7 @@ export class Basilisk {
   private constructor(
     nodeInstance: Node,
     database: Database,
-    uiCallBack: SendToUiCallback
+    uiCallBack: SendToUiCallback,
   ) {
     this.node = nodeInstance;
     this.uiCallBack = uiCallBack;
@@ -89,7 +90,7 @@ export class Basilisk {
   public static async init(
     database: Database,
     uiCallback: SendToUiCallback,
-    relayAddr: string
+    relayAddr: string,
   ) {
     const node = await Node.init({ mode: "CLIENT", relayAddr });
     return new Basilisk(node, database, uiCallback);
@@ -162,7 +163,7 @@ export class Basilisk {
         await setMyProfile(
           this.node.getPeerId(),
           event.payload.name,
-          event.payload.avatar
+          event.payload.avatar,
         );
         this.uiCallBack({
           type: "profile-updated-self",
@@ -193,7 +194,7 @@ export class Basilisk {
       case "get-messages": {
         const messages = await this.getMessages(
           event.payload.chatId,
-          event.payload.page
+          event.payload.page,
         );
         this.uiCallBack({
           type: "messages-retrieved",
@@ -226,6 +227,15 @@ export class Basilisk {
         await getDb().close();
         this.uiCallBack({
           type: "database-closed",
+          id: event.id,
+        });
+        break;
+      }
+
+      case "wipe-database": {
+        await wipeDatabase();
+        this.uiCallBack({
+          type: "database-wiped",
           id: event.id,
         });
         break;
