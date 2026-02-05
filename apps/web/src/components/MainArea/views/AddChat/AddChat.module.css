@@ -11,6 +11,7 @@
   flex-direction: column;
   justify-content: center;
   width: 85%;
+  max-width: 750px;
   background-color: var(--ctp-mantle);
   border-radius: 26px;
   overflow: hidden;
@@ -27,8 +28,7 @@
   flex: 1;
   height: 100%;
   background-color: var(--ctp-mantle);
-  border-top-left-radius: 12px;
-  padding: 1rem;
+  padding: 12px;
 }
 
 .loadingContainer {

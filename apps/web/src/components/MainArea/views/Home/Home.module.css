@@ -44,3 +44,28 @@
   height: 1rem;
   width: 1rem;
 }
+
+.separator {
+  height: 64px;
+}
+
+.wipeButton {
+  all: unset;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--ctp-base);
+  color: var(--ctp-error-light);
+  border-radius: 26px;
+  box-sizing: border-box;
+  padding: 4px;
+  padding-inline: 8px;
+  cursor: pointer;
+}
+
+.wipeButton svg {
+  display: block;
+  height: 1rem;
+  width: 1rem;
+}

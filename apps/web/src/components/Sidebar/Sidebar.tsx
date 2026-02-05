@@ -1,5 +1,4 @@
 import styles from "./Sidebar.module.css";
-import SettingsButton from "./buttons/SettingsButton/SettingsButton";
 import AddChatButton from "./buttons/AddChatButton/AddChatButton";
 import HomeButton from "./buttons/HomeButton/HomeButton";
 import type { Chat } from "@basilisk/core";
@@ -13,7 +12,6 @@ import { useEffect } from "react";
 const Sidebar = observer(() => {
   const chats = chatStore.chats;
   const setMainView = layoutStore.setMainView;
-  const setSidePanelView = layoutStore.setSidePanelView;
 
   useEffect(() => {
     chats.forEach((chat: Chat) => {
@@ -44,9 +42,6 @@ const Sidebar = observer(() => {
       </div>
       <div className={styles.footer}>
         <AddChatButton onClick={() => setMainView({ type: "addChat" })} />
-        <SettingsButton
-          onClick={() => setSidePanelView({ type: "settings" })}
-        />
       </div>
     </div>
   );

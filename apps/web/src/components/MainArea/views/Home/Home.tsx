@@ -10,7 +10,7 @@ import { layoutStore } from "../../../../stores/LayoutStore";
 const Home = observer(({ setHeader, setFooter }: ViewProps) => {
   const [idVisible, setIdVisible] = useState<boolean>(false);
   const profile = userStore.userProfile;
-  const { addToast } = layoutStore;
+  const { addToast, setModalView } = layoutStore;
 
   const toggleIdVisibility = useCallback(() => {
     setIdVisible((prev) => !prev);
@@ -40,7 +40,15 @@ const Home = observer(({ setHeader, setFooter }: ViewProps) => {
         {idVisible ? profile?.id : "Mostrar ID"}
       </button>
       <button onClick={copyIdToClipboard} className={styles.copyButton}>
-        <Icon icon="mingcute:copy-2-fill"></Icon>
+        <Icon icon="mingcute:copy-2-fill" />
+      </button>
+      <div className={styles.separator} />
+      <button
+        onClick={() => setModalView({ type: "wipe" })}
+        className={styles.wipeButton}
+      >
+        <Icon icon="mingcute:delete-2-fill" />
+        Apagar todos os dados
       </button>
     </motion.div>
   );

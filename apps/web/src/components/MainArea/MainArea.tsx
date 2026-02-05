@@ -7,7 +7,6 @@ import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { layoutStore } from "../../stores/LayoutStore";
 import { observer } from "mobx-react-lite";
-import Indicator from "./Indicator/Indicator";
 import Toast from "../Toast/Toast";
 
 const headerVariants = {
@@ -59,7 +58,6 @@ const MainArea = observer(() => {
       default:
         if (header) setHeader(null);
         if (footer) setFooter(null);
-        return null;
     }
   };
 
@@ -79,7 +77,6 @@ const MainArea = observer(() => {
             {header}
           </motion.div>
         </AnimatePresence>
-        <Indicator />
       </div>
 
       <motion.div

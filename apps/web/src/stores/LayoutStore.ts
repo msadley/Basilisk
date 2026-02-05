@@ -1,10 +1,16 @@
 import { makeAutoObservable, observable } from "mobx";
-import type { MainView, SidePanelView, ToastMessage } from "../types";
+import type {
+  MainView,
+  ModalView,
+  SidePanelView,
+  ToastMessage,
+} from "../types";
 import { v7 as uuidv7 } from "uuid";
 
 class LayoutStore {
   mainView: MainView = { type: "home" };
   sidePanelView: SidePanelView = { type: "none" };
+  modalView: ModalView = { type: "none" };
   toasts = observable<ToastMessage>([]);
 
   constructor() {
@@ -17,6 +23,10 @@ class LayoutStore {
 
   setSidePanelView = (view: SidePanelView) => {
     this.sidePanelView = view;
+  };
+
+  setModalView = (view: ModalView) => {
+    this.modalView = view;
   };
 
   get currentToast(): ToastMessage | undefined {
@@ -35,7 +45,7 @@ class LayoutStore {
 
   removeToast = (id: string) => {
     this.toasts = observable.array(
-      this.toasts.filter((toast) => toast.id !== id)
+      this.toasts.filter((toast) => toast.id !== id),
     );
   };
 }

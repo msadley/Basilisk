@@ -19,8 +19,18 @@ type SidePanelViewsFromMap<T extends Record<string, any>> = {
 
 interface SidePanelViewMap {
   none: void;
-  settings: void;
 }
+
+type ModalViewsFromMap<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends void ? { type: K } : { type: K; details: T[K] };
+}[keyof T];
+
+interface ModalViewMap {
+  loading: void;
+  wipe: void;
+  none: void;
+}
+export type ModalView = ModalViewsFromMap<ModalViewMap>;
 
 export type SidePanelView = SidePanelViewsFromMap<SidePanelViewMap>;
 

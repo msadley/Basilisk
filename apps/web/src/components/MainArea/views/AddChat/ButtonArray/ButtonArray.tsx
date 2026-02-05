@@ -12,37 +12,31 @@ const ButtonArray = ({
 }: ButtonArrayProps) => {
   return (
     <div className={styles.header}>
-      <div className={styles.tabContainer}>
-        <div className={styles.tab}>Adicionar Chat</div>
-      </div>
-      <div className={styles.buttonContainer}>
-        <motion.button
-          onClick={() => setActiveButtonIndex(0)}
-          className={styles.button}
-          animate={{
-            backgroundColor: !activeButtonIndex
-              ? "var(--ctp-crust)"
-              : "var(--ctp-base)",
-          }}
-          transition={{ duration: 0.2 }}
-        >
-          Privado
-        </motion.button>
+      <motion.button
+        onClick={() => setActiveButtonIndex(0)}
+        className={styles.button}
+        animate={{
+          backgroundColor: !activeButtonIndex
+            ? "var(--ctp-crust)"
+            : "var(--ctp-base)",
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        Privado
+      </motion.button>
 
-        <motion.button
-          onClick={() => setActiveButtonIndex(1)}
-          className={styles.button}
-          animate={{
-            backgroundColor: activeButtonIndex
-              ? "var(--ctp-crust)"
-              : "var(--ctp-base)",
-          }}
-          transition={{ duration: 0.2 }}
-        >
-          Grupo
-        </motion.button>
-        <div className={styles.spacer}></div>
-      </div>
+      <motion.button
+        onClick={() => setActiveButtonIndex(1)}
+        className={styles.button}
+        animate={{
+          backgroundColor: activeButtonIndex
+            ? "var(--ctp-crust)"
+            : "var(--ctp-base)",
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        Grupo
+      </motion.button>
     </div>
   );
 };

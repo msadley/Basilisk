@@ -28,7 +28,7 @@ const LoadingScreen = () => {
     >
       <div className={styles.inner}>
         <div className={styles.body}>
-          <Icon icon="mingcute:loading-3-fill"></Icon>
+          <Icon icon="mingcute:loading-3-fill" />
           Carregando banco de dados...
         </div>
       </div>

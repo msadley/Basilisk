@@ -1,31 +1,8 @@
 .header {
   display: flex;
   flex-direction: row;
-  background-color: var(--ctp-crust);
-}
-
-.tabContainer {
-  display: flex;
-  align-items: center;
   background-color: var(--ctp-mantle);
-}
-
-.tab {
-  height: 100%;
-  flex: 1;
-  align-content: center;
-  padding: 6px;
-  padding-inline: 1.2rem;
-  background-color: var(--ctp-crust);
-  border-bottom-right-radius: 1.2rem;
-  font-size: 0.9rem;
-}
-
-.buttonContainer {
-  flex: 1;
-  background-color: var(--ctp-mantle);
-  border-top-left-radius: 1.2rem;
-  position: relative;
+  padding-inline: 8px;
 }
 
 .button {
@@ -39,9 +16,10 @@
   padding: 0;
   box-sizing: border-box;
   padding: 4px;
-  padding-inline: 2rem;
+  padding-inline: 24px;
   border-radius: 26px;
-  margin: 6px;
+  margin: 8px;
+  margin-bottom: 0;
   position: relative;
   background-color: var(--ctp-base);
   color: var(--ctp-subtext0);

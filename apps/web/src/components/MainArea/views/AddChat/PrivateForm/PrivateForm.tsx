@@ -22,7 +22,7 @@ const formSchema = z.object({
       },
       {
         message: "Peer ID inválido ou mal formatado",
-      }
+      },
     ),
 });
 

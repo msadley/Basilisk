@@ -33,6 +33,7 @@
 
   /* Custom set ones */
   --ctp-error: #47000054;
+  --ctp-error-light: #ff8585;
 }
 
 body,

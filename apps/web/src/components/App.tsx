@@ -7,6 +7,8 @@ import { observer } from "mobx-react-lite";
 import { userStore as user } from "../stores/UserStore";
 import { chatStore as chat } from "../stores/ChatStore";
 import { AnimatePresence } from "framer-motion";
+import Modal from "./Modal/Modal";
+import Reconnecting from "./Reconnecting/Reconnecting";
 
 const App = observer(() => {
   const isLoading = user.isProfileLoading || chat.areChatsLoading;
@@ -19,6 +21,8 @@ const App = observer(() => {
         <div className={styles.app}>
           <Sidebar />
           <MainArea />
+          <Modal />
+          <Reconnecting />
         </div>
       )}
     </AnimatePresence>

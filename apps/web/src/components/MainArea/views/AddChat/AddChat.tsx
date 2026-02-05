@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { MainView, ViewProps } from "../../../../types";
 import styles from "./AddChat.module.css";
-import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import ButtonArray from "./ButtonArray/ButtonArray";
 import PrivateForm from "./PrivateForm/PrivateForm";
@@ -18,11 +17,7 @@ export type FormProps = {
   setView: (view: MainView) => void;
 };
 
-function AddChat({
-  setHeader,
-  setFooter,
-  setView,
-}: AddChatViewProps) {
+function AddChat({ setHeader, setFooter, setView }: AddChatViewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const createChat = chatStore.createChat;
 
@@ -41,30 +36,23 @@ function AddChat({
   }, []);
 
   return !isLoading ? (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0 }}
-      transition={{ type: "spring", duration: 0.5 }}
-      className={styles.addChat}
-    >
-      <motion.div className={styles.container}>
+    <div className={styles.addChat}>
+      <div className={styles.container}>
         <ButtonArray
           activeButtonIndex={activeButton}
           setActiveButtonIndex={setActiveButton}
         />
-        <motion.div layout className={styles.formContainer}>
-          <motion.div layout className={styles.form}>
+        <div className={styles.formContainer}>
+          <div className={styles.form}>
             {!activeButton ? (
               <PrivateForm {...formProps} />
             ) : (
               <p>Menu de grupos em construção!</p>
             )}
-          </motion.div>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
   ) : (
     <div className={styles.loadingContainer}>
       <Icon

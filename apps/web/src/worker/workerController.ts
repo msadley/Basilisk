@@ -121,6 +121,10 @@ class WorkerController {
     await this.requestWorker("close-database");
   }
 
+  async wipe(): Promise<void> {
+    await this.requestWorker("wipe-database");
+  }
+
   async pingRelay(): Promise<number> {
     return (await this.requestWorker("ping-relay")).latency;
   }
