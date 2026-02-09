@@ -2,6 +2,14 @@
 
 <br/>
 
+<div align="center">
+  <a href="https://basilisk.ddns.net">
+   <img src="https://img.shields.io/badge/LIVE_DEMO-Visit_Website-5e5e5e?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Demo" height="30">
+  </a>
+</div>
+
+<br/>
+
 A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
 ## Building from source
@@ -10,8 +18,9 @@ A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
 - Node.js (v22 or higher)
 - npm
+- docker(\*)
 
-You can get those [here](https://nodejs.org/en/download).
+\*Makes setting up your own relay a lot easier
 
 ### Instructions
 
@@ -33,29 +42,42 @@ You can get those [here](https://nodejs.org/en/download).
    npm run build
    ```
 
-## Development
+## Running
+
+Before proceding, make sure to set the variables in the .env file as specified in the example:
+
+```sh
+# .env.example
+
+# Specify the public DNS of the relay server here
+PUBLIC_DNS="your-dns.com"
+
+# Specify the relay address used by the frontend here
+VITE_BOOTSTRAP_MULTIADDRS="/dns4/your-dns.com/tcp/443/wss/p2p/12D3KooWS..."
+```
 
 ### Relay
 
-To set up your own circuit-relay server, create your own pm2 config file at the project's root directory following the example file:
-
-```javascript
-// ecosystem.config.js.example
-
-module.exports = {
-  apps: [{
-    name: "relay",
-    cwd: "./apps/relay",
-    script: "./dist/index.js",
-    env: {
-      PUBLIC_DNS: "your-public-dns"
-    }
-  }]
-}
-```
-
-This will ensure the relay server knows where to announce. After that, start the relay server using pm2:
+To set up your own circuit-relay server, just start the docker file inside the apps/relay directory using:
 
 ```sh
-pm2 start ./ecosystem.config.js
+$ docker compose up
 ```
+
+The relay will then log its public addresses which can be used by the vite frontend.
+
+### Frontend
+
+To run the frontend in development mode, you can run:
+
+```sh
+npm run vite
+```
+
+To build the website files for deployment, navigate to apps/web and run:
+
+```sh
+npm run build
+```
+
+The build files will be located at _apps/web/dist_.
