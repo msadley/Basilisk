@@ -24,5 +24,5 @@ export default defineConfig({
     format: "es",
   },
   envDir: "../../",
-  base: "/Basilisk/",
+  base: "./",
 });
