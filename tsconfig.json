@@ -2,8 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/core" },
-    { "path": "packages/utils" },
-    { "path": "apps/cli" },
+    { "path": "apps/web" },
     { "path": "apps/relay" }
   ]
 }

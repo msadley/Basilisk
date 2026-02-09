@@ -1,11 +1,9 @@
-// package/core/src/connection.ts
-
 import { fromString } from "uint8arrays/from-string";
 import type { Stream } from "@libp2p/interface";
 import * as lp from "it-length-prefixed";
 import { pushable, type Pushable } from "it-pushable";
 import { pipe } from "it-pipe";
-import type { Message } from "./database.js";
+import type { MessagePacket } from "./types.js";
 
 export class Connection {
   private stream: Stream;
@@ -22,7 +20,7 @@ export class Connection {
     pipe(this.messagePusher, (source) => lp.encode(source), this.stream.sink);
   }
 
-  sendMessage(message: Message) {
+  sendMessage(message: MessagePacket) {
     const messageString = JSON.stringify(message);
     this.messagePusher.push(fromString(messageString));
   }

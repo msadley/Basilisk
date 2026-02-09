@@ -1,0 +1,41 @@
+.form {
+  flex: 1;
+  display: flex;
+  background-color: var(--ctp-crust);
+  border-radius: 26px;
+}
+
+.input {
+  outline: none;
+  flex: 1;
+  z-index: 1;
+  height: 100%;
+  padding: 6px;
+  padding-left: 1rem;
+  background: var(--ctp-base);
+  border: none;
+  border-radius: 26px;
+  border-top-right-radius: 30px;
+  border-bottom-right-radius: 30px;
+  width: 10px;
+}
+
+.button {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
+  padding-inline: 1rem;
+  background: var(--ctp-crust);
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  border-radius: 26px;
+  border-top-right-radius: 8px;
+  text-align: right;
+}
+
+.error {
+  text-align: center;
+  padding-top: 1rem;
+}

@@ -1,74 +1,280 @@
-// packages/core/src/basilisk.ts
-
-import { Node, chatEvents } from "./node.js";
-import { retrieveMessages, saveMessage, type Message } from "./database.js";
-import { log, setHomePath } from "@basilisk/utils";
-import type { Multiaddr } from "@multiformats/multiaddr";
-
-const DEFAULT_HOME: string = "basilisk_data/";
+import { Node, nodeEvents } from "./node.js";
+import {
+  setDb,
+  createSchema,
+  getMyProfile,
+  databaseEvents,
+  saveMessage,
+  getMessages,
+  setMyProfile,
+  upsertChat,
+  getChats,
+  getDb,
+  wipeDatabase,
+} from "./database.js";
+import type {
+  Chat,
+  Message,
+  Profile,
+  SendToUiCallback,
+  UIEvent,
+  Database,
+  MessagePacket,
+} from "./types.js";
+import { v7 as uuidv7 } from "uuid";
 
 export class Basilisk {
   private node: Node;
+  private uiCallBack: SendToUiCallback;
 
-  private constructor(nodeInstance: Node) {
+  private constructor(
+    nodeInstance: Node,
+    database: Database,
+    uiCallBack: SendToUiCallback,
+  ) {
     this.node = nodeInstance;
+    this.uiCallBack = uiCallBack;
+    setDb(database);
+    createSchema();
 
-    chatEvents.on(
-      "message:receive",
-      async (message: Message, remoteAddr: string) => {
-        await log("INFO", `Message received from ${remoteAddr}`);
-        await saveMessage(message, remoteAddr);
+    nodeEvents.on("message:receive", async (message: MessagePacket) => {
+      await saveMessage(message);
+      this.uiCallBack({
+        type: "message-received",
+        payload: {
+          message,
+        },
+        id: uuidv7(),
+      });
+    });
+
+    nodeEvents.on("relay:connect", () => {
+      this.uiCallBack({
+        type: "relay-found",
+        id: uuidv7(),
+      });
+    });
+
+    nodeEvents.on("relay:disconnect", () => {
+      this.uiCallBack({
+        type: "relay-lost",
+        id: uuidv7(),
+      });
+    });
+
+    nodeEvents.on("peer:connect", (peerId) => {
+      this.uiCallBack({
+        type: "peer-found",
+        payload: { peerId },
+        id: uuidv7(),
+      });
+    });
+
+    nodeEvents.on("peer:disconnect", (peerId) => {
+      this.uiCallBack({
+        type: "peer-lost",
+        payload: { peerId },
+        id: uuidv7(),
+      });
+    });
+
+    databaseEvents.on("chat:spawn", async (chat: Chat) => {
+      this.uiCallBack({
+        type: "chat-spawned",
+        payload: { chat },
+        id: uuidv7(),
+      });
+    });
+  }
+
+  public static async init(
+    database: Database,
+    uiCallback: SendToUiCallback,
+    relayAddr: string,
+  ) {
+    const node = await Node.init({ mode: "CLIENT", relayAddr });
+    return new Basilisk(node, database, uiCallback);
+  }
+
+  public async startNode() {
+    await this.node.start();
+    await setMyProfile(this.node.getPeerId());
+
+    (await getChats())
+      .filter((chat) => chat.type === "group")
+      .map((chat) => chat.id)
+      .forEach((chatId) => this.node.subscribe(chatId));
+
+    this.uiCallBack({
+      type: "node-started",
+      payload: { profile: await getMyProfile() },
+      id: uuidv7(),
+    });
+  }
+
+  public async handleUiCommand(event: UIEvent) {
+    switch (event.type) {
+      case "ping-relay": {
+        try {
+          const latency = await this.node.pingRelay();
+          this.uiCallBack({
+            type: "pong-relay",
+            payload: { latency },
+            id: event.id,
+          });
+        } catch (e: any) {
+          this.uiCallBack({
+            type: "pong-relay",
+            id: event.id,
+            error: e.toString(),
+          });
+        }
+        break;
       }
-    );
+
+      case "send-message": {
+        try {
+          await this.sendMessage(event.payload.message);
+          this.uiCallBack({
+            type: "message-sent",
+            id: event.id,
+          });
+        } catch (e: any) {
+          this.uiCallBack({
+            type: "message-sent",
+            id: event.id,
+            error: e.toString(),
+          });
+        }
+        break;
+      }
+
+      case "get-profile-user": {
+        const profile = await getMyProfile();
+        this.uiCallBack({
+          type: "profile-retrieved-user",
+          payload: { profile },
+          id: event.id,
+        });
+        break;
+      }
+
+      case "patch-profile-self": {
+        await setMyProfile(
+          this.node.getPeerId(),
+          event.payload.name,
+          event.payload.avatar,
+        );
+        this.uiCallBack({
+          type: "profile-updated-self",
+          payload: { profile: await getMyProfile() },
+          id: event.id,
+        });
+        break;
+      }
+
+      case "get-profile": {
+        try {
+          const profile = await this.getProfile(event.payload.peerId);
+          this.uiCallBack({
+            type: "profile-retrieved",
+            payload: { profile },
+            id: event.id,
+          });
+        } catch (e: any) {
+          this.uiCallBack({
+            type: "profile-retrieved",
+            id: event.id,
+            error: e.toString(),
+          });
+        }
+        break;
+      }
+
+      case "get-messages": {
+        const messages = await this.getMessages(
+          event.payload.chatId,
+          event.payload.page,
+        );
+        this.uiCallBack({
+          type: "messages-retrieved",
+          payload: { messages },
+          id: event.id,
+        });
+        break;
+      }
+
+      case "get-chats": {
+        this.uiCallBack({
+          type: "chats-retrieved",
+          payload: { chats: await getChats() },
+          id: event.id,
+        });
+        break;
+      }
+
+      case "create-chat": {
+        await this.createChat(event.payload.chat);
+        this.uiCallBack({
+          type: "chat-created",
+          payload: { chat: event.payload.chat },
+          id: event.id,
+        });
+        break;
+      }
+
+      case "close-database": {
+        await getDb().close();
+        this.uiCallBack({
+          type: "database-closed",
+          id: event.id,
+        });
+        break;
+      }
+
+      case "wipe-database": {
+        await wipeDatabase();
+        this.uiCallBack({
+          type: "database-wiped",
+          id: event.id,
+        });
+        break;
+      }
+
+      case "subscribe-to-peer": {
+        await this.subscribeToPeer(event.payload.peerId);
+        this.uiCallBack({
+          type: "subscribed-to-peer",
+          id: event.id,
+        });
+        break;
+      }
+
+      default: {
+        break;
+      }
+    }
   }
 
-  static async init(nodeType: "CLIENT" | "RELAY", home?: string) {
-    setHomePath(home ? home : DEFAULT_HOME);
-
-    const nodeInstance = await Node.init(nodeType);
-    return new Basilisk(nodeInstance);
-  }
-
-  getId(): string {
-    return this.node.getId();
-  }
-
-  getMultiaddrs(): Multiaddr[] {
-    return this.node.getMultiaddrs();
-  }
-
-  stop() {
-    this.node.stop();
-  }
-
-  ping(addr: string): Promise<number> {
-    return this.node.pingTest(addr);
-  }
-
-  retrieveChatMessages(addr: string) {
-    retrieveMessages(addr);
-  }
-
-  openChatConnection(addr: string) {
-    this.node.createChatConnection(addr);
-  }
-
-  closeChatConnection(addr: string) {
-    this.node.closeChatStream(addr);
-  }
-
-  async sendMessage(addr: string, content: string) {
-    const message: Message = {
-      content: content,
-      timestamp: Date.now(),
-      from: this.node.getId(),
-      to: addr,
-    };
+  private async sendMessage(message: MessagePacket): Promise<void> {
     await this.node.sendMessage(message);
-    await saveMessage(message, addr);
+    await saveMessage(message);
   }
 
-  async sendMedia(_addr: string, _path: string) {
-    // TODO
+  private async getMessages(peerId: string, page: number): Promise<Message[]> {
+    return await getMessages(peerId, page);
+  }
+
+  private async getProfile(peerId: string): Promise<Profile> {
+    return await this.node.getPeerProfile(peerId);
+  }
+
+  private async createChat(chat: Chat): Promise<void> {
+    await upsertChat(chat);
+    if (chat.type === "group") this.node.subscribe(chat.id);
+  }
+
+  private async subscribeToPeer(peerId: string) {
+    await this.node.addPeerListener(peerId);
   }
 }

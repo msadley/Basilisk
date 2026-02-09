@@ -1,5 +1,3 @@
-// packages/core/src/libp2p.ts
-
 import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
 import { autoNAT } from "@libp2p/autonat";
@@ -15,16 +13,15 @@ import { yamux } from "@chainsafe/libp2p-yamux";
 import { identify } from "@libp2p/identify";
 import { bootstrap } from "@libp2p/bootstrap";
 import type { Libp2pOptions } from "libp2p";
-
-const bootstrapNodes = process.env.BOOTSTRAP_MULTIADDRS?.split("\n") || [
-  "/dns4/your-relay.example.com/tcp/4001/p2p/12D3KooW...",
-];
-const publicDns = process.env.PUBLIC_DNS || "localhost";
+import type { NodeConfig } from "./types.js";
+import type { PrivateKey } from "@libp2p/interface";
+import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 
 export const baseConfig: Partial<Libp2pOptions> = {
   connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
   services: {
+    pubsub: gossipsub(),
     ping: ping(),
     dht: kadDHT(),
     identify: identify(),
@@ -33,29 +30,59 @@ export const baseConfig: Partial<Libp2pOptions> = {
   } as any,
 };
 
-export const clientConfig: Partial<Libp2pOptions> = {
-  addresses: {
-    listen: ["/p2p-circuit"],
-  },
-  transports: [tcp(), webSockets(), circuitRelayTransport()],
-  peerDiscovery: [
-    bootstrap({
-      list: bootstrapNodes,
-    }),
-  ],
-};
+export function getClientConfig(relayAddr: string): Partial<Libp2pOptions> {
+  return {
+    addresses: {
+      listen: ["/p2p-circuit"],
+    },
+    transports: [webSockets(), circuitRelayTransport()],
+    peerDiscovery: [
+      bootstrap({
+        list: [relayAddr],
+      }),
+    ],
+  };
+}
 
-export const serverConfig: Partial<Libp2pOptions> = {
-  addresses: {
-    listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
-    announce: [`/dns4/${publicDns}/tcp/4001`, `/dns4/${publicDns}/tcp/4002/ws`],
-  },
-  transports: [tcp(), webSockets()],
-  services: {
-    relay: circuitRelayServer({
-      reservations: {
-        applyDefaultLimit: false,
-      },
-    }),
-  },
-};
+export function getServerConfig(publicDns: string): Partial<Libp2pOptions> {
+  return {
+    addresses: {
+      listen: ["/ip4/0.0.0.0/tcp/4001", "/ip4/0.0.0.0/tcp/4002/ws"],
+      announce: [
+        `/dns4/${publicDns}/tcp/4001`,
+        `/dns4/${publicDns}/tcp/443/wss`,
+      ],
+    },
+    transports: [tcp(), webSockets()],
+    services: {
+      relay: circuitRelayServer({
+        reservations: {
+          applyDefaultLimit: false,
+        },
+      }),
+      pubsub: gossipsub({
+        doPX: true,
+      }),
+    },
+  };
+}
+
+export async function getLibp2pOptions(
+  options: NodeConfig,
+  privateKey: PrivateKey
+): Promise<Libp2pOptions> {
+  const modeConfig =
+    options.mode === "CLIENT"
+      ? getClientConfig(options.relayAddr ?? "")
+      : getServerConfig(options.publicDns ?? "");
+  return {
+    ...baseConfig,
+    ...modeConfig,
+    services: {
+      ...baseConfig.services,
+      ...modeConfig.services,
+    },
+    privateKey,
+    start: false,
+  } as any;
+}

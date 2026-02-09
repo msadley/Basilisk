@@ -1,0 +1,35 @@
+.cover {
+  background-color: black;
+  opacity: 0.8;
+  position: absolute;
+  flex: 1;
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.iconWrapper {
+  width: 100%;
+  align-content: center;
+  justify-items: center;
+  align-content: center;
+  justify-content: center;
+  display: flex;
+  margin: auto;
+  flex: 1;
+}
+
+.iconWrapper svg {
+  height: 5rem;
+  width: 5rem;
+  animation: spin 1s infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

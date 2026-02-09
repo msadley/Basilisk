@@ -1,0 +1,31 @@
+.avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 5px 0;
+  background: var(--ctp-lavender);
+  border-radius: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  object-fit: cover;
+  position: relative;
+}
+
+.indicator {
+  position: absolute;
+  border-radius: 100%;
+  height: 0.8rem;
+  width: 0.8rem;
+  margin-top: 26px;
+  margin-left: 26px;
+}
+
+.avatar svg {
+  color: white;
+}
+
+.avatar img {
+  background-color: var(--ctp-lavender);
+  border-radius: 26px;
+}

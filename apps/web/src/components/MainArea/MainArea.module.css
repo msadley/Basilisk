@@ -1,0 +1,48 @@
+.mainArea {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  margin: 8px;
+  background-color: var(--ctp-base);
+  border-radius: 26px;
+}
+
+.headerContainer {
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.header {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  overflow: hidden;
+  min-height: 26px;
+  padding: 6px;
+  font-size: 12px;
+}
+
+.body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  margin-right: 6px;
+  margin-left: 6px;
+  background-color: var(--ctp-surface0);
+  border-radius: 26px;
+}
+
+.footer {
+  display: flex;
+  overflow: hidden;
+  min-height: 26px;
+  padding: 8px;
+  background: var(--ctp-base);
+  position: relative;
+  border-bottom-right-radius: 26px;
+  border-bottom-left-radius: 26px;
+}

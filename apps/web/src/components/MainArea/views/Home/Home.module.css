@@ -1,0 +1,71 @@
+.home {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 6px;
+  background-color: var(--ctp-surface0);
+  flex-wrap: wrap;
+  overflow: hidden;
+  gap: 4px;
+}
+
+.home img {
+  max-width: 200px;
+  aspect-ratio: 1;
+  background-color: transparent;
+}
+
+.idButton {
+  all: unset;
+  background-color: var(--ctp-base);
+  border-radius: 26px;
+  max-width: 100%;
+  padding: 4px;
+  padding-inline: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.copyButton {
+  all: unset;
+  background-color: var(--ctp-base);
+  border-radius: 26px;
+  box-sizing: border-box;
+  padding: 8px;
+}
+
+.copyButton svg {
+  display: block;
+  height: 1rem;
+  width: 1rem;
+}
+
+.separator {
+  height: 64px;
+}
+
+.wipeButton {
+  all: unset;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--ctp-base);
+  color: var(--ctp-error-light);
+  border-radius: 26px;
+  box-sizing: border-box;
+  padding: 4px;
+  padding-inline: 8px;
+  cursor: pointer;
+}
+
+.wipeButton svg {
+  display: block;
+  height: 1rem;
+  width: 1rem;
+}

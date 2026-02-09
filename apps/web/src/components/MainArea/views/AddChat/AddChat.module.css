@@ -1,0 +1,55 @@
+.addChat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 85%;
+  max-width: 750px;
+  background-color: var(--ctp-mantle);
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+.formContainer {
+  display: flex;
+  flex: 1;
+  background-color: var(--ctp-crust);
+}
+
+.form {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  background-color: var(--ctp-mantle);
+  padding: 12px;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.loadingContainer svg {
+  animation: spin 1s linear infinite;
+  height: 5rem;
+  width: 5rem;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

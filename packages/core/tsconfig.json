@@ -1,9 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "rootDir": "src",
     "outDir": "dist",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
   },
-  "include": ["src"],
-  "references": [{"path": "../utils"}]
+  "include": ["src"]
 }

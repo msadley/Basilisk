@@ -1,0 +1,16 @@
+.wrapper {
+  padding: 20px;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-items: center;
+  align-items: center;
+}
+
+.bar {
+  height: 4px;
+  border-radius: 99px;
+  width: 20%;
+  background-color: var(--ctp-surface1);
+}

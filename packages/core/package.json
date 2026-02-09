@@ -6,8 +6,5 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc -b"
-  },
-  "dependencies" : {
-    "@basilisk/utils": "*"
   }
 }

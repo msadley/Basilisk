@@ -1,12 +1,22 @@
 // apps/relay/src/relay.ts
 
+import "dotenv/config";
 import { type Multiaddr } from "@multiformats/multiaddr";
-import { Basilisk } from "@basilisk/core";
+import { Node } from "@basilisk/core";
 
-const basilisk = await Basilisk.init("RELAY");
+let basilisk: Node;
+
+const PUBLIC_DNS: string | undefined = process.env.PUBLIC_DNS;
+
+if (!PUBLIC_DNS) throw new Error("No public dns was specified.");
 
 export async function start() {
-  await printAddresses();
+  basilisk = await Node.init({
+    mode: "RELAY",
+    publicDns: process.env.PUBLIC_DNS!,
+  });
+
+  printAddresses();
 
   process.on("SIGINT", async () => {
     await stop();
@@ -20,10 +30,12 @@ export async function start() {
 }
 
 async function stop() {
-  await basilisk.stop();
+  if (basilisk) {
+    await basilisk.stop();
+  }
 }
 
-async function printAddresses() {
+function printAddresses() {
   console.log("Listening on: ");
   const addresses = basilisk.getMultiaddrs();
   addresses.forEach((addr: Multiaddr) => console.log(addr.toString()));

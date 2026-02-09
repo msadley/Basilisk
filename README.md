@@ -4,16 +4,16 @@
 
 A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
-## Getting Started
+## Building from source
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+### Requirements
 
-### Prerequisites
-
-- Node.js (v23 or higher)
+- Node.js (v22 or higher)
 - npm
 
-### Installing
+You can get those [here](https://nodejs.org/en/download).
+
+### Instructions
 
 1. Clone the repo:
 
@@ -21,7 +21,7 @@ These instructions will get you a copy of the project up and running on your loc
    git clone https://github.com/msadley/basilisk.git
    ```
 
-2. Install NPM packages:
+2. Install the npm project dependencies:
 
    ```sh
    npm install
@@ -33,31 +33,29 @@ These instructions will get you a copy of the project up and running on your loc
    npm run build
    ```
 
-## Usage
+## Development
 
 ### Relay
 
-The relay is a public node that other nodes can use to discover each other. To run the relay, use the following command:
+To set up your own circuit-relay server, create your own pm2 config file at the project's root directory following the example file:
 
-```sh
-npm run relay
+```javascript
+// ecosystem.config.js.example
+
+module.exports = {
+  apps: [{
+    name: "relay",
+    cwd: "./apps/relay",
+    script: "./dist/index.js",
+    env: {
+      PUBLIC_DNS: "your-public-dns"
+    }
+  }]
+}
 ```
 
-### CLI
-
-The CLI is the main interface for the chat app. To run the CLI, use the following command:
+This will ensure the relay server knows where to announce. After that, start the relay server using pm2:
 
 ```sh
-npm run cli
+pm2 start ./ecosystem.config.js
 ```
-
-## Available Scripts
-
-- `build`: Builds the project.
-- `prep`: Installs dependencies and builds the project.
-- `cli`: Runs the CLI app.
-- `relay`: Runs the relay.
-- `debug-cli`: Runs the CLI app with debug logs.
-- `debug-relay`: Runs the relay with debug logs.
-- `clean`: Removes the log files.
-- `reset`: Removes the config files.

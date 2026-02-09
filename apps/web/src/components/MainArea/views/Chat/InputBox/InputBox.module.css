@@ -1,0 +1,37 @@
+.inputBox {
+  display: flex;
+  flex: 1;
+  min-height: 100%;
+  max-height: fit-content;
+  background-color: var(--ctp-crust);
+  border-radius: 26px;
+  scrollbar-width: none;
+}
+
+.inputBox textarea {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1;
+  font-size: 0.8rem;
+  z-index: 1;
+  min-height: 100%;
+  max-height: fit-content;
+  padding: 6px;
+  padding-left: 1rem;
+  background: var(--ctp-mantle);
+  border: 0;
+  border-radius: 26px;
+  border-top-right-radius: 30px;
+  border-bottom-right-radius: 30px;
+}
+
+.inputBox button {
+  padding-inline: 1rem;
+  background: var(--ctp-crust);
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  border-radius: 26px;
+  border-top-right-radius: 8px;
+  text-align: right;
+}

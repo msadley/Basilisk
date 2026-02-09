@@ -1,138 +1,190 @@
-// packages/core/src/node.ts
-
-// Libp2p-related imports
-import { createLibp2p, type Libp2p, type Libp2pOptions } from "libp2p";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { createLibp2p, type Libp2p } from "libp2p";
 import type { Stream } from "@libp2p/interface";
-
-//Misc imports
 import { EventEmitter } from "events";
 import map from "it-map";
 import { pipe } from "it-pipe";
 import drain from "it-drain";
 import * as lp from "it-length-prefixed";
+import { fromString } from "uint8arrays/from-string";
 import { toString } from "uint8arrays/to-string";
-import type { Message } from "./database.js";
-
-// Local packages imports
-import { getPrivateKey } from "./keys.js";
-import { log } from "@basilisk/utils";
-import { validateConfigFile } from "./config.js";
-import { clientConfig, serverConfig, baseConfig } from "./libp2p.js";
+import { getPeerId, multiaddrFromPeerId } from "./peerId.js";
+import { getLibp2pOptions } from "./libp2p.js";
 import { Connection } from "./connection.js";
+import type { MessagePacket, NodeConfig, Profile } from "./types.js";
+import { getMyProfile } from "./database.js";
+import { getAppKey } from "./keys.js";
+import { multiaddr } from "@multiformats/multiaddr";
 
-export const chatEvents = new EventEmitter();
+export const nodeEvents = new EventEmitter();
+
+let RELAY_ADDR: string;
 
 export class Node {
-  private node: Libp2p;
-  private chatConnections: Map<string, Connection> = new Map();
+  public node: Libp2p;
+  private chatListeners: Set<string> = new Set();
 
   private constructor(nodeInstance: Libp2p) {
     this.node = nodeInstance;
 
-    this.node.addEventListener("connection:close", (evt) => {
-      const remoteAddr = evt.detail.remoteAddr;
-      this.chatConnections.delete(remoteAddr.toString());
-    });
+    (this.node.services as any).pubsub.addEventListener(
+      "message",
+      (evt: { topic: string; detail: { data: Uint8Array } }) => {
+        const message = JSON.parse(
+          new TextDecoder().decode(evt.detail.data),
+        ) as MessagePacket;
+        nodeEvents.emit("message:receive", message);
+      },
+    );
+
+    if (RELAY_ADDR) {
+      this.node.addEventListener("peer:connect", (evt) => {
+        if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
+          nodeEvents.emit("relay:connect");
+        } else if (this.chatListeners.has(evt.detail.toString()))
+          nodeEvents.emit("peer:connect", evt.detail.toString());
+      });
+
+      this.node.addEventListener("peer:disconnect", (evt) => {
+        if (evt.detail.toString() === getPeerId(RELAY_ADDR)) {
+          nodeEvents.emit("relay:disconnect");
+        } else if (this.chatListeners.has(evt.detail.toString()))
+          nodeEvents.emit("peer:disconnect", evt.detail.toString());
+      });
+    }
   }
 
-  static async init(mode: "CLIENT" | "RELAY"): Promise<Node> {
-    await log("INFO", "Initializing node...");
+  static async init(options: NodeConfig): Promise<Node> {
+    if (options.mode === "RELAY") {
+      console.debug("Initializing relay node...");
 
-    await validateConfigFile();
-
-    const modeConfig = mode === "CLIENT" ? clientConfig : serverConfig;
-
-    const config: Libp2pOptions = {
-      ...baseConfig,
-      ...modeConfig,
-      services: {
-        ...baseConfig.services,
-        ...modeConfig.services,
-      },
-      privateKey: await getPrivateKey(),
-      start: false,
-    };
-
-    const node = await createLibp2p(config);
-    const basiliskNode = new Node(node);
-
-    await log("INFO", "Creating chat protocol...");
-    await node.handle("/chat/1.0.0", async ({ stream, connection }) => {
-      await log(
-        "INFO",
-        `Chat stream opened with ${connection.remoteAddr.toString()}`
+      const privateKey = await getAppKey();
+      const libp2pNode = await createLibp2p(
+        await getLibp2pOptions(options, privateKey),
       );
-      await basiliskNode.retrieveMessageFromStream(
+      const node = new Node(libp2pNode);
+
+      await libp2pNode.start();
+
+      console.debug("Relay node initialized.");
+
+      return node;
+    }
+
+    console.debug("[libp2p] Initializing libp2p node");
+
+    RELAY_ADDR = options.relayAddr ?? "";
+
+    const privateKey = await getAppKey();
+    const libp2pNode = await createLibp2p(
+      await getLibp2pOptions(options, privateKey),
+    );
+    const node = new Node(libp2pNode);
+
+    await libp2pNode.handle("/chat/1.0.0", async ({ stream, connection }) => {
+      await node.retrieveMessageFromStream(
         stream,
-        connection.remoteAddr
+        getPeerId(connection.remoteAddr.toString()),
       );
     });
-    await log("INFO", "Chat protocol created.");
 
-    await node.start();
-    await log("INFO", "Node initialized.");
+    await libp2pNode.handle("/info/1.0.0", async ({ stream, connection }) => {
+      await node.sendInfoToStream(
+        stream,
+        getPeerId(connection.remoteAddr.toString()),
+      );
+    });
 
-    return basiliskNode;
+    return node;
+  }
+
+  async start() {
+    console.debug("[libp2p] Starting node...");
+    await this.node.start();
   }
 
   async stop() {
-    await log("INFO", "Stopping node...");
-    this.node.stop();
-    await log("INFO", "Node stopped.");
+    console.debug("[libp2p] Stopping node...");
+    await this.node.stop();
   }
 
-  getId(): string {
-    return this.node.peerId.toString();
+  async addPeerListener(peerId: string) {
+    this.chatListeners.add(peerId);
   }
 
-  getMultiaddrs(): Multiaddr[] {
+  getMultiaddrs() {
     return this.node.getMultiaddrs();
   }
 
-  async pingTest(addr: string): Promise<number> {
-    const pingService = this.node.services.ping as {
-      ping: (addr: Multiaddr) => Promise<number>;
-    };
-    const latency: number = await pingService.ping(multiaddr(addr));
-    await log("INFO", `Pinged ${addr.toString()} in ${latency}ms`);
-    return latency;
-  }
-
-  async createChatConnection(addr: string) {
-    await log("INFO", `Creating chat connection with ${addr}...`);
-    const stream: Stream = await this.node.dialProtocol(
-      multiaddr(addr),
-      "/chat/1.0.0"
-    );
-    const connection = new Connection(stream);
-    this.chatConnections.set(addr, connection);
-    await log("INFO", `Chat connection created with ${addr}.`);
-  }
-
-  async closeChatStream(addr: string) {
-    await log("INFO", `Closing chat connection with ${addr}...`);
-    this.chatConnections.delete(addr);
-    await log("INFO", `Closed chat connection with ${addr}.`);
-  }
-
-  async sendMessage(message: Message) {
-    await log("INFO", `Sending message to ${message.to}`);
-    const addr = multiaddr(message.to);
-    if (!this.chatConnections.get(addr.toString())) {
-      await this.createChatConnection(message.to);
-    }
-    const connection = this.chatConnections.get(addr.toString());
-    if (!connection) {
-      throw new Error(
-        `Failed to create or retrieve chat connection for ${message.to}`
+  async pingRelay(): Promise<number> {
+    try {
+      const latency: number = await (this.node.services.ping as any).ping(
+        multiaddr(RELAY_ADDR),
       );
+      return latency;
+    } catch (e: any) {
+      throw new Error("Error when pinging relay server", e);
     }
-    connection.sendMessage(message);
-    await log("INFO", `Message sent to ${message.to}.`);
   }
 
-  async retrieveMessageFromStream(stream: Stream, sender: Multiaddr) {
+  getPeerId(): string {
+    return this.node.peerId.toString();
+  }
+
+  subscribe(chatId: string): void {
+    (this.node.services as any).pubsub.subscribe(chatId);
+  }
+
+  private async createChatConn(peerId: string): Promise<Connection | null> {
+    try {
+      const addr = multiaddrFromPeerId(RELAY_ADDR, peerId);
+
+      const stream = await this.node.dialProtocol(addr, "/chat/1.0.0");
+      return new Connection(stream);
+    } catch (error: any) {
+      console.warn(
+        "[libp2p] Failed to create chat connection: " + error.message,
+      );
+      return null;
+    }
+  }
+
+  async getPeerProfile(peerId: string): Promise<Profile> {
+    const addr = multiaddrFromPeerId(RELAY_ADDR, peerId);
+    const stream = await this.node.dialProtocol(addr, "/info/1.0.0");
+    const response = await pipe(
+      stream.source,
+      (source) => lp.decode(source),
+      (source) => map(source, (buf) => toString(buf.subarray())),
+      async function (source) {
+        for await (const msg of source) {
+          return JSON.parse(msg) as Profile;
+        }
+        throw new Error("[libp2p] Stream ended without a response");
+      },
+    );
+
+    return response;
+  }
+
+  async sendMessage(message: MessagePacket) {
+    if (message.chatId.includes("group-")) {
+      (this.node.services as any).pubsub.publish(
+        message.chatId,
+        new TextEncoder().encode(JSON.stringify(message)),
+      );
+    } else {
+      const conn = await this.createChatConn(message.chatId);
+      if (!conn)
+        throw new Error(
+          `Failed to create chat connection for ${message.chatId}`,
+        );
+      conn.sendMessage(message);
+      conn.close();
+    }
+    console.debug(`[libp2p] Message sent to ${message.chatId}`);
+  }
+
+  private async retrieveMessageFromStream(stream: Stream, peerId: string) {
     try {
       await pipe(
         stream.source,
@@ -140,17 +192,38 @@ export class Node {
         (source) => map(source, (buffer) => toString(buffer.subarray())),
         (source) => map(source, (string) => JSON.parse(string)),
         (source) =>
-          map(source, (message: Message) => {
-            chatEvents.emit("message:receive", message, sender);
+          map(source, (message: MessagePacket) => {
+            if (message.from !== peerId)
+              console.warn("[libp2p] Message does not match specified sender", {
+                messageSenderId: message.from,
+                streamSenderId: peerId,
+              });
+            else nodeEvents.emit("message:receive", message);
           }),
-        drain
+        drain,
       );
-      await log("INFO", `Stream from ${sender} processed successfully.`);
     } catch (err: any) {
-      await log(
-        "ERROR",
-        `Error processing stream from ${sender}: ${err.message}`
+      console.warn(
+        `[libp2p] Error processing stream from ${peerId}: ${err.message}`,
       );
+    } finally {
+      stream.close();
+    }
+  }
+
+  private async sendInfoToStream(stream: Stream, id: string) {
+    try {
+      const profile = await getMyProfile();
+      await pipe(
+        [fromString(JSON.stringify(profile))],
+        (source) => lp.encode(source),
+        stream.sink,
+      );
+      console.debug(
+        `[libp2p] Profile sent to ${id}: ${JSON.stringify(profile)}`,
+      );
+    } catch (err: any) {
+      console.warn(`[libp2p] Error sending profile to ${id}: ${err.message}`);
     } finally {
       stream.close();
     }
