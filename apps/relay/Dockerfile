@@ -1,7 +1,5 @@
 FROM node:22
 
-USER basilisk
-
 WORKDIR /Basilisk
 
 COPY *.json ./
@@ -21,4 +19,11 @@ WORKDIR /Basilisk/apps/relay
 EXPOSE 4001
 EXPOSE 4002
 
-CMD ["node", "dist/index.js"] 
+ENV HOME=/home/node
+
+RUN mkdir -p /home/node/.basilisk \
+  && chown -R node:node /home/node/.basilisk 
+
+USER node
+
+CMD ["node", "dist/index.js"]
