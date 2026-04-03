@@ -35,7 +35,7 @@ const Home = observer(({ setHeader, setFooter }: ViewProps) => {
       transition={{ duration: 0.2 }}
       className={styles.home}
     >
-      <img src="/basilisk.svg" alt="logo" />
+      <img src="basilisk.svg" alt="logo" />
       <button className={styles.idButton} onClick={toggleIdVisibility}>
         {idVisible ? profile?.id : "Mostrar ID"}
       </button>
