@@ -15,7 +15,10 @@
   "license": "ISC",
   "description": "A chat app built on top of libp2p, using TypeScript.",
   "devDependencies": {
+    "@types/events": "^3.0.3",
     "@types/node": "^24.2.0",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
     "cross-env": "^10.0.0",
     "nodemon": "^3.1.10",
     "rimraf": "^6.0.1",
