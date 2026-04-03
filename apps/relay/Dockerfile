@@ -1,5 +1,7 @@
 FROM node:22
 
+USER basilisk
+
 WORKDIR /Basilisk
 
 COPY *.json ./

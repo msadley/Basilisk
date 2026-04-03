@@ -6,6 +6,8 @@
     "build": "npx tsc -b"
   },
   "dependencies": {
-    "@basilisk/core": "*"
+    "@basilisk/core": "*",
+    "@multiformats/multiaddr": "^12.5.1",
+    "dotenv": "^17.2.3"
   }
 }

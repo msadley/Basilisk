@@ -9,6 +9,6 @@ services:
       - "4001:4001"
       - "127.0.0.1:4002:4002"
     volumes:
-      - ${HOME}/.basilisk:/root/.basilisk
+      - ${HOME}/.basilisk:/home/basilisk/.basilisk
     env_file:
       - .env
