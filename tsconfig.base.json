@@ -12,11 +12,14 @@
     "declarationMap": true,
 
     // Style Options
+    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitOverride": true,
+    "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "strictNullChecks": true,
 
     "strict": true,
     "jsx": "react-jsx",
