@@ -4,82 +4,69 @@ import type { Database } from "@sqlite.org/sqlite-wasm";
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 
 export class sqlite implements DatabaseAdapter {
-  private db: Database;
+  private database: Database;
 
-  private constructor(db: any) {
-    this.db = db;
+  private constructor(database: Database) {
+    this.database = database;
   }
 
-  public static async create(dbName: string = "basilisk.db") {
+  public static async create(filename: string = "basilisk.db") {
     const sqlite3 = await sqlite3InitModule();
 
-    console.debug("[database] Initializing database...");
-
     let db: Database;
-    let storageType = "unknown";
 
     try {
-      console.debug("[database] Trying OPFS SAH...");
       await sqlite3.installOpfsSAHPoolVfs({ name: "opfs-sahpool" });
-      db = new sqlite3.oo1.DB(`file:${dbName}?vfs=opfs-sahpool`, "cw");
-      storageType = "[database] OPFS SAH (SharedArrayBuffer)";
+      db = new sqlite3.oo1.DB(`file:${filename}?vfs=opfs-sahpool`, "cw");
     } catch (e) {
-      console.debug("[database] OPFS SAH not available:", e);
-
       try {
-        console.debug("[database] Trying default OPFS...");
-        db = new sqlite3.oo1.DB(`file:${dbName}?vfs=unix-dotfile`, "cw");
-        storageType = "[database] OPFS (unix-dotfile)";
+        db = new sqlite3.oo1.DB(`file:${filename}?vfs=unix-dotfile`, "cw");
       } catch (e2) {
-        console.debug("[database] unix-dotfile failed, trying IndexedDB...");
-
         try {
-          db = new sqlite3.oo1.DB(`:${dbName}:`, "c");
-          storageType = "[database] IndexedDB (kvvfs)";
+          db = new sqlite3.oo1.DB(`:${filename}:`, "c");
         } catch (e3) {
-          console.error("[database] All storage methods failed:", e3);
           db = new sqlite3.oo1.DB(":memory:", "c");
-          storageType = "[database] Memory (volatile)";
-          console.warn(
-            "[database] ⚠️ Using in-memory database - data will NOT persist!"
-          );
         }
       }
     }
-
-    console.debug("[database] Database initialized");
-    console.debug("[database] Storage type:", storageType);
-    console.debug("[database] Database path:", db.filename);
 
     return new sqlite(db);
   }
 
   async run(
     sql: string,
-    params?: SqlValue[] | Record<string, SqlValue>
+    params?: SqlValue[] | Record<string, SqlValue>,
   ): Promise<number> {
-    this.db.exec(sql, { bind: params });
+    this.database.exec(sql, { bind: params });
 
-    return this.db.changes();
+    return this.database.changes();
   }
 
   async get<T>(
     sql: string,
-    params?: SqlValue[] | Record<string, SqlValue>
+    params?: SqlValue[] | Record<string, SqlValue>,
   ): Promise<T | undefined> {
-    const row = this.db.selectObject(sql, params) as T | undefined;
+    const row = this.database.selectObject(sql, params) as T | undefined;
     return row;
   }
 
   async all<T>(
     sql: string,
-    params?: SqlValue[] | Record<string, SqlValue>
+    params?: SqlValue[] | Record<string, SqlValue>,
   ): Promise<T[]> {
-    const rows = this.db.selectObjects(sql, params) as T[];
+    const rows = this.database.selectObjects(sql, params) as T[];
     return rows;
   }
 
   async close(): Promise<void> {
-    this.db.close();
+    this.database.close();
+  }
+
+  async wipe(tables: string[]) {
+    tables.forEach((table: string) => {
+      this.run(`DROP TABLE IF EXISTS ${table};`);
+    });
+
+    this.run("VACUUM;");
   }
 }

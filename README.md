@@ -44,7 +44,8 @@ A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
 ## Running
 
-Before proceding, make sure to set the variables in the .env file as specified in the example:
+Before proceding, make sure to set the variables in the .env file as specified
+in the example:
 
 ```sh
 # .env.example
@@ -58,10 +59,11 @@ VITE_BOOTSTRAP_MULTIADDRS="/dns4/your-dns.com/tcp/443/wss/p2p/12D3KooWS..."
 
 ### Relay
 
-To set up your own circuit-relay server, just start the docker file inside the apps/relay directory using:
+To set up your own circuit-relay server, just start the docker file inside the
+apps/relay directory using:
 
 ```sh
-$ docker compose up
+docker compose up
 ```
 
 The relay will then log its public addresses which can be used by the vite frontend.

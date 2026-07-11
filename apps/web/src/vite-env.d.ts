@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_BOOTSTRAP_MULTIADDRS: string;
+  readonly VITE_RELAY_MULTIADDRESS: string;
 }
 
 interface ImportMeta {

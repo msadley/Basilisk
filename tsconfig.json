@@ -1,8 +1,9 @@
 {
   "files": [],
   "references": [
+    { "path": "packages/libp2p" },
     { "path": "packages/core" },
-    { "path": "apps/web" },
-    { "path": "apps/relay" }
+    { "path": "apps/relay" },
+    { "path": "apps/web" }
   ]
 }

@@ -30,10 +30,9 @@
     "forceConsistentCasingInFileNames": true,
     "composite": true,
 
-    "baseUrl": ".",
     "paths": {
-      "@basilisk/relay": ["apps/relay/src"],
-      "@basilisk/core": ["packages/core/src"]
+      "@basilisk/core": ["./packages/core/src/index.ts"],
+      "@basilisk/libp2p": ["./packages/libp2p/src/index.ts"]
     }
   }
 }
