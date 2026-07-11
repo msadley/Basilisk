@@ -1,55 +1,71 @@
-import type ChatController from "../controller/ChatController.js";
-import type MessageController from "../controller/MessageController.js";
-import type NodeController from "../controller/NodeController.js";
-import type ProfileController from "../controller/ProfileController.js";
+import type ChatService from "../service/ChatService.js";
+import type MessageService from "../service/MessageService.js";
+import type NodeService from "../service/NodeService.js";
+import type PrivateChatService from "../service/PrivateChatService.js";
+import type ProfileService from "../service/ProfileService.js";
 import type { UIEvent } from "../types.js";
 
 class EventRouter {
-  private chatController: ChatController;
-  private messageController: MessageController;
-  private profileController: ProfileController;
-  private nodeController: NodeController;
+  private chatService: ChatService;
+  private messageService: MessageService;
+  private profileService: ProfileService;
+  private nodeService: NodeService;
+  private privateChatService: PrivateChatService;
 
   constructor(
-    chatController: ChatController,
-    messageController: MessageController,
-    profileController: ProfileController,
-    nodeController: NodeController,
+    chatService: ChatService,
+    privateChatService: PrivateChatService,
+    messageService: MessageService,
+    profileService: ProfileService,
+    nodeService: NodeService,
   ) {
-    this.chatController = chatController;
-    this.messageController = messageController;
-    this.profileController = profileController;
-    this.nodeController = nodeController;
+    this.chatService = chatService;
+    this.messageService = messageService;
+    this.profileService = profileService;
+    this.nodeService = nodeService;
+    this.privateChatService = privateChatService;
   }
 
   async route(event: UIEvent) {
     switch (event.type) {
       case "list-messages":
-        return await this.messageController.list(event.payload);
+        return await this.messageService.list(
+          event.payload.chatId,
+          event.payload.limit,
+          event.payload.page,
+        );
 
       case "send-message":
-        return this.messageController.send(event.payload);
+        return this.messageService.send(
+          event.payload.chatId,
+          event.payload.content,
+        );
 
       case "get-profile":
-        return await this.profileController.getById(event.payload);
+        return await this.profileService.getById(event.payload.peerId);
 
       case "get-user-profile":
-        return await this.profileController.getUserProfile();
+        return await this.profileService.getUserProfile();
 
       case "update-profile":
-        return this.profileController.update(event.payload);
+        return this.profileService.update(
+          event.payload.avatar,
+          event.payload.name,
+        );
 
       case "list-chats":
-        return await this.chatController.list();
+        return await this.chatService.list();
 
       case "create-private-chat":
-        return await this.chatController.createPrivateChat(event.payload);
+        return await this.privateChatService.createPrivateChat(
+          event.payload.peerId,
+        );
 
       case "ping-relay":
-        return await this.nodeController.pingRelay();
+        return await this.nodeService.pingRelay();
 
       default:
-        break;
+        throw new Error(`Unknown event type received`);
     }
   }
 }

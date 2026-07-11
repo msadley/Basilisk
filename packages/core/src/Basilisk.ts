@@ -1,6 +1,3 @@
-import ChatController from "./controller/ChatController.js";
-import MessageController from "./controller/MessageController.js";
-import ProfileController from "./controller/ProfileController.js";
 import MessageRepository from "./repository/MessageRepository.js";
 import ProfileRepository from "./repository/ProfileRepository.js";
 import ChatService from "./service/ChatService.js";
@@ -11,7 +8,6 @@ import { responseMap, type uiCallbackFn, type UIEvent } from "./types.js";
 import EventRouter from "./event/EventRouter.js";
 import EventEmitter from "./event/EventEmitter.js";
 import NodeService from "./service/NodeService.js";
-import NodeController from "./controller/NodeController.js";
 import NodeCore from "./node/NodeCore.js";
 import KnownPeersRepository from "./repository/KnownPeersRepository.js";
 import NodeOrchestrator from "./node/NodeOrchestrator.js";
@@ -68,16 +64,12 @@ class Basilisk {
       nodeService,
     );
 
-    const chatController = new ChatController(privateChatService);
-    const messageController = new MessageController(messageService);
-    const profileController = new ProfileController(profileService);
-    const nodeController = new NodeController(nodeService);
-
     const eventRouter = new EventRouter(
-      chatController,
-      messageController,
-      profileController,
-      nodeController,
+      chatService,
+      privateChatService,
+      messageService,
+      profileService,
+      nodeService,
     );
 
     const nodeOrchestrator = new NodeOrchestrator(
