@@ -1,8 +1,8 @@
 import { messageSchema, type Message } from "../model/Message.js";
-import type { AppDatabase } from "../database/databaseAdapter.js";
 import { messages } from "../database/databaseSchema.js";
 import { eq } from "drizzle-orm";
 import type { MessagePacket } from "../model/MessagePacket.js";
+import type { AppDatabase } from "../types.js";
 
 class MessageRepository {
   private database: AppDatabase;

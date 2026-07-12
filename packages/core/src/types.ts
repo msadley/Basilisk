@@ -2,6 +2,8 @@ import { type } from "arktype";
 import { type Message } from "./model/Message.js";
 import { type Profile } from "./model/Profile.js";
 import type { Chat } from "./model/Chat.js";
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import * as schema from "./database/databaseSchema.js";
 
 export interface SystemEventMap {
   "node-started": { profile: Profile };
@@ -83,3 +85,5 @@ export const responseMap = {
 
 export type ResponseMap = typeof responseMap;
 export type uiCallbackFn = (event: SystemEvent) => void;
+
+export type AppDatabase = BaseSQLiteDatabase<"async", any, typeof schema>;

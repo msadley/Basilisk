@@ -12,4 +12,8 @@ export type { Chat } from "./model/Chat.js";
 export { privateChatSchema, type PrivateChat } from "./model/PrivateChat.js";
 export { groupChatSchema, type GroupChat } from "./model/GroupChat.js";
 
+export type { PrivateKey } from "@libp2p/interface";
+export type { AsyncRemoteCallback } from "drizzle-orm/sqlite-proxy";
+
+
 Comlink.expose(Basilisk);

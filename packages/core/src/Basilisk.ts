@@ -1,22 +1,21 @@
+import type { PrivateKey } from "@libp2p/interface";
+import EventEmitter from "./event/EventEmitter.js";
+import EventRouter from "./event/EventRouter.js";
+import NodeCore from "./node/NodeCore.js";
+import NodeOrchestrator from "./node/NodeOrchestrator.js";
+import GroupChatRepository from "./repository/GroupChatRepository.js";
+import KnownPeersRepository from "./repository/KnownPeersRepository.js";
 import MessageRepository from "./repository/MessageRepository.js";
+import PrivateChatRepository from "./repository/PrivateChatRepository.js";
 import ProfileRepository from "./repository/ProfileRepository.js";
 import ChatService from "./service/ChatService.js";
-import MessageService from "./service/MessageService.js";
-import ProfileService from "./service/ProfileService.js";
-import { setupDatabaseAdapter } from "./database/databaseAdapter.js";
-import { responseMap, type uiCallbackFn, type UIEvent } from "./types.js";
-import EventRouter from "./event/EventRouter.js";
-import EventEmitter from "./event/EventEmitter.js";
-import NodeService from "./service/NodeService.js";
-import NodeCore from "./node/NodeCore.js";
-import KnownPeersRepository from "./repository/KnownPeersRepository.js";
-import NodeOrchestrator from "./node/NodeOrchestrator.js";
-import type { AsyncRemoteCallback } from "drizzle-orm/sqlite-proxy";
-import type { PrivateKey } from "@libp2p/interface";
-import GroupChatRepository from "./repository/GroupChatRepository.js";
-import PrivateChatRepository from "./repository/PrivateChatRepository.js";
 import GroupChatService from "./service/GroupChatService.js";
+import MessageService from "./service/MessageService.js";
+import NodeService from "./service/NodeService.js";
 import PrivateChatService from "./service/PrivateChatService.js";
+import ProfileService from "./service/ProfileService.js";
+import { responseMap, type uiCallbackFn, type UIEvent } from "./types.js";
+import type { AppDatabase } from "./index.js";
 
 class Basilisk {
   private eventRouter: EventRouter;
@@ -28,19 +27,18 @@ class Basilisk {
   }
 
   static async init(
-    databaseDriver: AsyncRemoteCallback,
+    databaseDriver: AppDatabase,
     callbackFn: uiCallbackFn,
     relayAddress: string,
     privateKey: PrivateKey,
   ) {
-    const databaseAdapter = setupDatabaseAdapter(databaseDriver);
     const nodeCore = await NodeCore.init(relayAddress, privateKey);
     const eventEmitter = new EventEmitter(callbackFn);
 
-    const privateChatRepository = new PrivateChatRepository(databaseAdapter);
-    const groupChatRepository = new GroupChatRepository(databaseAdapter);
-    const messageRepository = new MessageRepository(databaseAdapter);
-    const profileRepository = new ProfileRepository(databaseAdapter);
+    const privateChatRepository = new PrivateChatRepository(databaseDriver);
+    const groupChatRepository = new GroupChatRepository(databaseDriver);
+    const messageRepository = new MessageRepository(databaseDriver);
+    const profileRepository = new ProfileRepository(databaseDriver);
     const knownPeers: string[] = (await privateChatRepository.list()).map(
       (chat) => {
         return chat.id;

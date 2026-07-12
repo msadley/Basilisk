@@ -1,10 +1,11 @@
-import type { AppDatabase } from "../database/databaseAdapter.js";
 import { chatParticipants, chats } from "../database/databaseSchema.js";
 import { eq, and } from "drizzle-orm";
 import { type PrivateChat } from "../model/PrivateChat.js";
+import type { AppDatabase } from "../types.js";
 
 class PrivateChatRepository {
   private database: AppDatabase;
+
   constructor(database: AppDatabase) {
     this.database = database;
   }

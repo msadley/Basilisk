@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
-import type { AppDatabase } from "../database/databaseAdapter.js";
 import { chatParticipants, chats } from "../database/databaseSchema.js";
 import type { GroupChat } from "../model/GroupChat.js";
+import type { AppDatabase } from "../types.js";
 
 class GroupChatRepository {
   private database: AppDatabase;
