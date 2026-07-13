@@ -1,11 +1,12 @@
-import MessageRepository from "../repository/MessageRepository.js";
-import type NodeService from "./NodeService.js";
-import type ProfileService from "./ProfileService.js";
-import type ChatService from "./ChatService.js";
+import type { Stream } from "@libp2p/interface";
 import { peerIdFromString } from "@libp2p/peer-id";
 import { groupChatSchema } from "../model/GroupChat.js";
+import { messagePacketSchema } from "../model/MessagePacket.js";
 import { privateChatSchema } from "../model/PrivateChat.js";
-import type { MessagePacket } from "../model/MessagePacket.js";
+import MessageRepository from "../repository/MessageRepository.js";
+import type ChatService from "./ChatService.js";
+import type NodeService from "./NodeService.js";
+import type ProfileService from "./ProfileService.js";
 
 class MessageService {
   private messageRepository: MessageRepository;
@@ -29,8 +30,16 @@ class MessageService {
     return await this.messageRepository.list(chatId, limit, page);
   }
 
-  async handleMessageReceived(message: MessagePacket) {
-    return await this.messageRepository.save(message);
+  async handleMessageReceived(stream: Stream) {
+    const data = await new Promise((resolve) => {
+      stream.addEventListener("message", (evt) => {
+        resolve(JSON.parse(new TextDecoder().decode(evt.data.subarray())));
+      });
+    });
+    await stream.close();
+
+    const messagePacket = messagePacketSchema.assert(data);
+    return await this.messageRepository.save(messagePacket);
   }
 
   async send(chatId: string, content: string) {
@@ -48,7 +57,7 @@ class MessageService {
           return p === userProfile.id;
         })[0];
 
-        await this.nodeService.sendMessageToPeerId(
+        await this.nodeService.sendMessage(
           peerIdFromString(recipient),
           content,
         );

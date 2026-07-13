@@ -8,25 +8,18 @@
     "build": "npx tsc -b"
   },
   "dependencies": {
-    "better-sqlite3": "^12.11.1",
+    "@basilisk/libp2p": "*",
+    "@libp2p/gossipsub": "^16.0.4",
+    "@libp2p/crypto": "^5.1.21",
+    "@libp2p/interface": "^3.2.5",
+    "@libp2p/peer-id": "^6.0.12",
+    "@multiformats/multiaddr": "^13.0.3",
+    "arktype": "^2.2.3",
     "drizzle-orm": "^0.45.2",
-    "events": "^3.3.0",
-    "idb": "^8.0.3",
-    "it-drain": "^3.0.10",
-    "it-length-prefixed": "^9.1.0",
-    "it-map": "^3.1.0",
-    "it-pipe": "^3.0.1",
-    "it-pushable": "^3.2.3",
-    "libp2p": "^2.9.0",
-    "sqlocal": "^0.18.0"
+    "libp2p": "^3.3.5",
+    "uint8arrays": "^5.1.1"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/events": "^3.0.3",
-    "@types/node": "^24.2.0",
-    "@types/uuid": "^10.0.0",
-    "drizzle-kit": "^0.31.10",
-    "tsx": "^4.22.4",
-    "typescript": "^5.9.3"
+    "drizzle-kit": "^0.31.10"
   }
 }

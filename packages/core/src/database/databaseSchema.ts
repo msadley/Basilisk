@@ -8,6 +8,11 @@ import {
   text,
 } from "drizzle-orm/sqlite-core";
 
+export const identity = sqliteTable("identity", {
+  id: integer("id").primaryKey(),
+  seed: blob("seed").$type<Uint8Array>().notNull(),
+});
+
 export const profiles = sqliteTable("profiles", {
   id: text("id").primaryKey(),
   name: text("name"),

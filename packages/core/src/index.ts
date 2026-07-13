@@ -1,6 +1,3 @@
-import * as Comlink from "comlink";
-import Basilisk from "./Basilisk.js";
-
 export * from "./types.js";
 export { profileSchema, type Profile } from "./model/Profile.js";
 export { messageSchema, type Message } from "./model/Message.js";
@@ -11,9 +8,7 @@ export {
 export type { Chat } from "./model/Chat.js";
 export { privateChatSchema, type PrivateChat } from "./model/PrivateChat.js";
 export { groupChatSchema, type GroupChat } from "./model/GroupChat.js";
-
 export type { PrivateKey } from "@libp2p/interface";
 export type { AsyncRemoteCallback } from "drizzle-orm/sqlite-proxy";
-
-
-Comlink.expose(Basilisk);
+export { Basilisk } from "./Basilisk.js";
+export * as schema from "./database/databaseSchema.js";

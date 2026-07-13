@@ -3,9 +3,7 @@ import EventEmitter from "../event/EventEmitter.js";
 import type KnownPeersRepository from "../repository/KnownPeersRepository.js";
 import type MessageService from "../service/MessageService.js";
 import type ProfileService from "../service/ProfileService.js";
-import { forwardSchemaValidatedStream } from "../utils.js";
 import type NodeCore from "./NodeCore.js";
-import { messagePacketSchema } from "../model/MessagePacket.js";
 
 class NodeOrchestrator {
   private messageService: MessageService;
@@ -29,28 +27,25 @@ class NodeOrchestrator {
   }
 
   registerHandlers() {
-    this.nodeCore.registerProtocolHandler("/chat/1.0.0", async (event) => {
-      const savedMessage = await forwardSchemaValidatedStream(
-        event,
-        messagePacketSchema,
-        this.messageService.handleMessageReceived,
-      );
+    this.nodeCore.registerProtocolHandler("/chat/1.0.0", async (stream) => {
+      const savedMessage =
+        await this.messageService.handleMessageReceived(stream);
       this.eventEmitter.emit(randomUUID(), "message-received", {
         message: savedMessage,
       });
     });
 
-    this.nodeCore.registerProtocolHandler("/info/1.0.0", (event) =>
-      this.profileService.sendUserProfile(event.stream),
+    this.nodeCore.registerProtocolHandler("/info/1.0.0", (stream) =>
+      this.profileService.sendUserProfile(stream),
     );
 
-    this.nodeCore.registerEventHandler("peer:connect", (event) => {
+    this.nodeCore.registerEventListener("peer:connect", (event) => {
       const peerId = event.detail.toString();
       if (this.knownPeersStore.isKnown(peerId))
         this.eventEmitter.emit(randomUUID(), "peer-found", { peerId });
     });
 
-    this.nodeCore.registerEventHandler("peer:disconnect", (event) => {
+    this.nodeCore.registerEventListener("peer:disconnect", (event) => {
       const peerId = event.detail.toString();
       if (this.knownPeersStore.isKnown(peerId))
         this.eventEmitter.emit(randomUUID(), "peer-lost", { peerId });

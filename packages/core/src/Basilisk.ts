@@ -1,4 +1,3 @@
-import type { PrivateKey } from "@libp2p/interface";
 import EventEmitter from "./event/EventEmitter.js";
 import EventRouter from "./event/EventRouter.js";
 import NodeCore from "./node/NodeCore.js";
@@ -16,8 +15,10 @@ import PrivateChatService from "./service/PrivateChatService.js";
 import ProfileService from "./service/ProfileService.js";
 import { responseMap, type uiCallbackFn, type UIEvent } from "./types.js";
 import type { AppDatabase } from "./index.js";
+import IdentityRepository from "./repository/IdentityRepository.js";
+import IdentityService from "./service/IdentityService.js";
 
-class Basilisk {
+export class Basilisk {
   private eventRouter: EventRouter;
   private eventEmitter: EventEmitter;
 
@@ -27,24 +28,21 @@ class Basilisk {
   }
 
   static async init(
-    databaseDriver: AppDatabase,
+    drizzleDriver: AppDatabase,
     callbackFn: uiCallbackFn,
     relayAddress: string,
-    privateKey: PrivateKey,
   ) {
-    const nodeCore = await NodeCore.init(relayAddress, privateKey);
-    const eventEmitter = new EventEmitter(callbackFn);
-
-    const privateChatRepository = new PrivateChatRepository(databaseDriver);
-    const groupChatRepository = new GroupChatRepository(databaseDriver);
-    const messageRepository = new MessageRepository(databaseDriver);
-    const profileRepository = new ProfileRepository(databaseDriver);
-    const knownPeers: string[] = (await privateChatRepository.list()).map(
-      (chat) => {
-        return chat.id;
-      },
-    );
+    const identityRepository = new IdentityRepository(drizzleDriver);
+    const privateChatRepository = new PrivateChatRepository(drizzleDriver);
+    const groupChatRepository = new GroupChatRepository(drizzleDriver);
+    const messageRepository = new MessageRepository(drizzleDriver);
+    const profileRepository = new ProfileRepository(drizzleDriver);
+    const knownPeers = (await privateChatRepository.list()).map(({ id }) => id);
     const knownPeersRepository = new KnownPeersRepository(knownPeers);
+
+    const identityService = new IdentityService(identityRepository);
+    const privateKey = await identityService.getPrivateKey();
+    const nodeCore = await NodeCore.init(relayAddress, privateKey);
 
     const profileService = new ProfileService(profileRepository);
     const nodeService = new NodeService(knownPeersRepository, nodeCore);
@@ -61,6 +59,8 @@ class Basilisk {
       profileService,
       nodeService,
     );
+
+    const eventEmitter = new EventEmitter(callbackFn);
 
     const eventRouter = new EventRouter(
       chatService,
@@ -100,5 +100,3 @@ class Basilisk {
     return result;
   }
 }
-
-export default Basilisk;

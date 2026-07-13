@@ -6,7 +6,8 @@ import {
   type uiCallbackFn,
 } from "../types.js";
 
-type EventResult<K extends keyof SystemEventMap> = SystemEventMap[K] extends void | undefined
+type EventResult<K extends keyof SystemEventMap> = SystemEventMap[K] extends
+  void | undefined
   ? [result?: { error: string } | void]
   : [
       result:
@@ -27,17 +28,9 @@ class EventEmitter {
     ...args: EventResult<K>
   ): void;
 
-  emit(
-    id: string,
-    eventType: keyof SystemEventMap,
-    result?: any
-  ): void;
+  emit(id: string, eventType: keyof SystemEventMap, result?: any): void;
 
-  emit(
-    id: string,
-    eventType: keyof SystemEventMap,
-    ...args: any[]
-  ) {
+  emit(id: string, eventType: keyof SystemEventMap, ...args: any[]) {
     const result = args[0];
     const rawEvent: Record<string, unknown> = {
       type: eventType,
@@ -65,4 +58,3 @@ class EventEmitter {
 }
 
 export default EventEmitter;
-

@@ -1,8 +1,7 @@
 import type { PeerId } from "@libp2p/interface";
-import { parseDataFromStream, sendDataToStream } from "../utils.js";
 import { profileSchema, type Profile } from "../model/Profile.js";
-import type KnownPeersRepository from "../repository/KnownPeersRepository.js";
 import type NodeCore from "../node/NodeCore.js";
+import type KnownPeersRepository from "../repository/KnownPeersRepository.js";
 
 class NodeService {
   private knownPeersStore: KnownPeersRepository;
@@ -14,17 +13,26 @@ class NodeService {
   }
 
   async getPeerProfile(peerId: PeerId): Promise<Profile> {
-    return parseDataFromStream(
-      await this.nodeCore.dialProtocol(peerId, "/info/1.0.0"),
-      profileSchema,
-    );
+    const stream = await this.nodeCore.dialProtocol(peerId, "/info/1.0.0");
+
+    const data = await new Promise((resolve) => {
+      stream.addEventListener("message", (event) => {
+        resolve(JSON.parse(new TextDecoder().decode(event.data.subarray())));
+      });
+    });
+
+    await stream.close();
+    return profileSchema.assert(data);
   }
 
-  async sendMessageToPeerId(peerId: PeerId, content: string) {
-    sendDataToStream(
-      await this.nodeCore.dialProtocol(peerId, "/chat/1.0.0"),
-      content,
-    );
+  async sendMessage(peerId: PeerId, content: string) {
+    const stream = await this.nodeCore.dialProtocol(peerId, "/chat/1.0.0");
+    const data = new TextEncoder().encode(content);
+
+    if (!stream.send(data))
+      await new Promise((resolve) => stream.addEventListener("drain", resolve));
+
+    await stream.close();
   }
 
   async pingRelay(): Promise<number> {

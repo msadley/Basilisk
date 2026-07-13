@@ -1,7 +1,6 @@
 import type { Stream } from "@libp2p/interface";
 import type { Profile } from "../model/Profile.js";
 import type ProfileRepository from "../repository/ProfileRepository.js";
-import { sendDataToStream } from "../utils.js";
 
 class ProfileService {
   private profileRepository: ProfileRepository;
@@ -18,8 +17,16 @@ class ProfileService {
     return userProfile;
   }
 
-  sendUserProfile(stream: Stream) {
-    sendDataToStream(stream, this.getUserProfile());
+  async sendUserProfile(stream: Stream) {
+    const userProfile = await this.getUserProfile();
+    const data: Uint8Array = new TextEncoder().encode(
+      JSON.stringify(userProfile),
+    );
+
+    if (!stream.send(data))
+      await new Promise((resolve) => stream.addEventListener("drain", resolve));
+
+    await stream.close();
   }
 
   async getById(peerId: string) {

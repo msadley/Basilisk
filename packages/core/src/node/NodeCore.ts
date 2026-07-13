@@ -1,33 +1,34 @@
-import { createLibp2p, type Libp2p } from "libp2p";
+import { getLibp2pOptions, type BaseServices } from "@basilisk/libp2p";
+import type { GossipSubEvents } from "@libp2p/gossipsub";
 import type {
   EventHandler,
-  IncomingStreamData,
   Libp2pEvents,
   PeerId,
   PrivateKey,
+  StreamHandler,
 } from "@libp2p/interface";
-import { getLibp2pOptions, type BaseServices } from "@basilisk/libp2p";
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
-import type { GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
+import { createLibp2p, type Libp2p } from "libp2p";
 
 class NodeCore {
   private libp2p: Libp2p<BaseServices>;
-  private relayAddress: string;
+  private relayMultiaddress: Multiaddr;
 
-  private constructor(libp2p: Libp2p<BaseServices>, relayAddress: string) {
+  private constructor(libp2p: Libp2p<BaseServices>, relayAddress: Multiaddr) {
     this.libp2p = libp2p;
-    this.relayAddress = relayAddress;
+    this.relayMultiaddress = relayAddress;
   }
 
   static async init(
     relayAddress: string,
     privateKey: PrivateKey,
   ): Promise<NodeCore> {
+    const relayMultiaddr = multiaddr(relayAddress);
     const libp2p = await createLibp2p(
       getLibp2pOptions({ mode: "CLIENT", relayAddress }, privateKey),
     );
 
-    const node = new NodeCore(libp2p, relayAddress);
+    const node = new NodeCore(libp2p, relayMultiaddr);
     return node;
   }
 
@@ -40,7 +41,7 @@ class NodeCore {
   }
 
   async pingRelay(): Promise<number> {
-    return this.libp2p.services.ping.ping(multiaddr(this.relayAddress));
+    return this.libp2p.services.ping.ping(this.relayMultiaddress);
   }
 
   getPeerId(): PeerId {
@@ -51,23 +52,20 @@ class NodeCore {
     this.libp2p.services.pubsub.subscribe(topic);
   }
 
-  registerProtocolHandler(
-    protocol: string,
-    handler: (arg0: IncomingStreamData) => any,
-  ) {
+  registerProtocolHandler(protocol: string, handler: StreamHandler) {
     this.libp2p.handle(protocol, handler);
   }
 
-  registerEventHandler<K extends keyof Libp2pEvents<BaseServices>>(
+  registerEventListener<K extends keyof Libp2pEvents<BaseServices>>(
     event: K,
     handler: EventHandler<Libp2pEvents<BaseServices>[K]>,
   ) {
     this.libp2p.addEventListener(event, handler);
   }
 
-  registerPubsubHandler<K extends keyof GossipsubEvents>(
+  registerPubsubListener<K extends keyof GossipSubEvents>(
     event: K,
-    handler: EventHandler<GossipsubEvents[K]>,
+    handler: EventHandler<GossipSubEvents[K]>,
   ) {
     this.libp2p.services.pubsub.addEventListener(event, handler);
   }
