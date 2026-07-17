@@ -1,9 +1,11 @@
 {
+  "extends": "./tsconfig.base.json",
   "files": [],
   "references": [
     { "path": "packages/libp2p" },
     { "path": "packages/core" },
     { "path": "apps/relay" },
+    { "path": "apps/test" },
     { "path": "apps/web" }
   ]
 }

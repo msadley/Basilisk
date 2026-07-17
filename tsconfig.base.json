@@ -5,6 +5,9 @@
     "target": "esnext",
     "types": ["node"],
     "lib": ["esnext"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "erasableSyntaxOnly": false,
 
     // Other Outputs
     "sourceMap": true,
