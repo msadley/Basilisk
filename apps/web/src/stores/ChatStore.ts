@@ -1,59 +1,46 @@
 import type { Chat } from "@basilisk/core";
-import { makeAutoObservable, observable, runInAction } from "mobx";
+import { create } from "zustand";
 import { workerController } from "../worker/workerController";
 
-class ChatStore {
-  chats = observable.array<Chat>();
-  isLoading: boolean = true;
+interface ChatState {
+  chats: Chat[];
+  isLoading: boolean;
+  handleChatSpawn: (chat: Chat) => Promise<void>;
+  initialLoad: () => Promise<void>;
+  getChats: () => Promise<void>;
+  createChat: (chat: Chat) => Promise<Chat | undefined>;
+}
 
-  constructor() {
-    makeAutoObservable(this);
-  }
+export const useChatStore = create<ChatState>((set, get) => ({
+  chats: [],
+  isLoading: true,
 
-  handleChatSpawn = async (chat: Chat) => {
-    runInAction(() => {
-      this.chats.push(chat);
-    });
-  };
+  handleChatSpawn: async (chat) => {
+    set((state) => ({ chats: [...state.chats, chat] }));
+  },
 
-  initialLoad = async () => {
-    await this.getChats();
-  };
+  initialLoad: async () => {
+    await get().getChats();
+  },
 
-  getChats = async () => {
-    runInAction(() => {
-      this.isLoading = true;
-    });
-
+  getChats: async () => {
+    set({ isLoading: true });
     try {
-      const chats = await workerController.getChats();
-      runInAction(() => {
-        this.chats = observable.array(chats);
-        this.isLoading = false;
-      });
+      const chats = await workerController.listChats();
+      set({ chats, isLoading: false });
     } catch (e) {
       console.error("Failed to get chats", e);
-      runInAction(() => {
-        this.isLoading = false;
-      });
+      set({ isLoading: false });
     }
-  };
+  },
 
-  createChat = async (chat: Chat) => {
+  createChat: async (chat) => {
     try {
-      const newChat = await workerController.createChat(chat);
-      runInAction(() => {
-        this.chats.push(newChat);
-      });
+      const newChat = await workerController.createPrivateChat(chat.id);
+      set((state) => ({ chats: [...state.chats, newChat] }));
       return newChat;
     } catch (e) {
       console.error("Failed to create chat", e);
     }
-  };
-
-  get areChatsLoading(): boolean {
-    return this.isLoading;
-  }
-}
-
-export const chatStore = new ChatStore();
+  },
+}));

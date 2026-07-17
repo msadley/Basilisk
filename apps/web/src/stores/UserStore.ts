@@ -1,41 +1,31 @@
 import type { Profile } from "@basilisk/core";
-import { makeAutoObservable, runInAction } from "mobx";
+import { create } from "zustand";
 import { workerController } from "../worker/workerController";
 
-class UserStore {
+interface UserState {
   userProfile: Profile | undefined;
-  isLoading: boolean = true;
+  isLoading: boolean;
+  initialLoad: () => Promise<void>;
+  getUserProfile: () => Promise<void>;
+}
 
-  constructor() {
-    makeAutoObservable(this);
-  }
+export const useUserStore = create<UserState>((set, get) => ({
+  userProfile: undefined,
+  isLoading: true,
 
-  initialLoad = async () => {
-    await this.getUserProfile();
-  };
+  initialLoad: async () => {
+    await get().getUserProfile();
+  },
 
-  getUserProfile = async () => {
-    runInAction(() => {
-      this.isLoading = true;
-    });
+  getUserProfile: async () => {
+    set({ isLoading: true });
 
     try {
       const userProfile = await workerController.getUserProfile();
-      runInAction(() => {
-        this.userProfile = userProfile;
-        this.isLoading = false;
-      });
+      set({ userProfile, isLoading: false });
     } catch (e) {
       console.error("Failed to get user profile", e);
-      runInAction(() => {
-        this.isLoading = false;
-      });
+      set({ isLoading: false });
     }
-  };
-
-  get isProfileLoading(): boolean {
-    return this.isLoading;
-  }
-}
-
-export const userStore = new UserStore();
+  },
+}));

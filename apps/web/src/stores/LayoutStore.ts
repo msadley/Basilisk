@@ -1,4 +1,4 @@
-import { makeAutoObservable, observable } from "mobx";
+import { create } from "zustand";
 import type {
   MainView,
   ModalView,
@@ -7,47 +7,63 @@ import type {
 } from "../types";
 import { v7 as uuidv7 } from "uuid";
 
-class LayoutStore {
-  mainView: MainView = { type: "home" };
-  sidePanelView: SidePanelView = { type: "none" };
-  modalView: ModalView = { type: "none" };
-  toasts = observable<ToastMessage>([]);
-
-  constructor() {
-    makeAutoObservable(this);
-  }
-
-  setMainView = (view: MainView) => {
-    this.mainView = view;
-  };
-
-  setSidePanelView = (view: SidePanelView) => {
-    this.sidePanelView = view;
-  };
-
-  setModalView = (view: ModalView) => {
-    this.modalView = view;
-  };
-
-  get currentToast(): ToastMessage | undefined {
-    return this.toasts.length > 0 ? this.toasts[0] : undefined;
-  }
-
-  addToast = (message: string, type: ToastMessage["type"], duration = 3000) => {
-    const id = uuidv7();
-    this.toasts.push({
-      id,
-      message,
-      type,
-      duration,
-    });
-  };
-
-  removeToast = (id: string) => {
-    this.toasts = observable.array(
-      this.toasts.filter((toast) => toast.id !== id),
-    );
-  };
+interface LayoutState {
+  mainView: MainView;
+  sidePanelView: SidePanelView;
+  modalView: ModalView;
+  toasts: ToastMessage[];
+  theme: "mocha" | "macchiato" | "frappe" | "latte";
+  setTheme: (theme: "mocha" | "macchiato" | "frappe" | "latte") => void;
+  setMainView: (view: MainView) => void;
+  setSidePanelView: (view: SidePanelView) => void;
+  setModalView: (view: ModalView) => void;
+  addToast: (message: string, type: ToastMessage["type"], duration?: number) => void;
+  removeToast: (id: string) => void;
 }
 
-export const layoutStore = new LayoutStore();
+const getInitialTheme = (): "mocha" | "macchiato" | "frappe" | "latte" => {
+  const savedTheme = localStorage.getItem("basilisk-theme");
+  if (savedTheme && ["mocha", "macchiato", "frappe", "latte"].includes(savedTheme)) {
+    return savedTheme as any;
+  }
+  return "mocha";
+};
+
+const applyTheme = (theme: string) => {
+  const root = document.documentElement;
+  root.className = `theme-${theme}`;
+};
+
+// Apply the initial theme immediately
+applyTheme(getInitialTheme());
+
+export const useLayoutStore = create<LayoutState>((set) => ({
+  mainView: { type: "home" },
+  sidePanelView: { type: "none" },
+  modalView: { type: "none" },
+  toasts: [],
+  theme: getInitialTheme(),
+
+  setTheme: (theme) => {
+    localStorage.setItem("basilisk-theme", theme);
+    applyTheme(theme);
+    set({ theme });
+  },
+
+  setMainView: (view) => set({ mainView: view }),
+  setSidePanelView: (view) => set({ sidePanelView: view }),
+  setModalView: (view) => set({ modalView: view }),
+
+  addToast: (message, type, duration = 3000) => {
+    const id = uuidv7();
+    set((state) => ({
+      toasts: [...state.toasts, { id, message, type, duration }],
+    }));
+  },
+
+  removeToast: (id) => {
+    set((state) => ({
+      toasts: state.toasts.filter((toast) => toast.id !== id),
+    }));
+  },
+}));

@@ -1,34 +1,46 @@
-import { makeAutoObservable, observable } from "mobx";
-import { workerController } from "../worker/workerController";
+import { create } from "zustand";
 
-class ConnectionStore {
-  isUserConnected: boolean = false;
-  connectionStatuses = observable.map<string, boolean | undefined>();
-
-  constructor() {
-    makeAutoObservable(this);
-  }
-
-  setUserConnectionFalse = () => {
-    this.isUserConnected = false;
-  };
-
-  setUserConnectionTrue = () => {
-    this.isUserConnected = true;
-  };
-
-  addConnectionListener = (peerId: string) => {
-    this.connectionStatuses.set(peerId, undefined);
-    workerController.subscribeToPeer(peerId);
-  };
-
-  setConnectionFalse = (peerId: string) => {
-    this.connectionStatuses.set(peerId, false);
-  };
-
-  setConnectionTrue = (peerId: string) => {
-    this.connectionStatuses.set(peerId, true);
-  };
+interface ConnectionState {
+  isUserConnected: boolean;
+  connectionStatuses: Record<string, boolean | undefined>;
+  setUserConnectionFalse: () => void;
+  setUserConnectionTrue: () => void;
+  addConnectionListener: (peerId: string) => void;
+  setConnectionFalse: (peerId: string) => void;
+  setConnectionTrue: (peerId: string) => void;
 }
 
-export const connectionStore = new ConnectionStore();
+export const useConnectionStore = create<ConnectionState>((set) => ({
+  isUserConnected: false,
+  connectionStatuses: {},
+
+  setUserConnectionFalse: () => set({ isUserConnected: false }),
+  setUserConnectionTrue: () => set({ isUserConnected: true }),
+
+  addConnectionListener: (peerId) => {
+    set((state) => ({
+      connectionStatuses: {
+        ...state.connectionStatuses,
+        [peerId]: undefined,
+      },
+    }));
+  },
+
+  setConnectionFalse: (peerId) => {
+    set((state) => ({
+      connectionStatuses: {
+        ...state.connectionStatuses,
+        [peerId]: false,
+      },
+    }));
+  },
+
+  setConnectionTrue: (peerId) => {
+    set((state) => ({
+      connectionStatuses: {
+        ...state.connectionStatuses,
+        [peerId]: true,
+      },
+    }));
+  },
+}));

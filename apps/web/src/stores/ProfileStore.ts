@@ -1,27 +1,30 @@
+import { create } from "zustand";
 import type { Profile } from "@basilisk/core";
-import { makeAutoObservable, runInAction } from "mobx";
 import { workerController } from "../worker/workerController";
 
-class ProfileStore {
-  profiles = new Map<string, Profile>();
+interface ProfileState {
+  profiles: Record<string, Profile>;
+  getProfile: (peerId: string) => Promise<Profile>;
+}
 
-  constructor() {
-    makeAutoObservable(this);
-  }
+export const useProfileStore = create<ProfileState>((set, get) => ({
+  profiles: {},
 
-  getProfile = async (peerId: string): Promise<Profile> => {
-    if (this.profiles.get(peerId)) return this.profiles.get(peerId)!;
+  getProfile: async (peerId) => {
+    const existing = get().profiles[peerId];
+    if (existing) return existing;
 
     try {
       const profile = await workerController.getProfile(peerId);
-      runInAction(() => {
-        this.profiles.set(peerId, profile);
-      });
+      set((state) => ({
+        profiles: {
+          ...state.profiles,
+          [peerId]: profile,
+        },
+      }));
       return profile;
     } catch (e: any) {
       throw new Error("Profile could not be retrieved", e);
     }
-  };
-}
-
-export const profileStore = new ProfileStore();
+  },
+}));
