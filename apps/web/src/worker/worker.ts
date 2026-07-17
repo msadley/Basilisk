@@ -1,26 +1,17 @@
-import { Basilisk } from "@basilisk/core";
-import { sqlite } from "../utils/sqlite";
+import { Basilisk, schema, type uiCallbackFn } from "@basilisk/core";
+import * as Comlink from "comlink";
+import { drizzle } from "drizzle-orm/sqlite-proxy";
+import { SQLocalDrizzle } from "sqlocal/drizzle";
 
-let controller: Basilisk;
-
-self.onmessage = async (event) => {
-  console.debug("[worker] Message sent to node:", event.data);
-  if (event.data.type === "start-node") {
-    if (controller) return;
-
-    const db = await sqlite.create();
-
-    controller = await Basilisk.init(
+Comlink.expose({
+  init: async (params: { callbackFn: uiCallbackFn; relayAddress: string }) => {
+    const { driver } = new SQLocalDrizzle("basilisk.sqlite3");
+    const db = drizzle(driver, { schema });
+    const basilisk = await Basilisk.init(
       db,
-      (event) => {
-        console.debug("[worker] Message sent to UI:", event);
-        self.postMessage(event);
-      },
-      import.meta.env.VITE_BOOTSTRAP_MULTIADDRS
+      params.callbackFn,
+      params.relayAddress,
     );
-
-    await controller.startNode();
-  } else if (controller) {
-    await controller.handleUiCommand(event.data);
-  }
-};
+    return Comlink.proxy(basilisk);
+  },
+});

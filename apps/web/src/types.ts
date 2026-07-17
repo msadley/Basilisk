@@ -27,7 +27,6 @@ type ModalViewsFromMap<T extends Record<string, any>> = {
 
 interface ModalViewMap {
   loading: void;
-  wipe: void;
   none: void;
 }
 export type ModalView = ModalViewsFromMap<ModalViewMap>;
