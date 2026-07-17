@@ -18,9 +18,8 @@ A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
 - Node.js (v22 or higher)
 - npm
-- docker(\*)
 
-\*Makes setting up your own relay a lot easier
+A docker compose file is provided in the `apps/relay` directory to set up your own relay server.
 
 ### Instructions
 
@@ -45,7 +44,7 @@ A peer-to-peer chat app built on top of libp2p, using TypeScript.
 ## Running
 
 Before proceding, make sure to set the variables in the .env file as specified
-in the example:
+on the example:
 
 ```sh
 # .env.example

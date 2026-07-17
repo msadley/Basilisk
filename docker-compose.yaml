@@ -2,13 +2,13 @@ services:
   basilisk-relay:
     build:
       context: .
-      dockerfile: apps/relay/Dockerfile
+      dockerfile: ./Dockerfile
     container_name: basilisk_relay
     restart: unless-stopped
     ports:
       - "4001:4001"
       - "127.0.0.1:4002:4002"
     volumes:
-      - ${HOME}/.basilisk:/home/basilisk/.basilisk
+      - ./data:/home/basilisk/.basilisk
     env_file:
       - .env
