@@ -1,16 +1,14 @@
 import type { PeerId } from "@libp2p/interface";
 import { profileSchema, type Profile } from "../model/Profile.js";
-import type NodeCore from "../node/NodeCore.js";
-import type KnownPeersRepository from "../repository/KnownPeersRepository.js";
+import NodeCore from "../node/NodeCore.js";
+import { singleton, inject } from "tsyringe";
 
+@singleton()
 class NodeService {
-  private knownPeersStore: KnownPeersRepository;
-  private nodeCore: NodeCore;
-
-  constructor(knownPeersStore: KnownPeersRepository, nodeCore: NodeCore) {
-    this.knownPeersStore = knownPeersStore;
-    this.nodeCore = nodeCore;
-  }
+  constructor(
+    @inject("NodeCore")
+    private nodeCore: NodeCore,
+  ) {}
 
   async getPeerProfile(peerId: PeerId): Promise<Profile> {
     const stream = await this.nodeCore.dialProtocol(peerId, "/info/1.0.0");
@@ -37,10 +35,6 @@ class NodeService {
 
   async pingRelay(): Promise<number> {
     return this.nodeCore.pingRelay();
-  }
-
-  addKnownPeer(peerId: string) {
-    this.knownPeersStore.addPeer(peerId);
   }
 }
 

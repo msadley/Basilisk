@@ -2,17 +2,14 @@ import type { GroupChat } from "../model/GroupChat.js";
 import type { PrivateChat } from "../model/PrivateChat.js";
 import GroupChatService from "./GroupChatService.js";
 import PrivateChatService from "./PrivateChatService.js";
+import { inject, singleton } from "tsyringe";
 
+@singleton()
 class ChatService {
-  private groupChatService: GroupChatService;
-  private privateChatService: PrivateChatService;
-
   constructor(
-    groupChatService: GroupChatService,
-    privateChatService: PrivateChatService,
+    @inject(GroupChatService) private groupChatService: GroupChatService,
+    @inject(PrivateChatService) private privateChatService: PrivateChatService,
   ) {
-    this.groupChatService = groupChatService;
-    this.privateChatService = privateChatService;
   }
 
   async getById(chatId: string): Promise<GroupChat | PrivateChat | undefined> {

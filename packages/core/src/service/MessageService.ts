@@ -4,27 +4,23 @@ import { groupChatSchema } from "../model/GroupChat.js";
 import { messagePacketSchema } from "../model/MessagePacket.js";
 import { privateChatSchema } from "../model/PrivateChat.js";
 import MessageRepository from "../repository/MessageRepository.js";
-import type ChatService from "./ChatService.js";
-import type NodeService from "./NodeService.js";
-import type ProfileService from "./ProfileService.js";
+import ChatService from "./ChatService.js";
+import NodeService from "./NodeService.js";
+import ProfileService from "./ProfileService.js";
+import { inject, singleton } from "tsyringe";
 
+@singleton()
 class MessageService {
-  private messageRepository: MessageRepository;
-  private profileService: ProfileService;
-  private nodeService: NodeService;
-  private chatService: ChatService;
-
   constructor(
-    messageRepository: MessageRepository,
-    chatService: ChatService,
-    profileService: ProfileService,
-    nodeService: NodeService,
-  ) {
-    this.messageRepository = messageRepository;
-    this.chatService = chatService;
-    this.profileService = profileService;
-    this.nodeService = nodeService;
-  }
+    @inject(MessageRepository)
+    private messageRepository: MessageRepository,
+    @inject(ChatService)
+    private chatService: ChatService,
+    @inject(ProfileService)
+    private profileService: ProfileService,
+    @inject(NodeService)
+    private nodeService: NodeService,
+  ) {}
 
   async list(chatId: string, limit: number, page: number) {
     return await this.messageRepository.list(chatId, limit, page);

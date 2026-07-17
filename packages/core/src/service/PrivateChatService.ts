@@ -1,22 +1,19 @@
-import type PrivateChatRepository from "../repository/PrivateChatRepository.js";
-import type ProfileService from "../service/ProfileService.js";
-import type NodeService from "../service/NodeService.js";
-import type { PrivateChat } from "../model/PrivateChat.js";
+import PrivateChatRepository from "../repository/PrivateChatRepository.js";
+import ProfileService from "../service/ProfileService.js";
+import { type PrivateChat } from "../model/PrivateChat.js";
+import { inject, singleton } from "tsyringe";
+import PrivateChatCache from "../repository/PrivateChatCache.js";
 
+@singleton()
 class PrivateChatService {
-  private privateChatRepository: PrivateChatRepository;
-  private profileService: ProfileService;
-  private nodeService: NodeService;
-
   constructor(
-    privateChatRepository: PrivateChatRepository,
-    profileService: ProfileService,
-    nodeService: NodeService,
-  ) {
-    this.privateChatRepository = privateChatRepository;
-    this.profileService = profileService;
-    this.nodeService = nodeService;
-  }
+    @inject(PrivateChatRepository)
+    private privateChatRepository: PrivateChatRepository,
+    @inject(ProfileService)
+    private profileService: ProfileService,
+    @inject(PrivateChatCache)
+    private privateChatCache: PrivateChatCache,
+  ) {}
 
   async getById(id: string): Promise<PrivateChat | undefined> {
     return this.privateChatRepository.getById(id);
@@ -31,7 +28,7 @@ class PrivateChatService {
       this.privateChatRepository.getById(peerId);
       throw new Error("Chat already exists");
     } catch {
-      this.nodeService.addKnownPeer(peerId);
+      this.privateChatCache.add(peerId);
       return this.privateChatRepository.save({
         id: peerId,
         participants: [peerId, (await this.profileService.getUserProfile()).id],

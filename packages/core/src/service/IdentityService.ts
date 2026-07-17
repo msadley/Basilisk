@@ -1,13 +1,14 @@
 import type { PrivateKey } from "@basilisk/core";
-import type IdentityRepository from "../repository/IdentityRepository.js";
+import IdentityRepository from "../repository/IdentityRepository.js";
 import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
+import { inject, singleton } from "tsyringe";
 
+@singleton()
 class IdentityService {
-  private identityRepository: IdentityRepository;
-
-  constructor(identityRepository: IdentityRepository) {
-    this.identityRepository = identityRepository;
-  }
+  constructor(
+    @inject(IdentityRepository)
+    private identityRepository: IdentityRepository,
+  ) {}
 
   async getPrivateKey(): Promise<PrivateKey> {
     let seed = await this.identityRepository.getSeed();
