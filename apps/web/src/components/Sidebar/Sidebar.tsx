@@ -1,27 +1,29 @@
 import styles from "./Sidebar.module.css";
 import AddChatButton from "./buttons/AddChatButton/AddChatButton";
 import HomeButton from "./buttons/HomeButton/HomeButton";
+import ThemeSelector from "./buttons/ThemeSelector/ThemeSelector";
 import type { Chat } from "@basilisk/core";
-import { layoutStore } from "../../stores/LayoutStore";
-import { chatStore } from "../../stores/ChatStore";
-import { observer } from "mobx-react-lite";
+import { useLayoutStore } from "../../stores/LayoutStore";
+import { useChatStore } from "../../stores/ChatStore";
 import Avatar from "../Avatar/Avatar";
-import { connectionStore } from "../../stores/ConnectionStore";
+import { useConnectionStore } from "../../stores/ConnectionStore";
 import { useEffect } from "react";
 
-const Sidebar = observer(() => {
-  const chats = chatStore.chats;
-  const setMainView = layoutStore.setMainView;
+const Sidebar = () => {
+  const chats = useChatStore((state) => state.chats);
+  const setMainView = useLayoutStore((state) => state.setMainView);
+  const connectionStatuses = useConnectionStore((state) => state.connectionStatuses);
+  const addConnectionListener = useConnectionStore((state) => state.addConnectionListener);
 
   useEffect(() => {
     chats.forEach((chat: Chat) => {
-      if (chat.type === "private") {
-        if (!connectionStore.connectionStatuses.has(chat.id)) {
-          connectionStore.addConnectionListener(chat.id);
+      if (!("name" in chat)) {
+        if (!(chat.id in connectionStatuses)) {
+          addConnectionListener(chat.id);
         }
       }
     });
-  }, []);
+  }, [chats, connectionStatuses, addConnectionListener]);
 
   return (
     <div className={styles.sidebar}>
@@ -35,16 +37,17 @@ const Sidebar = observer(() => {
               key={chat.id}
               onClick={() => setMainView({ type: "chat", details: { chat } })}
               chat={chat}
-              indicator={chat.type === "private"}
+              indicator={!("name" in chat)}
             />
           ))}
         </div>
       </div>
       <div className={styles.footer}>
+        <ThemeSelector />
         <AddChatButton onClick={() => setMainView({ type: "addChat" })} />
       </div>
     </div>
   );
-});
+};
 
 export default Sidebar;

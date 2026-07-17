@@ -3,7 +3,6 @@ import { peerIdFromString } from "@libp2p/peer-id";
 import styles from "./PrivateForm.module.css";
 import type { FormProps } from "../AddChat";
 import { z } from "zod";
-import type { Chat } from "@basilisk/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -40,10 +39,11 @@ const PrivateForm = ({ createChat, setIsLoading, setView }: FormProps) => {
   });
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
-    const chat: Chat = {
+    const chat = {
       id: data.peerId,
+      participants: [data.peerId],
       type: "private",
-    };
+    } as any;
 
     setIsLoading(true);
     try {

@@ -2,15 +2,14 @@ import styles from "./Home.module.css";
 import type { ViewProps } from "../../../../types";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
-import { userStore } from "../../../../stores/UserStore";
-import { observer } from "mobx-react-lite";
+import { useUserStore } from "../../../../stores/UserStore";
 import { Icon } from "@iconify/react";
-import { layoutStore } from "../../../../stores/LayoutStore";
+import { useLayoutStore } from "../../../../stores/LayoutStore";
 
-const Home = observer(({ setHeader, setFooter }: ViewProps) => {
+const Home = ({ setHeader, setFooter }: ViewProps) => {
   const [idVisible, setIdVisible] = useState<boolean>(false);
-  const profile = userStore.userProfile;
-  const { addToast, setModalView } = layoutStore;
+  const profile = useUserStore((state) => state.userProfile);
+  const addToast = useLayoutStore((state) => state.addToast);
 
   const toggleIdVisibility = useCallback(() => {
     setIdVisible((prev) => !prev);
@@ -20,7 +19,7 @@ const Home = observer(({ setHeader, setFooter }: ViewProps) => {
     const data = profile?.id ?? "";
     navigator.clipboard.writeText(data);
     addToast("ID copiado para a área de transferência", "info");
-  }, []);
+  }, [profile, addToast]);
 
   useEffect(() => {
     setHeader(<></>);
@@ -42,16 +41,8 @@ const Home = observer(({ setHeader, setFooter }: ViewProps) => {
       <button onClick={copyIdToClipboard} className={styles.copyButton}>
         <Icon icon="mingcute:copy-2-fill" />
       </button>
-      <div className={styles.separator} />
-      <button
-        onClick={() => setModalView({ type: "wipe" })}
-        className={styles.wipeButton}
-      >
-        <Icon icon="mingcute:delete-2-fill" />
-        Apagar todos os dados
-      </button>
     </motion.div>
   );
-});
+};
 
 export default Home;

@@ -1,47 +1,55 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { ViewProps } from "../../../../types";
 import InputBox from "./InputBox/InputBox";
 import styles from "./Chat.module.css";
-import { profileStore } from "../../../../stores/ProfileStore";
-import { messageStore } from "../../../../stores/MessageStore";
-import { observer } from "mobx-react-lite";
+import { useProfileStore } from "../../../../stores/ProfileStore";
+import { useMessageStore } from "../../../../stores/MessageStore";
 import Message from "./Message/Message";
 import type { Chat as ChatType, Profile } from "@basilisk/core";
 import { Virtuoso } from "react-virtuoso";
-import { layoutStore } from "../../../../stores/LayoutStore";
+import { useLayoutStore } from "../../../../stores/LayoutStore";
 import Header from "./Header/Header";
 
 interface ChatProps extends ViewProps {
   chat: ChatType;
 }
 
-const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
-  const { addToast } = layoutStore;
+const Chat = ({ chat, setHeader, setFooter }: ChatProps) => {
+  const addToast = useLayoutStore((state) => state.addToast);
+  const getProfile = useProfileStore((state) => state.getProfile);
+  const loadMoreAction = useMessageStore((state) => state.loadMore);
+  const sendMessageAction = useMessageStore((state) => state.sendMessage);
+
+  const chatState = useMessageStore(
+    useCallback((state) => state.chats[chat.id], [chat.id])
+  );
+
+  const messages = useMemo(() => {
+    if (!chatState) return [];
+    return chatState.ids.map((id) => chatState.messages[id]);
+  }, [chatState]);
 
   const [peerProfile, setPeerProfile] = useState<Profile>();
   const [peerProfileError] = useState<Error>();
 
-  const messages = messageStore.getChatMessages(chat.id);
-
   const loadMore = useCallback(async () => {
-    await messageStore.loadMore(chat.id);
+    await loadMoreAction(chat.id);
     console.log("loading more messages");
-  }, [chat.id]);
+  }, [chat.id, loadMoreAction]);
 
   const sendTextMessage = useCallback(
     async (content: string) => {
-      await messageStore.sendMessage(chat.id, content);
+      await sendMessageAction(chat.id, content);
     },
-    [chat.id],
+    [chat.id, sendMessageAction],
   );
-
   useEffect(() => {
-    if (chat.type === "group") return;
+    if ("name" in chat) return;
 
     const getPeerProfile = async (peerId: string) => {
       try {
-        const profile = await profileStore.getProfile(peerId);
+        const profile = await getProfile(peerId);
         setPeerProfile(profile);
       } catch (e: any) {
         addToast("Usuário offline", "error");
@@ -49,7 +57,7 @@ const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
     };
 
     getPeerProfile(chat.id);
-  }, [chat.id]);
+  }, [chat.id, getProfile, addToast, chat]);
 
   useEffect(() => {
     const headerText = peerProfileError
@@ -60,7 +68,7 @@ const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
 
   useEffect(() => {
     loadMore();
-  }, [chat.id]);
+  }, [chat.id, loadMore]);
 
   useEffect(() => {
     setFooter(<InputBox sendMessage={sendTextMessage} />);
@@ -88,6 +96,6 @@ const Chat = observer(({ chat, setHeader, setFooter }: ChatProps) => {
       </AnimatePresence>
     </div>
   );
-});
+};
 
 export default Chat;

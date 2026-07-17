@@ -1,9 +1,8 @@
 import type { Chat } from "@basilisk/core";
 import styles from "./Avatar.module.css";
-import { observer } from "mobx-react-lite";
 import { memo } from "react";
 import { Icon } from "@iconify/react";
-import { connectionStore } from "../../stores/ConnectionStore";
+import { useConnectionStore } from "../../stores/ConnectionStore";
 
 type AvatarProps = {
   indicator?: boolean;
@@ -27,8 +26,11 @@ const bgColors = [
   "var(--ctp-lavender)",
 ];
 
-const Avatar = observer(({ onClick, chat, indicator }: AvatarProps) => {
-  const connectionStatus = connectionStore.connectionStatuses.get(chat.id);
+const Avatar = ({ onClick, chat, indicator }: AvatarProps) => {
+  const connectionStatus = useConnectionStore(
+    (state) => state.connectionStatuses[chat.id],
+  );
+  const chatAsAny = chat as any;
 
   return (
     <div
@@ -39,10 +41,10 @@ const Avatar = observer(({ onClick, chat, indicator }: AvatarProps) => {
         backgroundColor: bgColors[Math.floor(Math.random() * bgColors.length)],
       }}
     >
-      {chat.avatar ? (
-        <img src={chat.avatar} />
-      ) : chat.name ? (
-        chat.name[0]
+      {chatAsAny.avatar ? (
+        <img src={chatAsAny.avatar} />
+      ) : chatAsAny.name ? (
+        chatAsAny.name[0]
       ) : (
         <Icon icon="mingcute:user-2-fill" />
       )}
@@ -60,6 +62,6 @@ const Avatar = observer(({ onClick, chat, indicator }: AvatarProps) => {
       )}
     </div>
   );
-});
+};
 
 export default memo(Avatar);

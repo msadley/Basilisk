@@ -1,24 +1,23 @@
-import { observer } from "mobx-react-lite";
 import styles from "./Message.module.css";
 import type { Chat } from "@basilisk/core";
-import { messageStore, type Message } from "../../../../../stores/MessageStore";
+import { useMessageStore, type Message } from "../../../../../stores/MessageStore";
 import { AnimatePresence, motion } from "framer-motion";
-import { userStore } from "../../../../../stores/UserStore";
+import { useUserStore } from "../../../../../stores/UserStore";
 import { memo, useCallback } from "react";
 import { Icon } from "@iconify/react";
-// import Avatar from "../../../../Avatar/Avatar";
 
 type MessageProps = {
   message: Message;
   chat: Chat;
 };
 
-const Message = observer(({ message, chat }: MessageProps) => {
-  const profile = userStore.userProfile;
+const Message = ({ message, chat }: MessageProps) => {
+  const profile = useUserStore((state) => state.userProfile);
+  const resendMessage = useMessageStore((state) => state.resendMessage);
 
   const resend = useCallback(async () => {
-    await messageStore.resendMessage(chat.id, message.uuid);
-  }, [chat.id]);
+    await resendMessage(chat.id, message.uuid);
+  }, [chat.id, message.uuid, resendMessage]);
 
   const messageClasses = `
     ${styles.message}
@@ -47,10 +46,6 @@ const Message = observer(({ message, chat }: MessageProps) => {
       }}
       transition={{ type: "spring", duration: 0.5 }}
     >
-      {/* <div className={styles.avatarContainer}>
-        <Avatar chat={chat} />
-      </div> */}
-
       <AnimatePresence mode="popLayout" key={message.uuid}>
         {message.status === "ok" ? undefined : (
           <motion.div
@@ -88,6 +83,6 @@ const Message = observer(({ message, chat }: MessageProps) => {
       </button>
     </motion.div>
   );
-});
+};
 
 export default memo(Message);

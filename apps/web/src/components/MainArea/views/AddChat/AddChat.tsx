@@ -4,7 +4,7 @@ import styles from "./AddChat.module.css";
 import { Icon } from "@iconify/react";
 import ButtonArray from "./ButtonArray/ButtonArray";
 import PrivateForm from "./PrivateForm/PrivateForm";
-import { chatStore } from "../../../../stores/ChatStore";
+import { useChatStore } from "../../../../stores/ChatStore";
 import type { Chat } from "@basilisk/core";
 
 export interface AddChatViewProps extends ViewProps {
@@ -19,7 +19,7 @@ export type FormProps = {
 
 function AddChat({ setHeader, setFooter, setView }: AddChatViewProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const createChat = chatStore.createChat;
+  const createChat = useChatStore((state) => state.createChat);
 
   // 0 para privado e 1 para grupo
   const [activeButton, setActiveButton] = useState<number>(0);

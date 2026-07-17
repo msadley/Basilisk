@@ -1,8 +1,7 @@
-import { layoutStore } from "../../../stores/LayoutStore";
-import { observer } from "mobx-react-lite";
+import { useLayoutStore } from "../../../stores/LayoutStore";
 
-const SidePanel = observer(() => {
-  const { sidePanelView: view } = layoutStore;
+const SidePanel = () => {
+  const view = useLayoutStore((state) => state.sidePanelView);
 
   const panel = () => {
     switch (view.type) {
@@ -13,6 +12,6 @@ const SidePanel = observer(() => {
   };
 
   return panel();
-});
+};
 
 export default SidePanel;

@@ -1,10 +1,9 @@
 import { Icon } from "@iconify/react";
 import styles from "./Reconnecting.module.css";
-import { observer } from "mobx-react-lite";
-import { connectionStore } from "../../stores/ConnectionStore";
+import { useConnectionStore } from "../../stores/ConnectionStore";
 
-const Reconnecting = observer(() => {
-  const { isUserConnected } = connectionStore;
+const Reconnecting = () => {
+  const isUserConnected = useConnectionStore((state) => state.isUserConnected);
 
   return (
     !isUserConnected && (
@@ -16,6 +15,6 @@ const Reconnecting = observer(() => {
       </div>
     )
   );
-});
+};
 
 export default Reconnecting;

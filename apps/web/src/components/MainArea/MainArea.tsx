@@ -5,8 +5,7 @@ import type { ViewProps } from "../../types";
 import styles from "./MainArea.module.css";
 import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { layoutStore } from "../../stores/LayoutStore";
-import { observer } from "mobx-react-lite";
+import { useLayoutStore } from "../../stores/LayoutStore";
 import Toast from "../Toast/Toast";
 
 const headerVariants = {
@@ -28,10 +27,11 @@ const headerVariants = {
   },
 };
 
-const MainArea = observer(() => {
+const MainArea = () => {
   const [header, setHeader] = useState<ReactNode>();
   const [footer, setFooter] = useState<ReactNode>();
-  const { mainView: view, setMainView: setView } = layoutStore;
+  const view = useLayoutStore((state) => state.mainView);
+  const setView = useLayoutStore((state) => state.setMainView);
 
   const viewControls: ViewProps = {
     setHeader,
@@ -104,6 +104,6 @@ const MainArea = observer(() => {
       </AnimatePresence>
     </div>
   );
-});
+};
 
 export default MainArea;
