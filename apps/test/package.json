@@ -1,0 +1,14 @@
+{
+  "name": "@basilisk/test",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "npx tsc -b",
+    "dev": "node dist/index.js"
+  },
+  "dependencies": {
+    "@abraham/reflection": "^0.13.0",
+    "@basilisk/core": "*",
+    "@libsql/client": "^0.17.4"
+  }
+}
