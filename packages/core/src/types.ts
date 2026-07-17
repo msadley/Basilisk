@@ -46,29 +46,23 @@ export const SystemEventSchema = type({
   "error?": "string",
 });
 
+type SystemEventFields<K extends keyof SystemEventMap> =
+  SystemEventMap[K] extends void | undefined
+    ? { error?: never; payload?: never } | { error: string; payload?: never }
+    : { error?: never; payload: SystemEventMap[K] } | { error: string; payload?: never };
+
 export type UIEvent = {
   [K in keyof UIEventMap]: {
     id: string;
     type: K;
   } & (UIEventMap[K] extends void | undefined
     ? { payload?: never }
-    : { payload: UIPayload<K> });
+    : { payload: UIEventMap[K] });
 }[keyof UIEventMap];
 
 export type SystemEvent = {
-  [K in keyof SystemEventMap]: {
-    id: string;
-    type: K;
-  } & (SystemEventMap[K] extends void | undefined
-    ? { error?: never; payload?: never } | { error: string; payload?: never }
-    : | { error?: never; payload: SystemEventMap[K] }
-      | { error: string; payload?: never });
+  [K in keyof SystemEventMap]: { id: string; type: K } & SystemEventFields<K>
 }[keyof SystemEventMap];
-
-export type SystemPayload<T extends keyof SystemEventMap> = SystemEventMap[T];
-export type UIPayload<T extends keyof UIEventMap> = T extends "send-message"
-  ? { chatId: string; content: string }
-  : UIEventMap[T];
 
 export const responseMap = {
   "list-messages": "messages-retrieved",
@@ -78,8 +72,6 @@ export const responseMap = {
   "update-profile": "user-profile-updated",
   "list-chats": "chats-retrieved",
   "create-private-chat": "chat-created",
-  "close-database": "database-closed",
-  "wipe-database": "database-wiped",
   "ping-relay": "pong-relay",
 } as const;
 
@@ -87,3 +79,4 @@ export type ResponseMap = typeof responseMap;
 export type uiCallbackFn = (event: SystemEvent) => void;
 
 export type AppDatabase = BaseSQLiteDatabase<"async", any, typeof schema>;
+export const APP_DATABASE_TOKEN = Symbol('AppDatabase');

@@ -5,22 +5,17 @@ import {
   type SystemEventMap,
   type uiCallbackFn,
 } from "../types.js";
+import { injectable, singleton, inject } from "tsyringe";
 
-type EventResult<K extends keyof SystemEventMap> = SystemEventMap[K] extends
-  void | undefined
-  ? [result?: { error: string } | void]
-  : [
-      result:
-        | ({ error?: never } & SystemEventMap[K])
-        | ({ error: string } & { [P in keyof SystemEventMap[K]]?: never }),
-    ];
+type EventResult<K extends keyof SystemEventMap> =
+  SystemEventMap[K] extends void | undefined
+    ? [result?: { error: string } | void]
+    : [result: SystemEventMap[K] | { error: string }];
 
+@injectable()
+@singleton()
 class EventEmitter {
-  private callbackFn: uiCallbackFn;
-
-  constructor(callbackFn: uiCallbackFn) {
-    this.callbackFn = callbackFn;
-  }
+  constructor(@inject("CallbackFn") private callbackFn: uiCallbackFn) {}
 
   emit<K extends keyof SystemEventMap>(
     id: string,

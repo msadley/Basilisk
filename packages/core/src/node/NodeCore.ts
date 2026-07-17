@@ -14,9 +14,12 @@ class NodeCore {
   private libp2p: Libp2p<BaseServices>;
   private relayMultiaddress: Multiaddr;
 
-  private constructor(libp2p: Libp2p<BaseServices>, relayAddress: Multiaddr) {
+  private constructor(
+    libp2p: Libp2p<BaseServices>,
+    relayMultiaddress: Multiaddr,
+  ) {
     this.libp2p = libp2p;
-    this.relayMultiaddress = relayAddress;
+    this.relayMultiaddress = relayMultiaddress;
   }
 
   static async init(
@@ -27,9 +30,7 @@ class NodeCore {
     const libp2p = await createLibp2p(
       getLibp2pOptions({ mode: "CLIENT", relayAddress }, privateKey),
     );
-
-    const node = new NodeCore(libp2p, relayMultiaddr);
-    return node;
+    return new NodeCore(libp2p, relayMultiaddr);
   }
 
   start() {

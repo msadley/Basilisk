@@ -1,30 +1,20 @@
-import type ChatService from "../service/ChatService.js";
-import type MessageService from "../service/MessageService.js";
-import type NodeService from "../service/NodeService.js";
-import type PrivateChatService from "../service/PrivateChatService.js";
-import type ProfileService from "../service/ProfileService.js";
+import ChatService from "../service/ChatService.js";
+import MessageService from "../service/MessageService.js";
+import NodeService from "../service/NodeService.js";
+import PrivateChatService from "../service/PrivateChatService.js";
+import ProfileService from "../service/ProfileService.js";
 import type { UIEvent } from "../types.js";
+import { inject, singleton } from "tsyringe";
 
+@singleton()
 class EventRouter {
-  private chatService: ChatService;
-  private messageService: MessageService;
-  private profileService: ProfileService;
-  private nodeService: NodeService;
-  private privateChatService: PrivateChatService;
-
   constructor(
-    chatService: ChatService,
-    privateChatService: PrivateChatService,
-    messageService: MessageService,
-    profileService: ProfileService,
-    nodeService: NodeService,
-  ) {
-    this.chatService = chatService;
-    this.messageService = messageService;
-    this.profileService = profileService;
-    this.nodeService = nodeService;
-    this.privateChatService = privateChatService;
-  }
+    @inject(ChatService) private chatService: ChatService,
+    @inject(PrivateChatService) private privateChatService: PrivateChatService,
+    @inject(MessageService) private messageService: MessageService,
+    @inject(ProfileService) private profileService: ProfileService,
+    @inject(NodeService) private nodeService: NodeService,
+  ) {}
 
   async route(event: UIEvent) {
     switch (event.type) {
