@@ -1,21 +1,22 @@
 import { messageSchema, type Message } from "../model/Message.js";
-import { messages } from "../database/databaseSchema.js";
+import * as schema from "../database/databaseSchema.js";
 import { eq } from "drizzle-orm";
 import type { MessagePacket } from "../model/MessagePacket.js";
 import type { AppDatabase } from "../types.js";
+import { singleton, inject } from "tsyringe";
 
+@singleton()
 class MessageRepository {
-  private database: AppDatabase;
-
-  constructor(database: AppDatabase) {
-    this.database = database;
-  }
+  constructor(
+    @inject("AppDatabase")
+    private database: AppDatabase,
+  ) {}
 
   async list(chatId: string, limit: number, page: number): Promise<Message[]> {
     const result = await this.database
       .select()
-      .from(messages)
-      .where(eq(messages.chatId, chatId))
+      .from(schema.messages)
+      .where(eq(schema.messages.chatId, chatId))
       .limit(limit)
       .offset(page * limit);
     return result.map((row) => {
@@ -25,7 +26,7 @@ class MessageRepository {
 
   async save(messagePacket: MessagePacket): Promise<Message> {
     const [row] = await this.database
-      .insert(messages)
+      .insert(schema.messages)
       .values({
         chatId: messagePacket.chatId,
         senderId: messagePacket.senderId,

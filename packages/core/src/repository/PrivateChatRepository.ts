@@ -1,18 +1,19 @@
-import { chatParticipants, chats } from "../database/databaseSchema.js";
+import * as schema from "../database/databaseSchema.js";
 import { eq, and } from "drizzle-orm";
 import { type PrivateChat } from "../model/PrivateChat.js";
 import type { AppDatabase } from "../types.js";
+import { singleton, inject } from "tsyringe";
 
+@singleton()
 class PrivateChatRepository {
-  private database: AppDatabase;
-
-  constructor(database: AppDatabase) {
-    this.database = database;
-  }
+  constructor(
+    @inject("AppDatabase", { isOptional: false })
+    private database: AppDatabase,
+  ) {}
 
   async getById(id: string): Promise<PrivateChat | undefined> {
     const result = await this.database.query.chats.findFirst({
-      where: and(eq(chats.id, id), eq(chats.isGroup, false)),
+      where: and(eq(schema.chats.id, id), eq(schema.chats.isGroup, false)),
       with: {
         chatParticipants: {
           columns: {
@@ -32,7 +33,7 @@ class PrivateChatRepository {
 
   async list(): Promise<PrivateChat[]> {
     const results = await this.database.query.chats.findMany({
-      where: eq(chats.isGroup, false),
+      where: eq(schema.chats.isGroup, false),
       with: {
         chatParticipants: {
           columns: {
@@ -52,7 +53,7 @@ class PrivateChatRepository {
   async save(chat: PrivateChat): Promise<PrivateChat> {
     return this.database.transaction(async (tx) => {
       const [savedChat] = await tx
-        .insert(chats)
+        .insert(schema.chats)
         .values({ id: chat.id, isGroup: false })
         .returning();
 
@@ -62,7 +63,7 @@ class PrivateChatRepository {
       }));
 
       const savedParticipants = await tx
-        .insert(chatParticipants)
+        .insert(schema.chatParticipants)
         .values(newParticipants)
         .returning();
 

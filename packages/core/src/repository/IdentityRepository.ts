@@ -1,12 +1,13 @@
-import { identity } from "../database/databaseSchema.js";
-import type { AppDatabase } from "../types.js";
+import * as schema from "../database/databaseSchema.js";
+import { type AppDatabase } from "../types.js";
+import { singleton, inject } from "tsyringe";
 
+@singleton()
 class IdentityRepository {
-  private database: AppDatabase;
-
-  constructor(database: AppDatabase) {
-    this.database = database;
-  }
+  constructor(
+    @inject("AppDatabase")
+    private database: AppDatabase,
+  ) {}
 
   async getSeed(): Promise<Uint8Array | undefined> {
     const result = await this.database.query.identity.findFirst();
@@ -15,7 +16,7 @@ class IdentityRepository {
 
   async generateSeed(): Promise<Uint8Array> {
     const seed = crypto.getRandomValues(new Uint8Array(32));
-    await this.database.insert(identity).values({ id: 0, seed });
+    await this.database.insert(schema.identity).values({ id: 0, seed });
     return seed;
   }
 }

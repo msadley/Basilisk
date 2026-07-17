@@ -1,18 +1,19 @@
 import { and, eq } from "drizzle-orm";
-import { chatParticipants, chats } from "../database/databaseSchema.js";
+import * as schema from "../database/databaseSchema.js";
 import type { GroupChat } from "../model/GroupChat.js";
-import type { AppDatabase } from "../types.js";
+import { type AppDatabase } from "../types.js";
+import { singleton, inject } from "tsyringe";
 
+@singleton()
 class GroupChatRepository {
-  private database: AppDatabase;
-
-  constructor(database: AppDatabase) {
-    this.database = database;
-  }
+  constructor(
+    @inject("AppDatabase", { isOptional: false })
+    private database: AppDatabase,
+  ) {}
 
   async getById(id: string): Promise<GroupChat | undefined> {
     const result = await this.database.query.chats.findFirst({
-      where: and(eq(chats.id, id), eq(chats.isGroup, true)),
+      where: and(eq(schema.chats.id, id), eq(schema.chats.isGroup, true)),
       with: {
         chatParticipants: {
           columns: {
@@ -60,7 +61,7 @@ class GroupChatRepository {
   async save(chat: GroupChat): Promise<GroupChat> {
     return this.database.transaction(async (transaction) => {
       const [savedChat] = await transaction
-        .insert(chats)
+        .insert(schema.chats)
         .values({
           id: chat.id,
           isGroup: true,
@@ -75,7 +76,7 @@ class GroupChatRepository {
       }));
 
       const savedParticipants = await transaction
-        .insert(chatParticipants)
+        .insert(schema.chatParticipants)
         .values(newParticipants)
         .returning();
 
