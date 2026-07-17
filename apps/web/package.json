@@ -10,13 +10,14 @@
   },
   "dependencies": {
     "@basilisk/core": "*",
+    "@headlessui/react": "^2.1.2",
     "@hookform/resolvers": "^5.2.2",
+    "@libp2p/interface": "^3.2.5",
     "@sqlite.org/sqlite-wasm": "^3.50.4-build1",
     "babel-plugin-observing-components": "^0.2.0",
+    "comlink": "^4.4.2",
     "framer-motion": "^12.23.24",
     "mitt": "^3.0.1",
-    "mobx": "^6.15.0",
-    "mobx-react-lite": "^4.1.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.65.0",
@@ -24,8 +25,10 @@
     "react-stately": "^3.42.0",
     "react-textarea-autosize": "^8.5.9",
     "react-virtuoso": "^4.14.1",
+    "sqlocal": "^0.18.0",
     "uuid": "^11.1.0",
-    "zod": "^4.1.12"
+    "zod": "^4.1.12",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
@@ -40,7 +43,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "typescript": "^5.9.2",
     "vite": "^8.0.3"
   }
 }
