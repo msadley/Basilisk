@@ -1,0 +1,69 @@
+.menuContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.themeButton {
+  background: none;
+  margin: 2px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 99px;
+  transition: background-color 0.2s ease;
+}
+
+.themeButton:hover {
+  background-color: var(--ctp-surface1);
+}
+
+.themeButton svg {
+  width: 24px;
+  height: 24px;
+  color: var(--ctp-text);
+}
+
+.menuItems {
+  background-color: var(--ctp-mantle);
+  border: 1px solid var(--ctp-surface1);
+  border-radius: 12px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  min-width: 150px;
+  margin-left: 8px; /* space between sidebar and menu */
+  outline: none;
+}
+
+.menuItem {
+  background: none;
+  border: none;
+  color: var(--ctp-text);
+  padding: 8px 12px;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  width: 100%;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menuItem:hover,
+.menuItem[data-focus] {
+  background-color: var(--ctp-surface1);
+  color: var(--ctp-rosewater);
+}
+
+.menuItem.active {
+  background-color: var(--ctp-surface2);
+  color: var(--ctp-mauve);
+  font-weight: 600;
+}
