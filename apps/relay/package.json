@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "npx tsc -b"
+    "build": "npx tsc -b",
+    "dev": "nodemon --watch 'src/**/*.ts' --watch '../../packages/**/*.ts' --exec 'node -r ./dev-alias.mjs src/index.ts'",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@basilisk/core": "*",

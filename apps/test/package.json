@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc -b",
-    "dev": "node dist/index.js"
+    "dev": "nodemon --watch 'src/**/*.ts' --watch '../../packages/**/*.ts' --exec 'TS_NODE_PROJECT=tsconfig.dev.json node -r ts-node/register -r tsconfig-paths/register src/index.ts'",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@abraham/reflection": "^0.13.0",

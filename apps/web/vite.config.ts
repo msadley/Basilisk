@@ -2,8 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import basicSsl from "@vitejs/plugin-basic-ssl";
+import sqlocal from "sqlocal/vite";
 
-// https://vite.dev/config/
 export default defineConfig({
   server: {
     headers: {
@@ -11,15 +11,12 @@ export default defineConfig({
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
   },
-  plugins: [react(), basicSsl()],
+  plugins: [react(), basicSsl(), sqlocal()],
   resolve: {
     alias: {
       "@basilisk/core": path.resolve(__dirname, "../../packages/core/src/index.ts"),
       "app-root-path": path.resolve(__dirname, "./src/mocks/empty.js"),
     },
-  },
-  optimizeDeps: {
-    exclude: ["@sqlite.org/sqlite-wasm"],
   },
   worker: {
     format: "es",

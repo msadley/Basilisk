@@ -2,7 +2,7 @@ import { type } from "arktype";
 import { type Message } from "./model/Message.js";
 import { type Profile } from "./model/Profile.js";
 import type { Chat } from "./model/Chat.js";
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import type { SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import * as schema from "./database/databaseSchema.js";
 
 export interface SystemEventMap {
@@ -49,7 +49,8 @@ export const SystemEventSchema = type({
 type SystemEventFields<K extends keyof SystemEventMap> =
   SystemEventMap[K] extends void | undefined
     ? { error?: never; payload?: never } | { error: string; payload?: never }
-    : { error?: never; payload: SystemEventMap[K] } | { error: string; payload?: never };
+    : | { error?: never; payload: SystemEventMap[K] }
+      | { error: string; payload?: never };
 
 export type UIEvent = {
   [K in keyof UIEventMap]: {
@@ -61,7 +62,7 @@ export type UIEvent = {
 }[keyof UIEventMap];
 
 export type SystemEvent = {
-  [K in keyof SystemEventMap]: { id: string; type: K } & SystemEventFields<K>
+  [K in keyof SystemEventMap]: { id: string; type: K } & SystemEventFields<K>;
 }[keyof SystemEventMap];
 
 export const responseMap = {
@@ -78,5 +79,5 @@ export const responseMap = {
 export type ResponseMap = typeof responseMap;
 export type uiCallbackFn = (event: SystemEvent) => void;
 
-export type AppDatabase = BaseSQLiteDatabase<"async", any, typeof schema>;
-export const APP_DATABASE_TOKEN = Symbol('AppDatabase');
+export type AppDatabase = SqliteRemoteDatabase<typeof schema>;
+export const APP_DATABASE_TOKEN = Symbol("AppDatabase");

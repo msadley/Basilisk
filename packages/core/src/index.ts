@@ -6,7 +6,7 @@ export type {
   UIEvent,
   UIEventSchema,
   UIEventMap,
-  ResponseMap
+  ResponseMap,
 } from "./types.js";
 export { profileSchema, type Profile } from "./model/Profile.js";
 export { messageSchema, type Message } from "./model/Message.js";
