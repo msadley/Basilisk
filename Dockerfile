@@ -1,29 +1,30 @@
-FROM node:22
+FROM node:22-bookworm
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@11 --activate
 
 WORKDIR /Basilisk
 
 COPY *.json ./
-
+COPY *.yaml ./
 COPY packages ./packages
-
 COPY apps/relay ./apps/relay
 
-RUN npm ci
-
-RUN npm run build -w packages/core
-
-RUN npm run build -w apps/relay
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter relay build
 
 WORKDIR /Basilisk/apps/relay
+
+RUN chown -R node:node /Basilisk
 
 EXPOSE 4001
 EXPOSE 4002
 
-ENV HOME=/home/node
-
-RUN mkdir -p /home/node/.basilisk \
-  && chown -R node:node /home/node/.basilisk 
+ENV HOME=/home/basilisk
+RUN mkdir -p /home/basilisk/.basilisk \
+  && chown -R node:node /home/basilisk/.basilisk
 
 USER node
 
-CMD ["node", "dist/index.js"]
+CMD ["pnpm", "start"]

@@ -2,18 +2,12 @@
   "name": "basilisk",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "build": "npx tsc -b",
-    "dev": "concurrently \"npm:dev:*\"",
-    "dev:web": "npm run dev --prefix apps/web",
-    "dev:relay": "npm run dev --prefix apps/relay",
-    "dev:test": "npm run dev --prefix apps/test",
-    "vite": "npm run dev --prefix apps/web",
-    "relay": "npm run build && node apps/relay/dist/index.js"
+    "build": "tsc -b",
+    "vite": "pnpm --filter web dev",
+    "relay": "pnpm build && node apps/relay/dist/index.js",
+    "dev": "pnpm --parallel build",
+    "clean": "rm -rf **/dist **/node_modules/.tmp"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",
@@ -22,6 +16,7 @@
     "@multiformats/multiaddr": "^13.0.3"
   },
   "devDependencies": {
+    "@types/node": "^22",
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "concurrently": "^10.0.3",
     "cross-env": "^10.0.0",
@@ -30,5 +25,12 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.2"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "22.x",
+      "onFail": "download"
+    }
   }
 }

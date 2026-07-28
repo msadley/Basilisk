@@ -1,14 +1,15 @@
 {
   "name": "@basilisk/core",
   "version": "0.1.0",
+  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "npx tsc -b"
+    "build": "tsc -b"
   },
   "dependencies": {
-    "@basilisk/libp2p": "*",
+    "@basilisk/libp2p": "workspace:*",
     "@libp2p/crypto": "^5.1.21",
     "@libp2p/gossipsub": "^16.0.4",
     "@libp2p/interface": "^3.2.5",

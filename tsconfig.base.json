@@ -1,38 +1,25 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "target": "esnext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
+    "lib": ["ESNext"],
     "types": ["node"],
-    "lib": ["esnext"],
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "erasableSyntaxOnly": false,
-
-    // Other Outputs
-    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "composite": true,
     "declaration": true,
     "declarationMap": true,
-
-    // Style Options
-    "noImplicitReturns": true,
-    "noImplicitOverride": true,
+    "sourceMap": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
-    "strict": true,
-    "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
-
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "composite": true,
-
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
       "@basilisk/core": ["./packages/core/src/index.ts"],
       "@basilisk/libp2p": ["./packages/libp2p/src/index.ts"]

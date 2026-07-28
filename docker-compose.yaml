@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+      network: host
     container_name: basilisk_relay
     restart: unless-stopped
     ports:
