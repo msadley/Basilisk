@@ -1,8 +1,7 @@
 FROM node:22-bookworm
 
 ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@11 --activate
+ENV PATH="$PNPM_HOME"
 
 WORKDIR /Basilisk
 

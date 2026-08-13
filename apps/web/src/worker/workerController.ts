@@ -25,7 +25,13 @@ class WorkerController {
 
   constructor() {
     this.worker.addEventListener("message", this.handleWorkerEvent);
+  }
+
+  async init(): Promise<void> {
     this.worker.postMessage({ type: "start-node" });
+    return new Promise((resolve) => {
+      this.emitter.on("node-started", () => resolve());
+    });
   }
 
   handleWorkerEvent = (event: MessageEvent<SystemEvent>) => {
@@ -84,53 +90,45 @@ class WorkerController {
   }
 
   async getUserProfile(): Promise<Profile> {
-    return (await this.requestWorker("get-profile-user")).profile;
+    return (await this.requestWorker("get-user-profile")).profile;
   }
 
-  async patchUserProfile(name?: string, avatar?: string): Promise<Profile> {
+  async patchUserProfile(name?: string, avatar?: Uint8Array): Promise<Profile> {
     return (
-      await this.requestWorker("patch-profile-self", {
+      await this.requestWorker("update-profile", {
         name,
         avatar,
       })
     ).profile;
   }
 
-  async getChats(): Promise<Chat[]> {
-    return (await this.requestWorker("get-chats")).chats;
+  async listChats(): Promise<Chat[]> {
+    return (await this.requestWorker("list-chats")).chats;
   }
 
-  async createChat(chat: Chat): Promise<Chat> {
-    return (await this.requestWorker("create-chat", { chat })).chat;
+  async createPrivateChat(peerId: string): Promise<Chat> {
+    return (await this.requestWorker("create-private-chat", { peerId })).chat;
   }
 
-  async getMessages(chatId: string, page: number): Promise<Message[]> {
+  async listMessages(chatId: string, page: number): Promise<Message[]> {
     return (
-      await this.requestWorker("get-messages", {
+      await this.requestWorker("list-messages", {
         chatId,
+        limit: 20,
         page,
       })
     ).messages;
   }
 
-  async sendMessage(uuid: string, message: MessagePacket): Promise<void> {
-    return await this.requestWorkerSetId(uuid, "send-message", { message });
-  }
-
-  async closeDatabase(): Promise<void> {
-    await this.requestWorker("close-database");
-  }
-
-  async wipe(): Promise<void> {
-    await this.requestWorker("wipe-database");
+  async sendMessage(uuid: string, packet: MessagePacket): Promise<void> {
+    return await this.requestWorkerSetId(uuid, "send-message", {
+      chatId: packet.chatId,
+      content: typeof packet.content === "string" ? packet.content : "",
+    });
   }
 
   async pingRelay(): Promise<number> {
     return (await this.requestWorker("ping-relay")).latency;
-  }
-
-  async subscribeToPeer(peerId: string): Promise<void> {
-    await this.requestWorker("subscribe-to-peer", { peerId });
   }
 }
 

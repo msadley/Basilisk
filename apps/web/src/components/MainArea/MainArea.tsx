@@ -58,6 +58,7 @@ const MainArea = () => {
       default:
         if (header) setHeader(null);
         if (footer) setFooter(null);
+        return null;
     }
   };
 

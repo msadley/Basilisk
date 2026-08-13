@@ -41,6 +41,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return newChat;
     } catch (e) {
       console.error("Failed to create chat", e);
+      return undefined;
     }
   },
 }));

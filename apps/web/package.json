@@ -11,6 +11,8 @@
   "dependencies": {
     "@basilisk/core": "workspace:*",
     "@headlessui/react": "^2.1.2",
+    "@libp2p/peer-id": "^6.0.12",
+    "drizzle-orm": "^0.45.2",
     "@hookform/resolvers": "^5.2.2",
     "@libp2p/interface": "^3.2.5",
     "@sqlite.org/sqlite-wasm": "^3.50.4-build1",
