@@ -20,3 +20,9 @@ export { groupChatSchema, type GroupChat } from "./model/GroupChat.js";
 export type { PrivateKey } from "@libp2p/interface";
 export { Basilisk } from "./Basilisk.js";
 export * as databaseSchema from "./database/databaseSchema.js";
+
+export * as MessageService from "./service/MessageService.js";
+export * as ChatService from "./service/ChatService.js";
+export * as ProfileService from "./service/ProfileService.js";
+export * as IdentityService from "./service/IdentityService.js";
+export * as NodeService from "./service/NodeService.js";

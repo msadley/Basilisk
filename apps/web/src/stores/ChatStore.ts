@@ -26,7 +26,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   getChats: async () => {
     set({ isLoading: true });
     try {
-      const chats = await workerController.listChats();
+      const chats = await workerController.getChats();
       set({ chats, isLoading: false });
     } catch (e) {
       console.error("Failed to get chats", e);

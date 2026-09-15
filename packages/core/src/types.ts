@@ -23,12 +23,12 @@ export interface SystemEventMap {
 }
 
 export interface UIEventMap {
-  "list-messages": { chatId: string; limit: number; page: number };
-  "send-message": { chatId: string; content: string };
+  "get-messages": { chatId: string; limit: number; page: number };
+  "send-message": { chatId: string; content: string }; // TODO: implement different message types like media and docs
   "get-profile": { peerId: string };
   "get-user-profile": void;
   "update-profile": { name?: string; avatar?: Uint8Array | undefined };
-  "list-chats": void;
+  "get-chats": void;
   "create-private-chat": { peerId: string };
   "ping-relay": void;
 }
@@ -66,12 +66,12 @@ export type SystemEvent = {
 }[keyof SystemEventMap];
 
 export const responseMap = {
-  "list-messages": "messages-retrieved",
+  "get-messages": "messages-retrieved",
   "send-message": "message-sent",
   "get-profile": "profile-received",
   "get-user-profile": "user-profile-updated",
   "update-profile": "user-profile-updated",
-  "list-chats": "chats-retrieved",
+  "get-chats": "chats-retrieved",
   "create-private-chat": "chat-created",
   "ping-relay": "pong-relay",
 } as const;

@@ -1,137 +1,96 @@
-import type {
-  Chat,
-  Message,
-  MessagePacket,
-  Profile,
-  ResponseMap,
-  SystemEvent,
-  SystemEventMap,
-  UIEventMap,
-} from "@basilisk/core";
-import mitt, { type Handler } from "mitt";
+import type { Basilisk, SystemEvent } from "@basilisk/core";
+import * as Comlink from "comlink";
+import { BasiliskInitializer } from "./worker";
 import { v7 as uuidv7 } from "uuid";
 
-type PromiseControls = {
-  resolve: (value: any) => void;
-  reject: (reason?: any) => void;
-};
-
 class WorkerController {
-  worker: Worker = new Worker(new URL("./worker.ts", import.meta.url), {
-    type: "module",
-  });
-  emitter = mitt();
-  pendingRequests = new Map<string, PromiseControls>();
+  private basilisk!: Comlink.Remote<Basilisk>;
+  private worker!: Worker;
 
-  constructor() {
-    this.worker.addEventListener("message", this.handleWorkerEvent);
-    this.worker.postMessage({ type: "start-node" });
+  private constructor() {}
+
+  static async create(relayAddress: string): Promise<WorkerController> {
+    const controller = new WorkerController();
+    controller.worker = new Worker(new URL("./worker.ts", import.meta.url), {
+      type: "module",
+    });
+
+    const basiliskInitializer = Comlink.wrap<BasiliskInitializer>(
+      controller.worker,
+    );
+    const basilisk = await basiliskInitializer.init({
+      callbackFn: Comlink.proxy(controller.handleWorkerEvent),
+      relayAddress,
+    });
+
+    controller.basilisk = basilisk;
+    return controller;
   }
 
-  handleWorkerEvent = (event: MessageEvent<SystemEvent>) => {
-    const { type, id } = event.data;
-    const payload = "payload" in event.data ? event.data.payload : undefined;
+  handleWorkerEvent = (event: SystemEvent) => {};
 
-    if (id && this.pendingRequests.has(id)) {
-      if ("error" in event.data)
-        this.pendingRequests.get(id)?.reject(event.data.error);
-      else this.pendingRequests.get(id)?.resolve(payload);
-    } else {
-      // Só emitir se não houver promessa;
-      if (type) this.emitter.emit(type, payload);
-    }
-  };
-
-  on(type: SystemEvent["type"], handler: Handler<unknown>) {
-    this.emitter.on(type, handler);
-  }
-
-  off(type: SystemEvent["type"], handler: Handler<unknown>) {
-    this.emitter.off(type, handler);
-  }
-
-  private requestWorkerSetId<K extends keyof ResponseMap>(
-    id: string,
-    type: K,
-    ...args: UIEventMap[K] extends void ? [] : [UIEventMap[K]]
-  ): Promise<SystemEventMap[ResponseMap[K]]> {
-    return new Promise((resolve, reject) => {
-      this.pendingRequests.set(id, { resolve, reject });
-
-      const message: { type: string; id: string; payload?: any } = { type, id };
-
-      if (args.length > 0) {
-        message.payload = args[0];
-      }
-
-      this.worker.postMessage(message);
+  async getProfile(peerId: string) {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "get-profile",
+      payload: { peerId },
     });
   }
 
-  private requestWorker<K extends keyof ResponseMap>(
-    type: K,
-    ...args: UIEventMap[K] extends void ? [] : [UIEventMap[K]]
-  ): Promise<SystemEventMap[ResponseMap[K]]> {
-    return this.requestWorkerSetId(uuidv7(), type, ...args);
+  async getUserProfile() {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "get-user-profile",
+    });
   }
 
-  async getProfile(peerId: string): Promise<Profile> {
-    return (
-      await this.requestWorker("get-profile", {
-        peerId,
-      })
-    ).profile;
+  async updateProfile(name?: string, avatar?: Uint8Array<ArrayBufferLike>) {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "update-profile",
+      payload: { name, avatar },
+    });
   }
 
-  async getUserProfile(): Promise<Profile> {
-    return (await this.requestWorker("get-profile-user")).profile;
+  async getChats() {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "get-chats",
+    });
   }
 
-  async patchUserProfile(name?: string, avatar?: string): Promise<Profile> {
-    return (
-      await this.requestWorker("patch-profile-self", {
-        name,
-        avatar,
-      })
-    ).profile;
+  async createPrivateChat(peerId: string) {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "create-private-chat",
+      payload: { peerId },
+    });
   }
 
-  async getChats(): Promise<Chat[]> {
-    return (await this.requestWorker("get-chats")).chats;
+  async getMessages(chatId: string, limit: number, page: number) {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "get-messages",
+      payload: { chatId, limit, page },
+    });
   }
 
-  async createChat(chat: Chat): Promise<Chat> {
-    return (await this.requestWorker("create-chat", { chat })).chat;
+  async sendMessage(chatId: string, content: string) {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "send-message",
+      payload: { chatId, content },
+    });
   }
 
-  async getMessages(chatId: string, page: number): Promise<Message[]> {
-    return (
-      await this.requestWorker("get-messages", {
-        chatId,
-        page,
-      })
-    ).messages;
-  }
-
-  async sendMessage(uuid: string, message: MessagePacket): Promise<void> {
-    return await this.requestWorkerSetId(uuid, "send-message", { message });
-  }
-
-  async closeDatabase(): Promise<void> {
-    await this.requestWorker("close-database");
-  }
-
-  async wipe(): Promise<void> {
-    await this.requestWorker("wipe-database");
-  }
-
-  async pingRelay(): Promise<number> {
-    return (await this.requestWorker("ping-relay")).latency;
-  }
-
-  async subscribeToPeer(peerId: string): Promise<void> {
-    await this.requestWorker("subscribe-to-peer", { peerId });
+  async pingRelay() {
+    return await this.basilisk.handleEvent({
+      id: uuidv7(),
+      type: "ping-relay",
+    });
   }
 }
 
-export const workerController = new WorkerController();
+export const workerController = await WorkerController.create(
+  import.meta.env.VITE_RELAY_ADDRESS,
+);

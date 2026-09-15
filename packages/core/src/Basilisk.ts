@@ -1,5 +1,4 @@
 import EventEmitter from "./event/EventEmitter.js";
-import EventRouter from "./event/EventRouter.js";
 import NodeCore from "./node/NodeCore.js";
 import { container } from "tsyringe";
 import {
@@ -11,14 +10,9 @@ import {
 import IdentityService from "./service/IdentityService.js";
 
 export class Basilisk {
-  private eventRouter: EventRouter;
   private eventEmitter: EventEmitter;
 
-  private constructor(
-    eventRouter: EventRouter,
-    eventEmitter: EventEmitter,
-  ) {
-    this.eventRouter = eventRouter;
+  private constructor(eventEmitter: EventEmitter) {
     this.eventEmitter = eventEmitter;
   }
 
@@ -39,9 +33,8 @@ export class Basilisk {
     container.register<NodeCore>("NodeCore", { useValue: nodeCore });
 
     const eventEmitter = container.resolve(EventEmitter);
-    const eventRouter = container.resolve(EventRouter);
 
-    return new Basilisk(eventRouter, eventEmitter);
+    return new Basilisk(eventEmitter);
   }
 
   async handleEvent(event: UIEvent) {
