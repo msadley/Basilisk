@@ -10,7 +10,7 @@ import type {
 import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import { createLibp2p, type Libp2p } from "libp2p";
 
-class NodeCore {
+export class NodeCore {
   private libp2p: Libp2p<BaseServices>;
   private relayMultiaddress: Multiaddr;
 
@@ -75,5 +75,3 @@ class NodeCore {
     return this.libp2p.dialProtocol(id, protocol);
   }
 }
-
-export default NodeCore;

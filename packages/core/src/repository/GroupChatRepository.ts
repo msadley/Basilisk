@@ -2,14 +2,9 @@ import { and, eq } from "drizzle-orm";
 import * as schema from "../database/databaseSchema.js";
 import type { GroupChat } from "../model/GroupChat.js";
 import { type AppDatabase } from "../types.js";
-import { singleton, inject } from "tsyringe";
 
-@singleton()
-class GroupChatRepository {
-  constructor(
-    @inject("AppDatabase", { isOptional: false })
-    private database: AppDatabase,
-  ) {}
+export class GroupChatRepository {
+  constructor(private database: AppDatabase) {}
 
   async getById(id: string): Promise<GroupChat | undefined> {
     const result = await this.database.query.chats.findFirst({
@@ -94,5 +89,3 @@ class GroupChatRepository {
     });
   }
 }
-
-export default GroupChatRepository;

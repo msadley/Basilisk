@@ -1,14 +1,9 @@
 import type { Stream } from "@libp2p/interface";
 import type { Profile } from "../model/Profile.js";
-import ProfileRepository from "../repository/ProfileRepository.js";
-import { inject, singleton } from "tsyringe";
+import { ProfileRepository } from "../repository/ProfileRepository.js";
 
-@singleton()
-class ProfileService {
-  constructor(
-    @inject(ProfileRepository)
-    private profileRepository: ProfileRepository,
-  ) {}
+export class ProfileService {
+  constructor(private profileRepository: ProfileRepository) {}
 
   async getUserProfile(): Promise<Profile> {
     const userProfile = await this.profileRepository.getById("user");
@@ -43,5 +38,3 @@ class ProfileService {
     this.profileRepository.save(savedUserProfile);
   }
 }
-
-export default ProfileService;

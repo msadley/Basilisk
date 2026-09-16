@@ -1,14 +1,9 @@
 import type { PeerId } from "@libp2p/interface";
 import { profileSchema, type Profile } from "../model/Profile.js";
-import NodeCore from "../node/NodeCore.js";
-import { singleton, inject } from "tsyringe";
+import { NodeCore } from "../node/NodeCore.js";
 
-@singleton()
-class NodeService {
-  constructor(
-    @inject("NodeCore")
-    private nodeCore: NodeCore,
-  ) {}
+export class NodeService {
+  constructor(private nodeCore: NodeCore) {}
 
   async getPeerProfile(peerId: PeerId): Promise<Profile> {
     const stream = await this.nodeCore.dialProtocol(peerId, "/info/1.0.0");
@@ -37,5 +32,3 @@ class NodeService {
     return this.nodeCore.pingRelay();
   }
 }
-
-export default NodeService;

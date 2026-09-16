@@ -80,4 +80,3 @@ export type ResponseMap = typeof responseMap;
 export type uiCallbackFn = (event: SystemEvent) => void;
 
 export type AppDatabase = SqliteRemoteDatabase<typeof schema>;
-export const APP_DATABASE_TOKEN = Symbol("AppDatabase");

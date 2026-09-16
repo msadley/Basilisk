@@ -1,13 +1,8 @@
 import type { GroupChat } from "../model/GroupChat.js";
-import GroupChatRepository from "../repository/GroupChatRepository.js";
-import { inject, singleton } from "tsyringe";
+import { GroupChatRepository } from "../repository/GroupChatRepository.js";
 
-@singleton()
-class GroupChatService {
-  constructor(
-    @inject(GroupChatRepository)
-    private groupChatRepository: GroupChatRepository,
-  ) {}
+export class GroupChatService {
+  constructor(private groupChatRepository: GroupChatRepository) {}
 
   async getById(id: string): Promise<GroupChat | undefined> {
     return this.groupChatRepository.getById(id);
@@ -31,4 +26,3 @@ class GroupChatService {
     });
   }
 }
-export default GroupChatService;

@@ -1,16 +1,13 @@
 import type { GroupChat } from "../model/GroupChat.js";
 import type { PrivateChat } from "../model/PrivateChat.js";
-import GroupChatService from "./GroupChatService.js";
-import PrivateChatService from "./PrivateChatService.js";
-import { inject, singleton } from "tsyringe";
+import { GroupChatService } from "./GroupChatService.js";
+import { PrivateChatService } from "./PrivateChatService.js";
 
-@singleton()
-class ChatService {
+export class ChatService {
   constructor(
-    @inject(GroupChatService) private groupChatService: GroupChatService,
-    @inject(PrivateChatService) private privateChatService: PrivateChatService,
-  ) {
-  }
+    private groupChatService: GroupChatService,
+    private privateChatService: PrivateChatService,
+  ) {}
 
   async getById(chatId: string): Promise<GroupChat | PrivateChat | undefined> {
     const groupChat = await this.groupChatService.getById(chatId);
@@ -28,5 +25,3 @@ class ChatService {
     return [...groupChats, ...privateChats];
   }
 }
-
-export default ChatService;

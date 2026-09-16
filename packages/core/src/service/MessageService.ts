@@ -3,22 +3,16 @@ import { peerIdFromString } from "@libp2p/peer-id";
 import { groupChatSchema } from "../model/GroupChat.js";
 import { messagePacketSchema } from "../model/MessagePacket.js";
 import { privateChatSchema } from "../model/PrivateChat.js";
-import MessageRepository from "../repository/MessageRepository.js";
-import ChatService from "./ChatService.js";
-import NodeService from "./NodeService.js";
-import ProfileService from "./ProfileService.js";
-import { inject, singleton } from "tsyringe";
+import { MessageRepository } from "../repository/MessageRepository.js";
+import { ChatService } from "./ChatService.js";
+import { NodeService } from "./NodeService.js";
+import { ProfileService } from "./ProfileService.js";
 
-@singleton()
-class MessageService {
+export class MessageService {
   constructor(
-    @inject(MessageRepository)
     private messageRepository: MessageRepository,
-    @inject(ChatService)
     private chatService: ChatService,
-    @inject(ProfileService)
     private profileService: ProfileService,
-    @inject(NodeService)
     private nodeService: NodeService,
   ) {}
 
@@ -63,5 +57,3 @@ class MessageService {
     }
   }
 }
-
-export default MessageService;

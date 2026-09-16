@@ -3,14 +3,9 @@ import * as schema from "../database/databaseSchema.js";
 import { eq } from "drizzle-orm";
 import type { MessagePacket } from "../model/MessagePacket.js";
 import type { AppDatabase } from "../types.js";
-import { singleton, inject } from "tsyringe";
 
-@singleton()
-class MessageRepository {
-  constructor(
-    @inject("AppDatabase")
-    private database: AppDatabase,
-  ) {}
+export class MessageRepository {
+  constructor(private database: AppDatabase) {}
 
   async list(chatId: string, limit: number, page: number): Promise<Message[]> {
     const result = await this.database
@@ -42,5 +37,3 @@ class MessageRepository {
     return validationResult;
   }
 }
-
-export default MessageRepository;

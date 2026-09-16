@@ -27,6 +27,7 @@
     "react-textarea-autosize": "^8.5.9",
     "react-virtuoso": "^4.14.1",
     "sqlocal": "^0.18.0",
+    "tsyringe": "^4.10.0",
     "uuid": "^11.1.0",
     "zod": "^4.1.12",
     "zustand": "^5.0.3"

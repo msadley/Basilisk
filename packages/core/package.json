@@ -17,8 +17,7 @@
     "@multiformats/multiaddr": "^13.0.3",
     "arktype": "^2.2.3",
     "drizzle-orm": "^0.45.2",
-    "libp2p": "^3.3.5",
-    "tsyringe": "^4.10.0"
+    "libp2p": "^3.3.5"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.10"

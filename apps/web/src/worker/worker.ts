@@ -1,27 +1,27 @@
-import { Basilisk, databaseSchema, type uiCallbackFn } from "@basilisk/core";
 import * as Comlink from "comlink";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import { SQLocalDrizzle } from "sqlocal/drizzle";
+import { services, databaseSchema, uiCallbackFn } from "@basilisk/core";
 
-export type BasiliskInitializer = {
-  init: (params: {
-    callbackFn: uiCallbackFn,
-    relayAddress: string
-  }) => Promise<Basilisk & Comlink.ProxyMarked>
-}
+const { driver, batchDriver } = new SQLocalDrizzle("basilisk.sqlite3");
+const db = drizzle(driver, batchDriver, {
+  schema: databaseSchema,
+});
 
+// It could be possible to reduce the boilerplate here even further by initializing
+// the database on the main thread and passing the 'services' object directly to the
+// workerController to initialize.
 Comlink.expose({
-  init: async (params: { callbackFn: uiCallbackFn; relayAddress: string }) => {
-    const { driver, batchDriver } = new SQLocalDrizzle("basilisk.sqlite3");
-    const db = drizzle(driver, batchDriver, {
-      schema: databaseSchema,
-    });
-
-    const basilisk = await Basilisk.init(
-      db,
-      await params.callbackFn, // 'await' is probably required here
-      params.relayAddress,
-    );
-    return Comlink.proxy(basilisk);
+  init: async (relayAddress: string, callback: uiCallbackFn) => {
+    return await services(db, relayAddress, callback);
   },
 });
+
+export type BasiliskInitializer = {
+  init: (
+    relayAddress: string,
+    callback: uiCallbackFn,
+  ) => ReturnType<typeof services>;
+};
+
+export type Services = Awaited<ReturnType<typeof services>>;

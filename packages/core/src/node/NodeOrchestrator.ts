@@ -1,19 +1,17 @@
 import { randomUUID } from "crypto";
-import EventEmitter from "../event/EventEmitter.js";
-import MessageService from "../service/MessageService.js";
-import ProfileService from "../service/ProfileService.js";
-import NodeCore from "./NodeCore.js";
-import { container, inject, singleton } from "tsyringe";
-import PrivateChatCache from "../repository/PrivateChatCache.js";
+import { EventEmitter } from "../event/EventEmitter.js";
+import { MessageService } from "../service/MessageService.js";
+import { ProfileService } from "../service/ProfileService.js";
+import { NodeCore } from "./NodeCore.js";
+import { PrivateChatCache } from "../repository/PrivateChatCache.js";
 
-@singleton()
-class NodeOrchestrator {
+export class NodeOrchestrator {
   constructor(
-    @inject(MessageService) private messageService: MessageService,
-    @inject(ProfileService) private profileService: ProfileService,
-    @inject("NodeCore") private nodeCore: NodeCore,
-    @inject(EventEmitter) private eventEmitter: EventEmitter,
-    @inject(PrivateChatCache) private PrivateChatCache: PrivateChatCache,
+    private messageService: MessageService,
+    private profileService: ProfileService,
+    private nodeCore: NodeCore,
+    private eventEmitter: EventEmitter,
+    private PrivateChatCache: PrivateChatCache,
   ) {}
 
   registerHandlers() {
@@ -42,13 +40,3 @@ class NodeOrchestrator {
     });
   }
 }
-
-container.afterResolution(
-  NodeOrchestrator,
-  (_, instance) => {
-    (Array.isArray(instance) ? instance[0] : instance).registerHandlers();
-  },
-  { frequency: "Once" },
-);
-
-export default NodeOrchestrator;

@@ -2,14 +2,9 @@ import * as schema from "../database/databaseSchema.js";
 import { eq, and } from "drizzle-orm";
 import { type PrivateChat } from "../model/PrivateChat.js";
 import type { AppDatabase } from "../types.js";
-import { singleton, inject } from "tsyringe";
 
-@singleton()
-class PrivateChatRepository {
-  constructor(
-    @inject("AppDatabase", { isOptional: false })
-    private database: AppDatabase,
-  ) {}
+export class PrivateChatRepository {
+  constructor(private database: AppDatabase) {}
 
   async getById(id: string): Promise<PrivateChat | undefined> {
     const result = await this.database.query.chats.findFirst({
@@ -74,5 +69,3 @@ class PrivateChatRepository {
     });
   }
 }
-
-export default PrivateChatRepository;

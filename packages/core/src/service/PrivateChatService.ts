@@ -1,17 +1,12 @@
-import PrivateChatRepository from "../repository/PrivateChatRepository.js";
-import ProfileService from "../service/ProfileService.js";
+import { PrivateChatRepository } from "../repository/PrivateChatRepository.js";
+import { ProfileService } from "../service/ProfileService.js";
 import { type PrivateChat } from "../model/PrivateChat.js";
-import { inject, singleton } from "tsyringe";
-import PrivateChatCache from "../repository/PrivateChatCache.js";
+import { PrivateChatCache } from "../repository/PrivateChatCache.js";
 
-@singleton()
-class PrivateChatService {
+export class PrivateChatService {
   constructor(
-    @inject(PrivateChatRepository)
     private privateChatRepository: PrivateChatRepository,
-    @inject(ProfileService)
     private profileService: ProfileService,
-    @inject(PrivateChatCache)
     private privateChatCache: PrivateChatCache,
   ) {}
 
@@ -36,5 +31,3 @@ class PrivateChatService {
     }
   }
 }
-
-export default PrivateChatService;

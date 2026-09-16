@@ -1,17 +1,11 @@
-import { container, inject, injectable, singleton } from "tsyringe";
-import PrivateChatRepository from "./PrivateChatRepository.js";
+import { PrivateChatRepository } from "./PrivateChatRepository.js";
 
-@injectable()
-@singleton()
-class PrivateChatCache {
+export class PrivateChatCache {
   private cache: Set<string> = new Set();
   private isLoading: boolean = false;
   private isInitialized: boolean = false;
 
-  constructor(
-    @inject(PrivateChatRepository)
-    private privateChatRepository: PrivateChatRepository,
-  ) {}
+  constructor(private privateChatRepository: PrivateChatRepository) {}
 
   async init() {
     if (this.isInitialized || this.isLoading) return;
@@ -43,9 +37,3 @@ class PrivateChatCache {
     await this.init();
   }
 }
-
-container.afterResolution(PrivateChatCache, async (_t, instance) => {
-  await (Array.isArray(instance) ? instance[0] : instance).init();
-});
-
-export default PrivateChatCache;
