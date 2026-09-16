@@ -17,7 +17,7 @@
     "@multiformats/multiaddr": "^13.0.3"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/node": "^26",
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "concurrently": "^10.0.3",
     "cross-env": "^10.0.0",
@@ -30,7 +30,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "22.x",
+      "version": "26.x",
       "onFail": "download"
     }
   }

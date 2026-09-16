@@ -23,7 +23,9 @@ const toastVariants = {
 };
 
 const Toast = () => {
-  const currentToast = useLayoutStore((state) => state.toasts.length > 0 ? state.toasts[0] : undefined);
+  const currentToast = useLayoutStore((state) =>
+    state.toasts.length > 0 ? state.toasts[0] : undefined,
+  );
   const removeToast = useLayoutStore((state) => state.removeToast);
 
   useEffect(() => {

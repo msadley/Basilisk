@@ -1,4 +1,4 @@
-import type { Stream } from "@libp2p/interface";
+import type { Stream, Connection } from "@libp2p/interface";
 import { peerIdFromString } from "@libp2p/peer-id";
 import { groupChatSchema } from "../model/GroupChat.js";
 import { messagePacketSchema } from "../model/MessagePacket.js";
@@ -20,7 +20,7 @@ export class MessageService {
     return await this.messageRepository.list(chatId, limit, page);
   }
 
-  async handleMessageReceived(stream: Stream) {
+  async handleMessageReceived(stream: Stream, connection: Connection) {
     const data = await new Promise((resolve) => {
       stream.addEventListener("message", (evt) => {
         resolve(JSON.parse(new TextDecoder().decode(evt.data.subarray())));
@@ -29,6 +29,11 @@ export class MessageService {
     await stream.close();
 
     const messagePacket = messagePacketSchema.assert(data);
+
+    // TODO: verify if this is enough to ensure the sender is who they claim to be
+    if (connection.remotePeer.toString() !== messagePacket.senderId)
+      throw new Error("Sender ID does not match remote peer ID");
+
     return await this.messageRepository.save(messagePacket);
   }
 

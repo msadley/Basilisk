@@ -17,13 +17,20 @@ interface LayoutState {
   setMainView: (view: MainView) => void;
   setSidePanelView: (view: SidePanelView) => void;
   setModalView: (view: ModalView) => void;
-  addToast: (message: string, type: ToastMessage["type"], duration?: number) => void;
+  addToast: (
+    message: string,
+    type: ToastMessage["type"],
+    duration?: number,
+  ) => void;
   removeToast: (id: string) => void;
 }
 
 const getInitialTheme = (): "mocha" | "macchiato" | "frappe" | "latte" => {
   const savedTheme = localStorage.getItem("basilisk-theme");
-  if (savedTheme && ["mocha", "macchiato", "frappe", "latte"].includes(savedTheme)) {
+  if (
+    savedTheme &&
+    ["mocha", "macchiato", "frappe", "latte"].includes(savedTheme)
+  ) {
     return savedTheme as any;
   }
   return "mocha";

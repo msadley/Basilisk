@@ -1,5 +1,5 @@
-import type { PrivateKey } from "@basilisk/core";
 import { getLibp2pOptions } from "@basilisk/libp2p";
+import { PrivateKey } from "@libp2p/interface";
 import { createLibp2p, type Libp2p } from "libp2p";
 
 class BasiliskRelay {

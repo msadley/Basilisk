@@ -15,13 +15,18 @@ export class NodeOrchestrator {
   ) {}
 
   registerHandlers() {
-    this.nodeCore.registerProtocolHandler("/chat/1.0.0", async (stream) => {
-      const savedMessage =
-        await this.messageService.handleMessageReceived(stream);
-      this.eventEmitter.emit(randomUUID(), "message-received", {
-        message: savedMessage,
-      });
-    });
+    this.nodeCore.registerProtocolHandler(
+      "/chat/1.0.0",
+      async (stream, connection) => {
+        const savedMessage = await this.messageService.handleMessageReceived(
+          stream,
+          connection,
+        );
+        this.eventEmitter.emit(randomUUID(), "message-received", {
+          message: savedMessage,
+        });
+      },
+    );
 
     this.nodeCore.registerProtocolHandler("/info/1.0.0", (stream) =>
       this.profileService.sendUserProfile(stream),

@@ -12,8 +12,12 @@ import { useEffect } from "react";
 const Sidebar = () => {
   const chats = useChatStore((state) => state.chats);
   const setMainView = useLayoutStore((state) => state.setMainView);
-  const connectionStatuses = useConnectionStore((state) => state.connectionStatuses);
-  const addConnectionListener = useConnectionStore((state) => state.addConnectionListener);
+  const connectionStatuses = useConnectionStore(
+    (state) => state.connectionStatuses,
+  );
+  const addConnectionListener = useConnectionStore(
+    (state) => state.addConnectionListener,
+  );
 
   useEffect(() => {
     chats.forEach((chat: Chat) => {

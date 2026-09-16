@@ -48,7 +48,10 @@ interface MessageStoreState {
 }
 
 export const useMessageStore = create<MessageStoreState>((set, get) => {
-  const ensureChatState = (chats: Record<string, ChatState>, chatId: string): ChatState => {
+  const ensureChatState = (
+    chats: Record<string, ChatState>,
+    chatId: string,
+  ): ChatState => {
     return chats[chatId] || defaultChatState();
   };
 
@@ -95,17 +98,20 @@ export const useMessageStore = create<MessageStoreState>((set, get) => {
 
       try {
         const currentChatState = ensureChatState(get().chats, chatId);
-        const newMsgs = await workerController.listMessages(chatId, currentChatState.page);
+        const newMsgs = await workerController.listMessages(
+          chatId,
+          currentChatState.page,
+        );
 
         set((state) => {
           const chats = { ...state.chats };
           const chat = { ...ensureChatState(chats, chatId) };
 
           const timestamps = new Set(chat.ids);
-          
+
           const mappedMsgs = newMsgs.map(mapCoreToFrontendMessage);
           const uniqueNewMsgs = mappedMsgs.filter(
-            (msg) => !timestamps.has(msg.uuid)
+            (msg) => !timestamps.has(msg.uuid),
           );
 
           const newMessages = { ...chat.messages };
@@ -213,7 +219,7 @@ export const useMessageStore = create<MessageStoreState>((set, get) => {
       const message = chat.messages[messageId];
       if (!message) {
         console.error(
-          "Impossible case where an unexisting message called its own resend function"
+          "Impossible case where an unexisting message called its own resend function",
         );
         return;
       }

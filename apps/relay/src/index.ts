@@ -1,7 +1,7 @@
 import IdentityManager from "./IdentityManager.js";
 import { databaseAdapter } from "./DatabaseAdapter.js";
 import BasiliskRelay from "./BasiliskRelay.js";
-import "dotenv/config"
+import "dotenv/config";
 
 const PUBLIC_DNS = process.env.PUBLIC_DNS;
 

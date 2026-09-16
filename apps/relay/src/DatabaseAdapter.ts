@@ -5,8 +5,8 @@ export type DatabaseAdapter = ReturnType<typeof createDatabaseAdapter>;
 
 function createDatabaseAdapter() {
   const database = createClient({
-    url: process.env.DATABASE_URL ?? "file:basilisk.db"
-  })
+    url: process.env.DATABASE_URL ?? "file:basilisk.db",
+  });
   return drizzle(database);
 }
 

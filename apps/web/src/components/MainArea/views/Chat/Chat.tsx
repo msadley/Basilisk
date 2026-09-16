@@ -22,7 +22,7 @@ const Chat = ({ chat, setHeader, setFooter }: ChatProps) => {
   const sendMessageAction = useMessageStore((state) => state.sendMessage);
 
   const chatState = useMessageStore(
-    useCallback((state) => state.chats[chat.id], [chat.id])
+    useCallback((state) => state.chats[chat.id], [chat.id]),
   );
 
   const messages = useMemo(() => {

@@ -1,6 +1,9 @@
 import styles from "./Message.module.css";
 import type { Chat } from "@basilisk/core";
-import { useMessageStore, type Message } from "../../../../../stores/MessageStore";
+import {
+  useMessageStore,
+  type Message,
+} from "../../../../../stores/MessageStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUserStore } from "../../../../../stores/UserStore";
 import { memo, useCallback } from "react";

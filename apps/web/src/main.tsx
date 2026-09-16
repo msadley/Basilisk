@@ -7,7 +7,7 @@ import { rootStore } from "./stores/RootStore";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 );
 
 // Calls the constructor and triggers the store system
