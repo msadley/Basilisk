@@ -1,9 +1,8 @@
 import "@abraham/reflection";
-import { services, databaseSchema } from "@basilisk/core";
+import { databaseSchema, services } from "@basilisk/core";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
-
-async function callbackFn() {}
+import mitt from "mitt";
 
 const relayAddress = "";
 
@@ -13,9 +12,7 @@ async function main() {
   });
 
   const orm = drizzle(client, { schema: databaseSchema });
-
-  const basilisk = await services(orm, relayAddress, callbackFn);
-
+  const basilisk = await services(orm, relayAddress, mitt());
   const pingTime = await basilisk.nodeService.pingRelay();
   console.log(`Ping time: ${pingTime}ms`);
 }

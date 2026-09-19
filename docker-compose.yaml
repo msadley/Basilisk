@@ -11,5 +11,6 @@ services:
       - "127.0.0.1:4002:4002"
     volumes:
       - ./data:/home/basilisk/.basilisk
+      - ./cache:/home/basilisk/.cache
     env_file:
       - .env

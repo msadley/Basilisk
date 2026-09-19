@@ -1,4 +1,3 @@
-import { EventEmitter } from "./event/EventEmitter.js";
 import { NodeCore } from "./node/NodeCore.js";
 import { NodeOrchestrator } from "./node/NodeOrchestrator.js";
 import { GroupChatRepository } from "./repository/GroupChatRepository.js";
@@ -14,8 +13,9 @@ import { MessageService } from "./service/MessageService.js";
 import { NodeService } from "./service/NodeService.js";
 import { PrivateChatService } from "./service/PrivateChatService.js";
 import { ProfileService } from "./service/ProfileService.js";
-import { AppDatabase, uiCallbackFn } from "./types.js";
+import { AppDatabase, WorkerEventSink } from "./types.js";
 
+// database and models
 export * as databaseSchema from "./database/databaseSchema.js";
 export type { Chat } from "./model/Chat.js";
 export { groupChatSchema, type GroupChat } from "./model/GroupChat.js";
@@ -26,21 +26,12 @@ export {
 } from "./model/MessagePacket.js";
 export { privateChatSchema, type PrivateChat } from "./model/PrivateChat.js";
 export { profileSchema, type Profile } from "./model/Profile.js";
-export type {
-  ResponseMap,
-  SystemEvent,
-  SystemEventMap,
-  SystemEventSchema,
-  uiCallbackFn,
-  UIEvent,
-  UIEventMap,
-  UIEventSchema,
-} from "./types.js";
 
+// main services object
 export const services = async (
   db: AppDatabase,
   relayAddress: string,
-  callback: uiCallbackFn,
+  eventSink: WorkerEventSink,
 ) => {
   const messageRepository = new MessageRepository(db);
   const privateChatRepository = new PrivateChatRepository(db);
@@ -70,17 +61,16 @@ export const services = async (
     nodeService,
   );
 
-  const eventEmitter = new EventEmitter(callback);
   const nodeOrchestrator = new NodeOrchestrator(
     messageService,
     profileService,
     nodeCore,
-    eventEmitter,
     privateChatCache,
+    eventSink,
   );
 
   nodeOrchestrator.registerHandlers();
-  nodeCore.start();
+  await nodeCore.start();
 
   return {
     messageService,
@@ -88,6 +78,8 @@ export const services = async (
     profileService,
     nodeService,
     identityService,
-    eventEmitter,
   };
 };
+
+// miscellaneous
+export { PushEvent } from "./types.js";

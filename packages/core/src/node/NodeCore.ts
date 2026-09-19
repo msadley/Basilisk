@@ -33,12 +33,12 @@ export class NodeCore {
     return new NodeCore(libp2p, relayMultiaddr);
   }
 
-  start() {
-    this.libp2p.start();
+  async start() {
+    return this.libp2p.start();
   }
 
-  stop() {
-    this.libp2p.stop();
+  async stop() {
+    return this.libp2p.stop();
   }
 
   async pingRelay(): Promise<number> {

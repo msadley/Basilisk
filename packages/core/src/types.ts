@@ -1,82 +1,28 @@
-import { type } from "arktype";
-import { type Message } from "./model/Message.js";
-import { type Profile } from "./model/Profile.js";
-import type { Chat } from "./model/Chat.js";
 import type { SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import * as schema from "./database/databaseSchema.js";
+import type { Chat } from "./model/Chat.js";
+import { type Message } from "./model/Message.js";
+import { Profile } from "./model/Profile.js";
 
-export interface SystemEventMap {
+interface PushEventMap {
   "node-started": { profile: Profile };
-  "chat-created": { chat: Chat };
-  "chat-spawned": { chat: Chat };
-  "chats-retrieved": { chats: Chat[] };
-  "user-profile-updated": { profile: Profile };
-  "profile-received": { profile: Profile };
-  "message-received": { message: Message };
-  "messages-retrieved": { messages: Message[] };
-  "pong-relay": { latency: number };
   "peer-found": { peerId: string };
   "peer-lost": { peerId: string };
-  "message-sent": void;
+  "chat-spawned": { chat: Chat };
+  "message-received": { message: Message };
   "relay-found": void;
   "relay-lost": void;
 }
 
-export interface UIEventMap {
-  "get-messages": { chatId: string; limit: number; page: number };
-  "send-message": { chatId: string; content: string }; // TODO: implement different message types like media and docs
-  "get-profile": { peerId: string };
-  "get-user-profile": void;
-  "update-profile": { name?: string; avatar?: Uint8Array | undefined };
-  "get-chats": void;
-  "create-private-chat": { peerId: string };
-  "ping-relay": void;
+export type PushEvent = {
+  [K in keyof PushEventMap]: PushEventMap[K] extends void
+    ? { type: K }
+    : { type: K; payload: PushEventMap[K] };
+}[keyof PushEventMap];
+
+
+export interface WorkerEventSink {
+  emit(event: PushEvent): void;
 }
-
-export const UIEventSchema = type({
-  id: "string",
-  type: "string",
-  "payload?": "unknown",
-});
-
-export const SystemEventSchema = type({
-  id: "string",
-  type: "string",
-  "payload?": "unknown",
-  "error?": "string",
-});
-
-type SystemEventFields<K extends keyof SystemEventMap> =
-  SystemEventMap[K] extends void | undefined
-    ? { error?: never; payload?: never } | { error: string; payload?: never }
-    : | { error?: never; payload: SystemEventMap[K] }
-      | { error: string; payload?: never };
-
-export type UIEvent = {
-  [K in keyof UIEventMap]: {
-    id: string;
-    type: K;
-  } & (UIEventMap[K] extends void | undefined
-    ? { payload?: never }
-    : { payload: UIEventMap[K] });
-}[keyof UIEventMap];
-
-export type SystemEvent = {
-  [K in keyof SystemEventMap]: { id: string; type: K } & SystemEventFields<K>;
-}[keyof SystemEventMap];
-
-export const responseMap = {
-  "get-messages": "messages-retrieved",
-  "send-message": "message-sent",
-  "get-profile": "profile-received",
-  "get-user-profile": "user-profile-updated",
-  "update-profile": "user-profile-updated",
-  "get-chats": "chats-retrieved",
-  "create-private-chat": "chat-created",
-  "ping-relay": "pong-relay",
-} as const;
-
-export type ResponseMap = typeof responseMap;
-export type uiCallbackFn = (event: SystemEvent) => void;
 
 export type AppDatabase = SqliteRemoteDatabase<typeof schema>;

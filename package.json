@@ -2,7 +2,7 @@
   "name": "basilisk",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@12.4.1",
+  "packageManager": "pnpm@12.4.2",
   "scripts": {
     "build": "tsc -b",
     "vite": "pnpm --filter web dev",

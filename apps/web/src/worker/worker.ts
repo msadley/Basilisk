@@ -1,26 +1,27 @@
 import * as Comlink from "comlink";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import { SQLocalDrizzle } from "sqlocal/drizzle";
-import { services, databaseSchema, uiCallbackFn } from "@basilisk/core";
+import { services, databaseSchema } from "@basilisk/core";
+import { WorkerEventSink } from "@basilisk/core/src/types";
 
+// Even though the db is initialized here on the worker thread, sqlocal
+// actually spawns a separate thread for only the sqlite worker itself.
+// That means sqlite i/o accesses produce one rpc hop in this architecture.
 const { driver, batchDriver } = new SQLocalDrizzle("basilisk.sqlite3");
 const db = drizzle(driver, batchDriver, {
   schema: databaseSchema,
 });
 
-// It could be possible to reduce the boilerplate here even further by initializing
-// the database on the main thread and passing the 'services' object directly to the
-// workerController to initialize.
 Comlink.expose({
-  init: async (relayAddress: string, callback: uiCallbackFn) => {
-    return await services(db, relayAddress, callback);
+  init: async (relayAddress: string, sink: WorkerEventSink) => {
+    return await services(db, relayAddress, sink);
   },
 });
 
 export type BasiliskInitializer = {
   init: (
     relayAddress: string,
-    callback: uiCallbackFn,
+    sink: WorkerEventSink,
   ) => ReturnType<typeof services>;
 };
 
