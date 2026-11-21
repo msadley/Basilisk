@@ -16,10 +16,10 @@ A peer-to-peer chat app built on top of libp2p, using TypeScript.
 
 ### Requirements
 
-- Node.js (v22 or higher)
-- npm
+- Node.js (`26.x`)
+- pnpm
 
-A docker compose file is provided in the `apps/relay` directory to set up your own relay server.
+A `docker-compose.yaml` file is provided at the repository root to set up your own relay server.
 
 ### Instructions
 
@@ -29,22 +29,21 @@ A docker compose file is provided in the `apps/relay` directory to set up your o
    git clone https://github.com/msadley/basilisk.git
    ```
 
-2. Install the npm project dependencies:
+2. Install the project dependencies:
 
    ```sh
-   npm install
+   pnpm install
    ```
 
 3. Build the project:
 
    ```sh
-   npm run build
+   pnpm build
    ```
 
 ## Running
 
-Before proceding, make sure to set the variables in the .env file as specified
-on the example:
+Before proceeding, make sure to set the variables in `.env` as specified in `.env.example`:
 
 ```sh
 # .env.example
@@ -58,27 +57,26 @@ VITE_RELAY_MULTIADDRESS="/dns4/your-dns.com/tcp/443/wss/p2p/12D3KooWS..."
 
 ### Relay
 
-To set up your own circuit-relay server, just start the docker file inside the
-apps/relay directory using:
+To set up your own circuit-relay server, start the relay service from the repository root using:
 
 ```sh
-docker compose up
+docker compose --profile relay up
 ```
 
-The relay will then log its public addresses which can be used by the vite frontend.
+The relay will then log its public addresses which can be used by the Vite frontend.
 
 ### Frontend
 
 To run the frontend in development mode, you can run:
 
 ```sh
-npm run vite
+pnpm vite
 ```
 
-To build the website files for deployment, navigate to apps/web and run:
+To build the website files for deployment, run:
 
 ```sh
-npm run build
+pnpm --filter web build
 ```
 
 The build files will be located at _apps/web/dist_.

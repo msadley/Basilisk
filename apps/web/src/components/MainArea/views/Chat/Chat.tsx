@@ -8,7 +8,7 @@ import {
 } from "../../../../stores/MessageStore";
 import { useUserProfile } from "../../../../stores/ProfileStore";
 import styles from "./Chat.module.css";
-import Header from "./Header/Header";
+import ListSpacer from "./ListSpacer/ListSpacer";
 import Message from "./Message/Message";
 
 interface ChatProps {
@@ -52,7 +52,7 @@ const Chat = ({ chatId }: ChatProps) => {
             fetchNextPage();
           }
         }}
-        components={{ Header }}
+        components={{ Header: ListSpacer }}
         alignToBottom
         followOutput
         increaseViewportBy={200}

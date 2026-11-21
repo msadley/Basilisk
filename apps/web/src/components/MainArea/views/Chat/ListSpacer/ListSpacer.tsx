@@ -1,6 +1,6 @@
-import styles from "./Header.module.css";
+import styles from "./ListSpacer.module.css";
 
-const Header = () => {
+const ListSpacer = () => {
   return (
     <div className={styles.wrapper}>
       <div className={styles.bar}></div>
@@ -8,4 +8,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default ListSpacer;

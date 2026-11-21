@@ -5,7 +5,7 @@ import Toast from "../Toast/Toast";
 import styles from "./MainArea.module.css";
 import AddChat from "./views/AddChat/AddChat";
 import Chat from "./views/Chat/Chat";
-import ChatHeader from "./views/Chat/ChatHeader";
+import ChatHeader from "./views/Chat/ChatHeader/ChatHeader";
 import InputBox from "./views/Chat/InputBox/InputBox";
 import Home from "./views/Home/Home";
 

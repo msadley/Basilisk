@@ -1,6 +1,6 @@
 import { groupChatSchema } from "@basilisk/core/models";
-import { useChat } from "../../../../stores/ChatStore";
-import { useProfile } from "../../../../stores/ProfileStore";
+import { useChat } from "../../../../../stores/ChatStore";
+import { useProfile } from "../../../../../stores/ProfileStore";
 
 type ChatHeaderProps = {
   chatId: string;
