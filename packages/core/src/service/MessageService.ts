@@ -2,6 +2,7 @@ import type { Stream, Connection } from "@libp2p/interface";
 import { peerIdFromString } from "@libp2p/peer-id";
 import { groupChatSchema } from "../model/GroupChat.js";
 import { MessagePacket, messagePacketSchema } from "../model/MessagePacket.js";
+import { base64ToUint8Array, readStreamJson } from "../node/stream.js";
 import { MessageRepository } from "../repository/MessageRepository.js";
 import { ChatService } from "./ChatService.js";
 import { NodeService } from "./NodeService.js";
@@ -9,6 +10,8 @@ import { ProfileService } from "./ProfileService.js";
 import { Message } from "../model/Message.js";
 
 export class MessageService {
+  private pendingChatCreations = new Map<string, Promise<void>>();
+
   constructor(
     private messageRepository: MessageRepository,
     private chatService: ChatService,
@@ -20,21 +23,67 @@ export class MessageService {
     return await this.messageRepository.list(chatId, cursor);
   }
 
-  async handleMessageReceived(stream: Stream, connection: Connection) {
-    const raw: unknown = await new Promise((resolve) => {
-      stream.addEventListener("message", (evt) => {
-        resolve(JSON.parse(new TextDecoder().decode(evt.data.subarray())));
-      });
-    });
-    await stream.close();
+  private async ensurePrivateChat(
+    localChatId: string,
+    senderId: string,
+  ): Promise<void> {
+    const pending = this.pendingChatCreations.get(localChatId);
+    if (pending) {
+      await pending;
+      return;
+    }
 
-    const normalized =
-      raw &&
-      typeof raw === "object" &&
-      "timestamp" in raw &&
-      (typeof raw.timestamp === "string" || typeof raw.timestamp === "number")
-        ? { ...raw, timestamp: new Date(raw.timestamp) }
-        : raw;
+    const ensurePromise = (async () => {
+      if ((await this.chatService.getById(localChatId)) === undefined) {
+        try {
+          await this.chatService.createPrivateChat(localChatId);
+        } catch (error) {
+          if ((await this.chatService.getById(localChatId)) === undefined) {
+            throw error;
+          }
+          await this.profileService.ensureProfile(senderId);
+        }
+      } else {
+        await this.profileService.ensureProfile(senderId);
+      }
+    })();
+
+    this.pendingChatCreations.set(localChatId, ensurePromise);
+    try {
+      await ensurePromise;
+    } finally {
+      if (this.pendingChatCreations.get(localChatId) === ensurePromise) {
+        this.pendingChatCreations.delete(localChatId);
+      }
+    }
+  }
+
+  async handleMessageReceived(stream: Stream, connection: Connection) {
+    const raw = await readStreamJson(stream);
+
+    let normalized: unknown = raw;
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      const record = raw as Record<string, unknown>;
+      const updates: Record<string, unknown> = {};
+
+      if (
+        typeof record.timestamp === "string" ||
+        typeof record.timestamp === "number"
+      ) {
+        updates.timestamp = new Date(record.timestamp);
+      }
+
+      if (
+        (record.contentType === "image" || record.contentType === "file") &&
+        typeof record.content === "string"
+      ) {
+        updates.content = base64ToUint8Array(record.content);
+      }
+
+      if (Object.keys(updates).length > 0) {
+        normalized = { ...record, ...updates };
+      }
+    }
 
     const messagePacket = messagePacketSchema.assert(normalized);
 
@@ -49,11 +98,7 @@ export class MessageService {
       chatId: localChatId,
     };
 
-    if ((await this.chatService.getById(localChatId)) === undefined) {
-      await this.chatService.createPrivateChat(localChatId);
-    } else {
-      await this.profileService.ensureProfile(localPacket.senderId);
-    }
+    await this.ensurePrivateChat(localChatId, localPacket.senderId);
 
     return await this.messageRepository.save(localPacket, true);
   }

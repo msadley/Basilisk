@@ -1,6 +1,7 @@
 import type { Stream } from "@libp2p/interface";
 import { peerIdFromString } from "@libp2p/peer-id";
 import type { Profile } from "../model/Profile.js";
+import { uint8ArrayToBase64, writeStreamJson } from "../node/stream.js";
 import { ProfileRepository } from "../repository/ProfileRepository.js";
 import { NodeService } from "./NodeService.js";
 
@@ -27,14 +28,12 @@ export class ProfileService {
     const userProfile = await this.getUserProfile();
     const payload = {
       ...userProfile,
-      avatar: userProfile.avatar ? Array.from(userProfile.avatar) : null,
+      avatar: userProfile.avatar
+        ? uint8ArrayToBase64(userProfile.avatar)
+        : null,
     };
-    const data: Uint8Array = new TextEncoder().encode(JSON.stringify(payload));
 
-    if (!stream.send(data))
-      await new Promise((resolve) => stream.addEventListener("drain", resolve));
-
-    await stream.close();
+    await writeStreamJson(stream, payload);
   }
 
   async getById(peerId: string) {

@@ -17,30 +17,42 @@ export class NodeOrchestrator {
     this.nodeCore.registerProtocolHandler(
       "/chat/1.0.0",
       async (stream, connection) => {
-        const peerId = connection.remotePeer.toString();
-        const wasKnownPeer = this.privateChatCache.contains(peerId);
-        const savedMessage = await this.messageService.handleMessageReceived(
-          stream,
-          connection,
-        );
-        if (!wasKnownPeer && this.privateChatCache.contains(peerId)) {
+        try {
+          const peerId = connection.remotePeer.toString();
+          const wasKnownPeer = this.privateChatCache.contains(peerId);
+          const savedMessage = await this.messageService.handleMessageReceived(
+            stream,
+            connection,
+          );
+          if (!wasKnownPeer && this.privateChatCache.contains(peerId)) {
+            this.sink.emit({
+              type: "peer-found",
+              payload: { peerId },
+            });
+          }
           this.sink.emit({
-            type: "peer-found",
-            payload: { peerId },
+            type: "message-received",
+            payload: {
+              message: savedMessage,
+            },
           });
+        } catch (error) {
+          console.error("Failed to handle /chat/1.0.0 stream:", error);
+          stream.abort(
+            error instanceof Error ? error : new Error(String(error)),
+          );
         }
-        this.sink.emit({
-          type: "message-received",
-          payload: {
-            message: savedMessage,
-          },
-        });
       },
     );
 
-    this.nodeCore.registerProtocolHandler("/info/1.0.0", (stream) =>
-      this.profileService.sendUserProfile(stream),
-    );
+    this.nodeCore.registerProtocolHandler("/info/1.0.0", async (stream) => {
+      try {
+        await this.profileService.sendUserProfile(stream);
+      } catch (error) {
+        console.error("Failed to handle /info/1.0.0 stream:", error);
+        stream.abort(error instanceof Error ? error : new Error(String(error)));
+      }
+    });
 
     this.nodeCore.registerEventListener("peer:connect", (event) => {
       const peerId = event.detail.toString();
