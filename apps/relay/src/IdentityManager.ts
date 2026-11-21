@@ -1,7 +1,10 @@
+import {
+  createIdentityFromSeed,
+  generateIdentitySeed,
+} from "@basilisk/libp2p";
 import type { DatabaseAdapter } from "./DatabaseAdapter.js";
 import { identity } from "./DatabaseSchema.js";
 import { eq } from "drizzle-orm";
-import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 import type { PrivateKey } from "@libp2p/interface";
 
 class IdentityManager {
@@ -20,7 +23,7 @@ class IdentityManager {
   }
 
   private async generateSeed(): Promise<Uint8Array> {
-    const seed = crypto.getRandomValues(new Uint8Array(32));
+    const seed = generateIdentitySeed();
     await this.databaseAdapter.insert(identity).values({ id: 0, seed });
     return seed;
   }
@@ -28,7 +31,7 @@ class IdentityManager {
   async getIdentity(): Promise<PrivateKey> {
     let seed = await this.getSeed();
     if (seed === undefined) seed = await this.generateSeed();
-    return generateKeyPairFromSeed("Ed25519", seed);
+    return createIdentityFromSeed(seed);
   }
 }
 

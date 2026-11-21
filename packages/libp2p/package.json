@@ -14,6 +14,7 @@
     "@libp2p/autonat": "^3.0.23",
     "@libp2p/bootstrap": "^12.0.26",
     "@libp2p/circuit-relay-v2": "^4.2.8",
+    "@libp2p/crypto": "^5.1.21",
     "@libp2p/dcutr": "^3.0.23",
     "@libp2p/gossipsub": "^16.0.4",
     "@libp2p/identify": "^4.1.9",

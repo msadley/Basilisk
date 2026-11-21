@@ -123,3 +123,9 @@ export function getLibp2pOptions(
   };
   return config;
 }
+
+export {
+  IDENTITY_SEED_LENGTH,
+  generateIdentitySeed,
+  createIdentityFromSeed,
+} from "./identity.js";

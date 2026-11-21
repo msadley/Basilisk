@@ -1,34 +1,27 @@
-type MainViewsFromMap<T extends Record<string, any>> = {
+type ViewsFromMap<T extends Record<string, unknown>> = {
   [K in keyof T]: T[K] extends void ? { type: K } : { type: K; details: T[K] };
 }[keyof T];
 
-interface MainViewMap {
+type MainViewMap = {
   home: void;
   addChat: void;
   chat: { chatId: string };
-}
+};
 
-export type MainView = MainViewsFromMap<MainViewMap>;
+export type MainView = ViewsFromMap<MainViewMap>;
 
-type SidePanelViewsFromMap<T extends Record<string, any>> = {
-  [K in keyof T]: T[K] extends void ? { type: K } : { type: K; details: T[K] };
-}[keyof T];
-
-interface SidePanelViewMap {
+type SidePanelViewMap = {
   none: void;
-}
+};
 
-type ModalViewsFromMap<T extends Record<string, any>> = {
-  [K in keyof T]: T[K] extends void ? { type: K } : { type: K; details: T[K] };
-}[keyof T];
+export type SidePanelView = ViewsFromMap<SidePanelViewMap>;
 
-interface ModalViewMap {
+type ModalViewMap = {
   loading: void;
   none: void;
-}
-export type ModalView = ModalViewsFromMap<ModalViewMap>;
+};
 
-export type SidePanelView = SidePanelViewsFromMap<SidePanelViewMap>;
+export type ModalView = ViewsFromMap<ModalViewMap>;
 
 export interface ButtonProps {
   onClick: () => void;

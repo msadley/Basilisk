@@ -1,3 +1,4 @@
+import { generateIdentitySeed } from "@basilisk/libp2p";
 import * as schema from "../database/databaseSchema.js";
 import { type AppDatabase } from "../types.js";
 
@@ -10,7 +11,7 @@ export class IdentityRepository {
   }
 
   async generateSeed(): Promise<Uint8Array> {
-    const seed = crypto.getRandomValues(new Uint8Array(32));
+    const seed = generateIdentitySeed();
     await this.database.insert(schema.identity).values({ id: 0, seed });
     return seed;
   }

@@ -1,6 +1,6 @@
-import { PrivateKey } from "@libp2p/interface";
+import { createIdentityFromSeed } from "@basilisk/libp2p";
+import type { PrivateKey } from "@libp2p/interface";
 import { IdentityRepository } from "../repository/IdentityRepository.js";
-import { generateKeyPairFromSeed } from "@libp2p/crypto/keys";
 
 export class IdentityService {
   constructor(private identityRepository: IdentityRepository) {}
@@ -8,6 +8,6 @@ export class IdentityService {
   async getPrivateKey(): Promise<PrivateKey> {
     let seed = await this.identityRepository.getSeed();
     if (seed === undefined) seed = await this.identityRepository.generateSeed();
-    return generateKeyPairFromSeed("Ed25519", seed);
+    return createIdentityFromSeed(seed);
   }
 }
