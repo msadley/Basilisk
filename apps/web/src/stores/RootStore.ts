@@ -1,4 +1,5 @@
 import type { Chat, PrivateChat, Profile } from "@basilisk/core";
+import { create } from "zustand";
 import { workerController } from "../worker/workerController";
 import { useConnectionStore } from "./ConnectionStore";
 import { queryKeys } from "./keys";
@@ -50,8 +51,28 @@ const ensureChatInCache = (chatId: string) => {
   queryClient.setQueryData<Chat>(queryKeys.chat(chat.id), chat);
 };
 
+export type StartupStatus = "idle" | "initializing" | "ready" | "error";
+
+export interface StartupState {
+  status: StartupStatus;
+  error: Error | null;
+}
+
+export const useStartupStore = create<StartupState>(() => ({
+  status: "idle",
+  error: null,
+}));
+
 class RootStore {
-  private constructor() {
+  private listenersAttached = false;
+  private initPromise: Promise<void> | null = null;
+
+  private attachEventListeners() {
+    if (this.listenersAttached) {
+      return;
+    }
+    this.listenersAttached = true;
+
     workerController.on("message-received", (e) => {
       const { message } = e.payload;
       ensureChatInCache(message.chatId);
@@ -85,17 +106,42 @@ class RootStore {
     });
   }
 
-  static async init() {
-    queryClient.setQueryData(
-      queryKeys.userProfile,
-      await workerController.services.profileService.getUserProfile(),
-    );
-    const store = new RootStore();
-    await workerController.init().catch((e) => {
-      console.error("Failed to initialize workerController", e);
+  init(): Promise<void> {
+    if (useStartupStore.getState().status === "ready") {
+      return Promise.resolve();
+    }
+
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    this.initPromise = this.runInit().finally(() => {
+      this.initPromise = null;
     });
-    return store;
+
+    return this.initPromise;
+  }
+
+  private async runInit(): Promise<void> {
+    useStartupStore.setState({ status: "initializing", error: null });
+    this.attachEventListeners();
+
+    try {
+      const services = await workerController.getServices();
+      queryClient.setQueryData(
+        queryKeys.userProfile,
+        await services.profileService.getUserProfile(),
+      );
+      await workerController.init().catch((e) => {
+        console.error("Failed to initialize workerController", e);
+      });
+      useStartupStore.setState({ status: "ready", error: null });
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error("Failed to initialize RootStore", error);
+      useStartupStore.setState({ status: "error", error });
+    }
   }
 }
 
-export const rootStore = RootStore.init();
+export const rootStore = new RootStore();

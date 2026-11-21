@@ -21,18 +21,22 @@ const db = drizzle(driver, batchDriver, {
   schema: databaseSchema,
 });
 
-Comlink.expose({
+const workerApi = {
   init: async (relayAddress: string, sink: WorkerEventSink) => {
     await initializeDatabase(db);
-    return await services(db, relayAddress, sink);
+    const coreServices = await services(db, relayAddress, sink);
+    return Comlink.proxy({
+      messageService: Comlink.proxy(coreServices.messageService),
+      chatService: Comlink.proxy(coreServices.chatService),
+      profileService: Comlink.proxy(coreServices.profileService),
+      nodeService: Comlink.proxy(coreServices.nodeService),
+      identityService: Comlink.proxy(coreServices.identityService),
+    });
   },
-});
-
-export type BasiliskInitializer = {
-  init: (
-    relayAddress: string,
-    sink: WorkerEventSink,
-  ) => ReturnType<typeof services>;
 };
 
-export type Services = Awaited<ReturnType<typeof services>>;
+Comlink.expose(workerApi);
+
+export type BasiliskInitializer = typeof workerApi;
+
+export type Services = Awaited<ReturnType<BasiliskInitializer["init"]>>;

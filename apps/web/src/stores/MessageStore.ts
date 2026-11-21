@@ -96,7 +96,8 @@ export const useMessages = (chatId?: string) => {
         return { items: [], nextCursor: undefined };
       }
 
-      const rows = await workerController.services.messageService.list(
+      const services = await workerController.getServices();
+      const rows = await services.messageService.list(
         chatId,
         pageParam,
       );
@@ -156,8 +157,10 @@ export const useSendMessage = (chatId: string) => {
 
   return useMutation({
     mutationKey: ["sendMessage", chatId],
-    mutationFn: ({ content }: SendMessageVariables): Promise<Message> =>
-      workerController.services.messageService.send(chatId, content),
+    mutationFn: async ({ content }: SendMessageVariables): Promise<Message> => {
+      const services = await workerController.getServices();
+      return services.messageService.send(chatId, content);
+    },
 
     onMutate: async ({ content, retryClientId }) => {
       const key = queryKeys.messages(chatId);

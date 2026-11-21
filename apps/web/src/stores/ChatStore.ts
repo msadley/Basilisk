@@ -7,7 +7,8 @@ export const useChats = () => {
   return useQuery({
     queryKey: queryKeys.chats,
     queryFn: async (): Promise<Chat[]> => {
-      return workerController.services.chatService.list();
+      const services = await workerController.getServices();
+      return services.chatService.list();
     },
   });
 };
@@ -20,9 +21,8 @@ export const useChat = (chatId?: string) => {
     enabled: Boolean(chatId),
     queryFn: async (): Promise<Chat | null> => {
       if (!chatId) return null;
-      return (
-        (await workerController.services.chatService.getById(chatId)) ?? null
-      );
+      const services = await workerController.getServices();
+      return (await services.chatService.getById(chatId)) ?? null;
     },
     initialData: () => {
       if (!chatId) return undefined;
@@ -38,8 +38,10 @@ export const useCreatePrivateChat = () => {
 
   return useMutation({
     mutationKey: ["createPrivateChat"],
-    mutationFn: (peerId: string) =>
-      workerController.services.chatService.createPrivateChat(peerId),
+    mutationFn: async (peerId: string) => {
+      const services = await workerController.getServices();
+      return services.chatService.createPrivateChat(peerId);
+    },
     onSuccess: (newChat) => {
       queryClient.setQueryData<Chat[]>(queryKeys.chats, (old) => {
         if (!old) return [newChat];

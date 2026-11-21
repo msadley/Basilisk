@@ -34,7 +34,8 @@ export const useProfiles = () => {
   return useQuery({
     queryKey: queryKeys.profiles,
     queryFn: async (): Promise<Profile[]> => {
-      return workerController.services.profileService.list();
+      const services = await workerController.getServices();
+      return services.profileService.list();
     },
   });
 };
@@ -43,7 +44,8 @@ export const useUserProfile = () => {
   return useQuery({
     queryKey: queryKeys.userProfile,
     queryFn: async (): Promise<Profile> => {
-      return workerController.services.profileService.getUserProfile();
+      const services = await workerController.getServices();
+      return services.profileService.getUserProfile();
     },
   });
 };
@@ -62,16 +64,14 @@ export const useProfile = (peerId?: string) => {
     queryFn: async (): Promise<Profile | null> => {
       if (!peerId) return null;
 
-      const local =
-        await workerController.services.profileService.getById(peerId);
+      const services = await workerController.getServices();
+      const local = await services.profileService.getById(peerId);
       if (isResolvedProfile(local)) {
         return local;
       }
 
       try {
-        return await workerController.services.profileService.fetchPeerProfile(
-          peerId,
-        );
+        return await services.profileService.fetchPeerProfile(peerId);
       } catch {
         return local ?? null;
       }
@@ -91,10 +91,8 @@ export const useUpdateProfile = () => {
 
   return useMutation({
     mutationFn: async (data: PatchProfileInput) => {
-      return workerController.services.profileService.update(
-        data.avatar,
-        data.name,
-      );
+      const services = await workerController.getServices();
+      return services.profileService.update(data.avatar, data.name);
     },
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(queryKeys.userProfile, updatedProfile);
