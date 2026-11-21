@@ -9,6 +9,7 @@
   display: flex;
   height: 100%;
   width: 100%;
+  z-index: 20;
 }
 
 .iconWrapper {
@@ -16,13 +17,53 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
   width: 100%;
 }
 
-.iconWrapper svg {
+.spinner {
   height: 5rem;
   width: 5rem;
-  animation: spin 1s infinite;
+  animation: spin 1s linear infinite;
+}
+
+.errorIcon {
+  height: 4rem;
+  width: 4rem;
+  color: var(--ctp-red);
+}
+
+.errorTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ctp-text);
+}
+
+.errorDetail {
+  margin: 0;
+  max-width: 26rem;
+  font-size: 0.875rem;
+  color: var(--ctp-subtext0);
+  word-break: break-word;
+}
+
+.retryButton {
+  margin-top: 0.25rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 14px;
+  border: none;
+  background-color: var(--ctp-blue);
+  color: var(--ctp-crust);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
 }
 
 @keyframes spin {

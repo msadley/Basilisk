@@ -26,6 +26,23 @@ const formSchema = z.object({
     ),
 });
 
+const getCreateChatErrorMessage = (error: unknown): string => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+
+  if (message.includes("Cannot create a private chat with yourself")) {
+    return "Você não pode criar um chat consigo mesmo.";
+  }
+  if (message.includes("Chat already exists")) {
+    return "Este chat já existe.";
+  }
+  return "Não foi possível criar o chat.";
+};
+
 type Inputs = z.infer<typeof formSchema>;
 
 const PrivateForm = () => {
@@ -50,7 +67,7 @@ const PrivateForm = () => {
       });
     } catch (e) {
       console.error("Failed to create chat:", e);
-      setError("root", { message: "Could not create chat." });
+      setError("root", { message: getCreateChatErrorMessage(e) });
     }
   };
 

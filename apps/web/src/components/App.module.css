@@ -4,3 +4,73 @@
   width: 100vw;
   overflow: hidden;
 }
+
+.errorScreen {
+  display: flex;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  padding: 8px;
+  position: fixed;
+}
+
+.errorInner {
+  background-color: var(--ctp-crust);
+  border-radius: 26px;
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.errorBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--ctp-base);
+  border-radius: 26px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2rem;
+}
+
+.errorIcon {
+  height: 4rem;
+  width: 4rem;
+  color: var(--ctp-red);
+}
+
+.errorTitle {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--ctp-text);
+}
+
+.errorMessage {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.95rem;
+  color: var(--ctp-subtext0);
+  word-break: break-word;
+}
+
+.retryButton {
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 14px;
+  border: none;
+  background-color: var(--ctp-blue);
+  color: var(--ctp-crust);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
+}

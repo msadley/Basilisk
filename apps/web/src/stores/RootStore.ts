@@ -132,9 +132,7 @@ class RootStore {
         queryKeys.userProfile,
         await services.profileService.getUserProfile(),
       );
-      await workerController.init().catch((e) => {
-        console.error("Failed to initialize workerController", e);
-      });
+      await workerController.init();
       useStartupStore.setState({ status: "ready", error: null });
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));

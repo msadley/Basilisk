@@ -72,7 +72,8 @@ export const useProfile = (peerId?: string) => {
 
       try {
         return await services.profileService.fetchPeerProfile(peerId);
-      } catch {
+      } catch (error) {
+        console.warn(`Failed to fetch profile for peer ${peerId}:`, error);
         return local ?? null;
       }
     },

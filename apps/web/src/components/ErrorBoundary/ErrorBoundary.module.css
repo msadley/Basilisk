@@ -1,0 +1,82 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100vw;
+  padding: 1.5rem;
+  background-color: var(--ctp-crust);
+  color: var(--ctp-text);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  max-width: 28rem;
+  width: 100%;
+  padding: 2rem;
+  border-radius: 26px;
+  background-color: var(--ctp-base);
+  border: 1px solid var(--ctp-surface0);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--ctp-red);
+}
+
+.description {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ctp-subtext0);
+}
+
+.detail {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  border-radius: 12px;
+  background-color: var(--ctp-surface0);
+  color: var(--ctp-subtext1);
+  font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 0.6rem 1.15rem;
+  border-radius: 14px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.primaryButton {
+  background-color: var(--ctp-blue);
+  color: var(--ctp-crust);
+}
+
+.secondaryButton {
+  background-color: var(--ctp-surface0);
+  color: var(--ctp-text);
+}
+
+.primaryButton:hover,
+.secondaryButton:hover {
+  opacity: 0.9;
+}

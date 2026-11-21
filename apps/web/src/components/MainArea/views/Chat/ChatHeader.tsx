@@ -12,7 +12,7 @@ const ChatHeader = ({ chatId }: ChatHeaderProps) => {
   const { data: peerProfile } = useProfile(chat && !isGroup ? chat.id : undefined);
 
   if (!chat) {
-    return <>Loading...</>;
+    return <>Carregando...</>;
   }
 
   if (groupChatSchema.allows(chat)) {
