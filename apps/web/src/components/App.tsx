@@ -6,7 +6,6 @@ import { rootStore, useStartupStore } from "../stores/RootStore";
 import styles from "./App.module.css";
 import LoadingScreen from "./LoadingScreen/LoadingScreen";
 import MainArea from "./MainArea/MainArea";
-import Modal from "./Modal/Modal";
 import Reconnecting from "./Reconnecting/Reconnecting";
 import Sidebar from "./Sidebar/Sidebar";
 
@@ -74,7 +73,6 @@ const App = () => {
         <div key="app" className={styles.app}>
           <Sidebar />
           <MainArea />
-          <Modal />
           <Reconnecting />
         </div>
       )}

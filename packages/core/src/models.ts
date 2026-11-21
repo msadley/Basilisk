@@ -1,5 +1,4 @@
 import type { Message } from "./model/Message.js";
-import type { Profile } from "./model/Profile.js";
 
 export type { Chat } from "./model/Chat.js";
 export { groupChatSchema, type GroupChat } from "./model/GroupChat.js";
@@ -12,7 +11,6 @@ export { privateChatSchema, type PrivateChat } from "./model/PrivateChat.js";
 export { profileSchema, type Profile } from "./model/Profile.js";
 
 interface PushEventMap {
-  "node-started": { profile: Profile };
   "peer-found": { peerId: string };
   "peer-lost": { peerId: string };
   "message-received": { message: Message };

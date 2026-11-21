@@ -1,7 +1,5 @@
 import { type } from "arktype";
 
-export const contentTypeSchema = type("'image' | 'text' | 'file'");
-
 const commonMessageSchema = type({
   senderId: "string",
   chatId: "string",

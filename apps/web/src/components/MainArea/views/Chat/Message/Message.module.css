@@ -41,12 +41,6 @@
   padding-inline: 8px;
 }
 
-.avatarContainer {
-  display: flex;
-  height: 2rem;
-  margin-inline: 4px;
-}
-
 .statusContainer {
   display: flex;
   margin-inline: 4px;

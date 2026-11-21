@@ -10,19 +10,6 @@ type MainViewMap = {
 
 export type MainView = ViewsFromMap<MainViewMap>;
 
-type SidePanelViewMap = {
-  none: void;
-};
-
-export type SidePanelView = ViewsFromMap<SidePanelViewMap>;
-
-type ModalViewMap = {
-  loading: void;
-  none: void;
-};
-
-export type ModalView = ViewsFromMap<ModalViewMap>;
-
 export interface ButtonProps {
   onClick: () => void;
 }

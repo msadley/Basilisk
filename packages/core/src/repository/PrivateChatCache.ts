@@ -27,14 +27,4 @@ export class PrivateChatCache {
   add(id: string) {
     this.cache.add(id);
   }
-
-  remove(id: string) {
-    this.cache.delete(id);
-  }
-
-  async invalidate() {
-    this.cache.clear();
-    this.isInitialized = false;
-    await this.init();
-  }
 }

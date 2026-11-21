@@ -3,17 +3,13 @@ import { create } from "zustand";
 interface ConnectionState {
   peers: Record<string, boolean>;
   isConnectedToRelay: boolean;
-  setPeers: (peers: Record<string, boolean>) => void;
   setPeerStatus: (peerId: string, connected: boolean) => void;
-  removePeer: (peerId: string) => void;
   setConnectedToRelay: (connected: boolean) => void;
 }
 
 export const useConnectionStore = create<ConnectionState>((set) => ({
   peers: {},
   isConnectedToRelay: false,
-
-  setPeers: (peers) => set({ peers }),
 
   setPeerStatus: (peerId, connected) =>
     set((state) => {
@@ -26,15 +22,6 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
           [peerId]: connected,
         },
       };
-    }),
-
-  removePeer: (peerId) =>
-    set((state) => {
-      if (!(peerId in state.peers)) {
-        return state;
-      }
-      const { [peerId]: _, ...rest } = state.peers;
-      return { peers: rest };
     }),
 
   setConnectedToRelay: (connected) =>

@@ -1,17 +1,7 @@
 import type { Profile } from "@basilisk/core/models";
-import {
-  type QueryClient,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { type QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workerController } from "../worker/workerController";
 import { queryKeys } from "./keys";
-
-export type PatchProfileInput = {
-  name?: string | null;
-  avatar?: Uint8Array | null;
-};
 
 /** Updates cached profile entries across the single-profile and profile-list caches. */
 export const upsertProfileInCache = (
@@ -27,16 +17,6 @@ export const upsertProfileInCache = (
           existing.id === profile.id ? profile : existing,
         )
       : [...old, profile];
-  });
-};
-
-export const useProfiles = () => {
-  return useQuery({
-    queryKey: queryKeys.profiles,
-    queryFn: async (): Promise<Profile[]> => {
-      const services = await workerController.getServices();
-      return services.profileService.list();
-    },
   });
 };
 
@@ -83,21 +63,6 @@ export const useProfile = (peerId?: string) => {
         .getQueryData<Profile[]>(queryKeys.profiles)
         ?.find((profile) => profile.id === peerId);
       return isResolvedProfile(cached) ? cached : undefined;
-    },
-  });
-};
-
-export const useUpdateProfile = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: PatchProfileInput) => {
-      const services = await workerController.getServices();
-      return services.profileService.update(data.avatar, data.name);
-    },
-    onSuccess: (updatedProfile) => {
-      queryClient.setQueryData(queryKeys.userProfile, updatedProfile);
-      upsertProfileInCache(queryClient, updatedProfile);
     },
   });
 };

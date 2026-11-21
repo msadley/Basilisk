@@ -2,7 +2,6 @@ import {
   getClientLibp2pOptions,
   type BaseServices,
 } from "@basilisk/libp2p/client";
-import type { GossipSubEvents } from "@libp2p/gossipsub";
 import type {
   EventHandler,
   Libp2pEvents,
@@ -40,10 +39,6 @@ export class NodeCore {
     return this.libp2p.start();
   }
 
-  async stop() {
-    return this.libp2p.stop();
-  }
-
   getRelayPeerId(): string {
     const peerId = this.relayMultiaddress
       .getComponents()
@@ -65,10 +60,6 @@ export class NodeCore {
     return this.libp2p.peerId;
   }
 
-  subscribeToTopic(topic: string) {
-    this.libp2p.services.pubsub.subscribe(topic);
-  }
-
   registerProtocolHandler(protocol: string, handler: StreamHandler) {
     this.libp2p.handle(protocol, handler);
   }
@@ -78,13 +69,6 @@ export class NodeCore {
     handler: EventHandler<Libp2pEvents<BaseServices>[K]>,
   ) {
     this.libp2p.addEventListener(event, handler);
-  }
-
-  registerPubsubListener<K extends keyof GossipSubEvents>(
-    event: K,
-    handler: EventHandler<GossipSubEvents[K]>,
-  ) {
-    this.libp2p.services.pubsub.addEventListener(event, handler);
   }
 
   async dialProtocol(id: PeerId | Multiaddr, protocol: string) {
