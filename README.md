@@ -53,7 +53,7 @@ on the example:
 PUBLIC_DNS="your-dns.com"
 
 # Specify the relay address used by the frontend here
-VITE_BOOTSTRAP_MULTIADDRS="/dns4/your-dns.com/tcp/443/wss/p2p/12D3KooWS..."
+VITE_RELAY_MULTIADDRESS="/dns4/your-dns.com/tcp/443/wss/p2p/12D3KooWS..."
 ```
 
 ### Relay

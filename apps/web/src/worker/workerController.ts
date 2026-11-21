@@ -3,7 +3,7 @@ import * as Comlink from "comlink";
 import mitt, { Emitter } from "mitt";
 import { BasiliskInitializer, Services } from "./worker";
 
-const RELAY_ADDRESS = import.meta.env.VITE_RELAY_ADDRESS;
+const RELAY_ADDRESS = import.meta.env.VITE_RELAY_MULTIADDRESS;
 
 type PushEventMap = {
   [T in PushEvent["type"]]: Extract<PushEvent, { type: T }>;
@@ -16,6 +16,18 @@ class WorkerController {
   private constructor() {}
 
   static async create(): Promise<WorkerController> {
+    const relayAddress =
+      typeof RELAY_ADDRESS === "string" ? RELAY_ADDRESS.trim() : "";
+    if (
+      !relayAddress ||
+      !relayAddress.startsWith("/") ||
+      relayAddress === "/"
+    ) {
+      throw new Error(
+        "VITE_RELAY_MULTIADDRESS must be configured as a valid multiaddress starting with '/' (e.g. /dns4/your-dns.com/tcp/443/wss/p2p/...).",
+      );
+    }
+
     const controller = new WorkerController();
     controller.worker = new Worker(new URL("./worker.ts", import.meta.url), {
       type: "module",
@@ -27,7 +39,7 @@ class WorkerController {
     );
 
     const services = await basiliskInitializer.init(
-      RELAY_ADDRESS,
+      relayAddress,
       Comlink.proxy({
         emit: (event: PushEvent) =>
           controller.eventEmitter.emit(event.type, event),
