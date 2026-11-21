@@ -1,7 +1,7 @@
 services:
-  basilisk-relay:
+  relay:
     build:
-      context: .
+      context: ./apps/relay
       dockerfile: ./Dockerfile
       network: host
     container_name: basilisk_relay
@@ -14,3 +14,20 @@ services:
       - ./cache:/home/basilisk/.cache
     env_file:
       - .env
+    profiles: ["relay"]
+
+  test:
+    build:
+      context: ./apps/test
+      dockerfile: ./Dockerfile
+    container_name: basilisk_test
+    restart: unless-stopped
+    ports:
+      - "4001:4001"
+      - "127.0.0.1:4002:4002"
+    volumes:
+      - ./data:/home/basilisk/.basilisk
+      - ./cache:/home/basilisk/.cache
+    env_file:
+      - .env
+    profiles: ["test"]
