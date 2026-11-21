@@ -1,8 +1,9 @@
 services:
   relay:
     build:
-      context: ./apps/relay
+      context: .
       dockerfile: ./Dockerfile
+      target: relay
       network: host
     container_name: basilisk_relay
     restart: unless-stopped
@@ -18,8 +19,9 @@ services:
 
   test:
     build:
-      context: ./apps/test
+      context: .
       dockerfile: ./Dockerfile
+      target: test
     container_name: basilisk_test
     restart: unless-stopped
     ports:

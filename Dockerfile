@@ -1,29 +1,48 @@
-FROM node:22-bookworm
+FROM node:26-bookworm AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@11 --activate
+RUN npm install -g pnpm@12.4.2
 
 WORKDIR /Basilisk
 
-COPY *.json ./
-COPY *.yaml ./
+COPY package.json tsconfig*.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages ./packages
-COPY apps/relay ./apps/relay
-
-RUN pnpm install --frozen-lockfile
-RUN pnpm --filter relay build
-
-WORKDIR /Basilisk/apps/relay
-
-RUN chown -R node:node /Basilisk
 
 EXPOSE 4001
 EXPOSE 4002
 
+ENV DATABASE_URL="file:/home/basilisk/.basilisk/basilisk.db"
+
+FROM base AS test
+
+COPY apps/test ./apps/test
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @basilisk/test... build
+
+WORKDIR /Basilisk/apps/test
+
 ENV HOME=/home/basilisk
-RUN mkdir -p /home/basilisk/.basilisk \
-  && chown -R node:node /home/basilisk/.basilisk
+RUN mkdir -p /home/basilisk/.basilisk /home/basilisk/.cache \
+  && chown -R node:node /Basilisk /home/basilisk
+
+USER node
+
+CMD ["pnpm", "dev"]
+
+FROM base AS relay
+
+COPY apps/relay ./apps/relay
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @basilisk/relay... build
+
+WORKDIR /Basilisk/apps/relay
+
+ENV HOME=/home/basilisk
+RUN mkdir -p /home/basilisk/.basilisk /home/basilisk/.cache \
+  && chown -R node:node /Basilisk /home/basilisk
 
 USER node
 
