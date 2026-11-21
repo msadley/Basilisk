@@ -55,7 +55,6 @@ const Chat = ({ chatId }: ChatProps) => {
         components={{ Header }}
         alignToBottom
         followOutput
-        seamless
         increaseViewportBy={200}
         data={messages}
         computeItemKey={(_, msg) => msg.clientId ?? msg.id}

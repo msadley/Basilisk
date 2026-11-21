@@ -15,7 +15,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@basilisk/core": path.resolve(__dirname, "../../packages/core/src/index.ts"),
-      "app-root-path": path.resolve(__dirname, "./src/mocks/empty.js"),
     },
   },
   worker: {

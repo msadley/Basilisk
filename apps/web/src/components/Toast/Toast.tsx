@@ -56,7 +56,7 @@ const Toast = () => {
               color:
                 currentToast.type === "error"
                   ? "var(--ctp-red)"
-                  : "var(--ctp-text0)",
+                  : "var(--ctp-text)",
             }}
           >
             {currentToast.message}
