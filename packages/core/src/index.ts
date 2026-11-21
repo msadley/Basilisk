@@ -21,15 +21,20 @@ export {
   DATABASE_INIT_STATEMENTS,
   initializeDatabase,
 } from "./database/migrations.js";
-export type { Chat } from "./model/Chat.js";
-export { groupChatSchema, type GroupChat } from "./model/GroupChat.js";
-export { messageSchema, type Message } from "./model/Message.js";
 export {
+  type Chat,
+  groupChatSchema,
+  type GroupChat,
+  messageSchema,
+  type Message,
   messagePacketSchema,
   type MessagePacket,
-} from "./model/MessagePacket.js";
-export { privateChatSchema, type PrivateChat } from "./model/PrivateChat.js";
-export { profileSchema, type Profile } from "./model/Profile.js";
+  privateChatSchema,
+  type PrivateChat,
+  profileSchema,
+  type Profile,
+  type PushEvent,
+} from "./models.js";
 
 // main services object
 export const services = async (
@@ -100,4 +105,4 @@ export const services = async (
 };
 
 // miscellaneous
-export type { AppDatabase, PushEvent, WorkerEventSink } from "./types.js";
+export type { AppDatabase, WorkerEventSink } from "./types.js";

@@ -1,4 +1,7 @@
-import { getLibp2pOptions, type BaseServices } from "@basilisk/libp2p";
+import {
+  getClientLibp2pOptions,
+  type BaseServices,
+} from "@basilisk/libp2p/client";
 import type { GossipSubEvents } from "@libp2p/gossipsub";
 import type {
   EventHandler,
@@ -28,7 +31,7 @@ export class NodeCore {
   ): Promise<NodeCore> {
     const relayMultiaddr = multiaddr(relayAddress);
     const libp2p = await createLibp2p(
-      getLibp2pOptions({ mode: "CLIENT", relayAddress }, privateKey),
+      getClientLibp2pOptions(relayAddress, privateKey),
     );
     return new NodeCore(libp2p, relayMultiaddr);
   }

@@ -22,7 +22,10 @@
     "emitDecoratorMetadata": true,
     "paths": {
       "@basilisk/core": ["./packages/core/src/index.ts"],
-      "@basilisk/libp2p": ["./packages/libp2p/src/index.ts"]
+      "@basilisk/core/models": ["./packages/core/src/models.ts"],
+      "@basilisk/libp2p": ["./packages/libp2p/src/index.ts"],
+      "@basilisk/libp2p/client": ["./packages/libp2p/src/client.ts"],
+      "@basilisk/libp2p/relay": ["./packages/libp2p/src/relay.ts"]
     }
   }
 }

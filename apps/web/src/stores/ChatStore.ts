@@ -1,4 +1,4 @@
-import type { Chat } from "@basilisk/core";
+import type { Chat } from "@basilisk/core/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workerController } from "../worker/workerController";
 import { queryKeys } from "./keys";

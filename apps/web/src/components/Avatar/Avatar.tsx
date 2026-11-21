@@ -1,4 +1,4 @@
-import { type Chat, groupChatSchema } from "@basilisk/core";
+import { type Chat, groupChatSchema } from "@basilisk/core/models";
 import { Icon } from "@iconify/react";
 import { memo, useEffect, useState } from "react";
 import { useConnectionStore } from "../../stores/ConnectionStore";

@@ -1,4 +1,4 @@
-import type { Profile } from "@basilisk/core";
+import type { Profile } from "@basilisk/core/models";
 import {
   type QueryClient,
   useMutation,

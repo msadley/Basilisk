@@ -1,4 +1,4 @@
-import type { Message, Profile } from "@basilisk/core";
+import type { Message, Profile } from "@basilisk/core/models";
 import {
   type InfiniteData,
   type QueryClient,

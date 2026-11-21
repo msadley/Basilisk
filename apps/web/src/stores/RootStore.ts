@@ -1,4 +1,4 @@
-import type { Chat, PrivateChat, Profile } from "@basilisk/core";
+import type { Chat, PrivateChat, Profile } from "@basilisk/core/models";
 import { create } from "zustand";
 import { workerController } from "../worker/workerController";
 import { useConnectionStore } from "./ConnectionStore";

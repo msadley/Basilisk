@@ -1,4 +1,4 @@
-import type { PushEvent } from "@basilisk/core";
+import type { PushEvent } from "@basilisk/core/models";
 import * as Comlink from "comlink";
 import mitt, { Emitter } from "mitt";
 import type { BasiliskInitializer, Services } from "./worker";

@@ -1,4 +1,4 @@
-import { getLibp2pOptions } from "@basilisk/libp2p";
+import { getRelayLibp2pOptions } from "@basilisk/libp2p/relay";
 import { PrivateKey } from "@libp2p/interface";
 import { createLibp2p, type Libp2p } from "libp2p";
 
@@ -14,7 +14,7 @@ class BasiliskRelay {
     privateKey: PrivateKey,
   ): Promise<BasiliskRelay> {
     const libp2p = await createLibp2p(
-      getLibp2pOptions({ mode: "RELAY", publicDns }, privateKey),
+      getRelayLibp2pOptions(publicDns, privateKey),
     );
     return new BasiliskRelay(libp2p);
   }
