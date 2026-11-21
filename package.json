@@ -5,6 +5,8 @@
   "packageManager": "pnpm@12.4.2",
   "scripts": {
     "build": "tsc -b",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm --filter web lint",
     "vite": "pnpm --filter web dev",
     "relay": "pnpm build && node apps/relay/dist/index.js",
     "dev": "pnpm --parallel build",
