@@ -25,17 +25,15 @@ export class ProfileRepository {
       .onConflictDoNothing({ target: schema.profiles.id });
   }
 
-  async save(profile: Profile) {
-    const [result] = await this.database.transaction(async (tx) => {
-      return await tx
-        .insert(schema.profiles)
-        .values(profile)
-        .onConflictDoUpdate({
-          target: schema.profiles.id,
-          set: { name: profile.name, avatar: profile.avatar },
-        })
-        .returning();
-    });
+  async save(profile: Profile): Promise<Profile> {
+    const [result] = await this.database
+      .insert(schema.profiles)
+      .values(profile)
+      .onConflictDoUpdate({
+        target: schema.profiles.id,
+        set: { name: profile.name, avatar: profile.avatar },
+      })
+      .returning();
     return result;
   }
 }

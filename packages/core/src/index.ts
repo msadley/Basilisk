@@ -47,11 +47,14 @@ export const services = async (
   const userPeerId = nodeCore.getPeerId().toString();
 
   const nodeService = new NodeService(nodeCore);
-  const groupChatService = new GroupChatService(groupChatRepository);
   const profileService = new ProfileService(
     profileRepository,
     nodeService,
     userPeerId,
+  );
+  const groupChatService = new GroupChatService(
+    groupChatRepository,
+    profileService,
   );
   const privateChatService = new PrivateChatService(
     privateChatRepository,

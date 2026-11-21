@@ -55,38 +55,55 @@ export class GroupChatRepository {
   }
 
   async save(chat: GroupChat): Promise<GroupChat> {
-    return this.database.transaction(async (transaction) => {
-      const [savedChat] = await transaction
-        .insert(schema.chats)
-        .values({
-          id: chat.id,
-          isGroup: true,
-          image: chat.image,
-          name: chat.name,
-        })
-        .returning();
+    if (!chat.name) {
+      throw new Error(`Group chat with ID ${chat.id} is missing a name.`);
+    }
 
-      const newParticipants = chat.participants.map((peerId) => ({
+    const newParticipants = Array.from(new Set(chat.participants)).map(
+      (peerId) => ({
         chatId: chat.id,
         userId: peerId,
-      }));
+      }),
+    );
 
-      const savedParticipants = await transaction
-        .insert(schema.chatParticipants)
-        .values(newParticipants)
-        .returning();
+    const insertChatQuery = this.database
+      .insert(schema.chats)
+      .values({
+        id: chat.id,
+        isGroup: true,
+        image: chat.image,
+        name: chat.name,
+      })
+      .returning();
 
-      if (!savedChat.name) {
-        throw new Error(
-          `Group chat with ID ${savedChat.id} is missing a name.`,
-        );
-      }
+    let savedChat: typeof schema.chats.$inferSelect;
+    let savedParticipants: (typeof schema.chatParticipants.$inferSelect)[];
 
-      return {
-        ...savedChat,
-        name: savedChat.name,
-        participants: savedParticipants.map((e) => e.userId),
-      };
-    });
+    if (newParticipants.length === 0) {
+      const [[chatRow]] = await this.database.batch([insertChatQuery]);
+      savedChat = chatRow;
+      savedParticipants = [];
+    } else {
+      const [[chatRow], participantRows] = await this.database.batch([
+        insertChatQuery,
+        this.database
+          .insert(schema.chatParticipants)
+          .values(newParticipants)
+          .returning(),
+      ]);
+      savedChat = chatRow;
+      savedParticipants = participantRows;
+    }
+
+    if (!savedChat.name) {
+      throw new Error(`Group chat with ID ${savedChat.id} is missing a name.`);
+    }
+
+    return {
+      id: savedChat.id,
+      name: savedChat.name,
+      image: savedChat.image,
+      participants: savedParticipants.map((p) => p.userId),
+    };
   }
 }

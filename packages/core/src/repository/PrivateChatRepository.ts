@@ -46,26 +46,37 @@ export class PrivateChatRepository {
   }
 
   async save(chat: PrivateChat): Promise<PrivateChat> {
-    return this.database.transaction(async (tx) => {
-      const [savedChat] = await tx
-        .insert(schema.chats)
-        .values({ id: chat.id, isGroup: false })
-        .returning();
-
-      const newParticipants = chat.participants.map((peerId) => ({
+    const newParticipants = Array.from(new Set(chat.participants)).map(
+      (peerId) => ({
         chatId: chat.id,
         userId: peerId,
-      }));
+      }),
+    );
 
-      const savedParticipants = await tx
+    const insertChatQuery = this.database
+      .insert(schema.chats)
+      .values({ id: chat.id, isGroup: false })
+      .returning();
+
+    if (newParticipants.length === 0) {
+      const [[savedChat]] = await this.database.batch([insertChatQuery]);
+      return {
+        id: savedChat.id,
+        participants: [],
+      };
+    }
+
+    const [[savedChat], savedParticipants] = await this.database.batch([
+      insertChatQuery,
+      this.database
         .insert(schema.chatParticipants)
         .values(newParticipants)
-        .returning();
+        .returning(),
+    ]);
 
-      return {
-        ...savedChat,
-        participants: savedParticipants.map((p) => p.userId),
-      };
-    });
+    return {
+      id: savedChat.id,
+      participants: savedParticipants.map((p) => p.userId),
+    };
   }
 }
