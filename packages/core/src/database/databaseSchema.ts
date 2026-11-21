@@ -1,22 +1,73 @@
 import { relations, sql } from "drizzle-orm";
 import {
-  blob,
   check,
+  customType,
   integer,
   primaryKey,
   sqliteTable,
   text,
 } from "drizzle-orm/sqlite-core";
 
+const textEncoder = new TextEncoder();
+
+function toPlainUint8Array(value: Uint8Array): Uint8Array {
+  if (
+    typeof SharedArrayBuffer !== "undefined" &&
+    value.buffer instanceof SharedArrayBuffer
+  ) {
+    return new Uint8Array(value);
+  }
+  return value.constructor === Uint8Array
+    ? value
+    : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+}
+
+const uint8ArrayBlob = customType<{ data: Uint8Array; driverData: unknown }>({
+  dataType() {
+    return "blob";
+  },
+  toDriver(value: Uint8Array): Uint8Array {
+    return toPlainUint8Array(value);
+  },
+  fromDriver(value: unknown): Uint8Array {
+    if (value instanceof Uint8Array) {
+      return toPlainUint8Array(value);
+    }
+    if (value instanceof ArrayBuffer) {
+      return new Uint8Array(value);
+    }
+    if (
+      typeof SharedArrayBuffer !== "undefined" &&
+      value instanceof SharedArrayBuffer
+    ) {
+      return new Uint8Array(new Uint8Array(value));
+    }
+    if (ArrayBuffer.isView(value)) {
+      return toPlainUint8Array(
+        new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
+      );
+    }
+    if (Array.isArray(value)) {
+      return Uint8Array.from(value);
+    }
+    if (typeof value === "string") {
+      return textEncoder.encode(value);
+    }
+    throw new TypeError(
+      `Unsupported blob value from SQLite driver: ${typeof value}`,
+    );
+  },
+});
+
 export const identity = sqliteTable("identity", {
   id: integer("id").primaryKey(),
-  seed: blob("seed").$type<Uint8Array>().notNull(),
+  seed: uint8ArrayBlob("seed").notNull(),
 });
 
 export const profiles = sqliteTable("profiles", {
   id: text("id").primaryKey(),
   name: text("name"),
-  avatar: blob("avatar").$type<Uint8Array>(),
+  avatar: uint8ArrayBlob("avatar"),
 });
 
 export const chats = sqliteTable(
@@ -25,7 +76,7 @@ export const chats = sqliteTable(
     id: text("id").primaryKey(),
     isGroup: integer("is_group", { mode: "boolean" }).notNull(),
     name: text("name"),
-    image: blob("image").$type<Uint8Array>(),
+    image: uint8ArrayBlob("image"),
   },
   (table) => [
     check(
@@ -44,7 +95,7 @@ export const messages = sqliteTable("messages", {
     .notNull()
     .references(() => profiles.id, { onDelete: "cascade" }),
   contentType: text("content_type").notNull(),
-  content: blob("content").$type<Uint8Array | string>().notNull(),
+  content: uint8ArrayBlob("content").notNull(),
   timestamp: integer("timestamp", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),
