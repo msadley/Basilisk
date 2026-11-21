@@ -17,6 +17,10 @@ import { AppDatabase, WorkerEventSink } from "./types.js";
 
 // database and models
 export * as databaseSchema from "./database/databaseSchema.js";
+export {
+  DATABASE_INIT_STATEMENTS,
+  initializeDatabase,
+} from "./database/migrations.js";
 export type { Chat } from "./model/Chat.js";
 export { groupChatSchema, type GroupChat } from "./model/GroupChat.js";
 export { messageSchema, type Message } from "./model/Message.js";
