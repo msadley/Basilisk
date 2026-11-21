@@ -8,7 +8,7 @@
     "vite": "pnpm --filter web dev",
     "relay": "pnpm build && node apps/relay/dist/index.js",
     "dev": "pnpm --parallel build",
-    "clean": "rm -rf **/dist **/node_modules/.tmp"
+    "clean": "rm -rf apps/*/dist packages/*/dist apps/*/node_modules/.tmp packages/*/node_modules/.tmp *.tsbuildinfo apps/*/*.tsbuildinfo packages/*/*.tsbuildinfo"
   },
   "author": "Adley Silva Mendes",
   "license": "ISC",

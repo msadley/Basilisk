@@ -6,7 +6,7 @@ node_modules
 
 # TypeScript build artifacts
 dist
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Lock files
 package-lock.json
@@ -27,3 +27,8 @@ ecosystem.config.js
 scratch.md
 
 data/
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
