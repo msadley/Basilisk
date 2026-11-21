@@ -55,12 +55,19 @@ export class ProfileService {
     return this.profileRepository.save(remoteProfile);
   }
 
-  async update(avatar?: Uint8Array, name?: string) {
+  async update(
+    avatar?: Uint8Array | null,
+    name?: string | null,
+  ): Promise<Profile> {
     const savedUserProfile = await this.getUserProfile();
 
-    savedUserProfile.avatar = avatar ?? savedUserProfile.avatar;
-    savedUserProfile.name = name ?? savedUserProfile.name;
+    if (avatar !== undefined) {
+      savedUserProfile.avatar = avatar;
+    }
+    if (name !== undefined) {
+      savedUserProfile.name = name;
+    }
 
-    await this.profileRepository.save(savedUserProfile);
+    return await this.profileRepository.save(savedUserProfile);
   }
 }

@@ -19,7 +19,7 @@ const ChatHeader = ({ chatId }: ChatHeaderProps) => {
     return <>{chat.name}</>;
   }
 
-  return <>{peerProfile?.name ?? chat.id}</>;
+  return <>{peerProfile?.name?.trim() || chat.id}</>;
 };
 
 export default ChatHeader;

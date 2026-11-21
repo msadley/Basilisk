@@ -3,7 +3,7 @@ import { workerController } from "../worker/workerController";
 import { useConnectionStore } from "./ConnectionStore";
 import { queryKeys } from "./keys";
 import { appendMessageToCache } from "./MessageStore";
-import { isResolvedProfile } from "./ProfileStore";
+import { upsertProfileInCache } from "./ProfileStore";
 import { queryClient } from "./queryClient";
 
 /** Builds a PrivateChat cache entry on demand for a newly started private chat. */
@@ -62,12 +62,14 @@ class RootStore {
       const { peerId } = e.payload;
       useConnectionStore.getState().setPeerStatus(peerId, true);
 
-      const cachedProfile = queryClient.getQueryData<Profile | null>(
-        queryKeys.profile(peerId),
-      );
-      if (!isResolvedProfile(cachedProfile)) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.profile(peerId) });
-      }
+      void workerController.services.profileService
+        .fetchPeerProfile(peerId)
+        .then((profile) => {
+          upsertProfileInCache(queryClient, profile);
+        })
+        .catch(() => {
+          // Peer may disconnect before profile exchange completes.
+        });
     });
 
     workerController.on("peer-lost", (e) => {

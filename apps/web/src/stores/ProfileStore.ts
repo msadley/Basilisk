@@ -1,11 +1,33 @@
 import type { Profile } from "@basilisk/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { workerController } from "../worker/workerController";
 import { queryKeys } from "./keys";
 
 export type PatchProfileInput = {
-  name?: string;
-  avatar?: Uint8Array;
+  name?: string | null;
+  avatar?: Uint8Array | null;
+};
+
+/** Updates cached profile entries across the single-profile and profile-list caches. */
+export const upsertProfileInCache = (
+  client: QueryClient,
+  profile: Profile,
+) => {
+  client.setQueryData(queryKeys.profile(profile.id), profile);
+  client.setQueryData<Profile[]>(queryKeys.profiles, (old) => {
+    if (!old) return old;
+    const exists = old.some((existing) => existing.id === profile.id);
+    return exists
+      ? old.map((existing) =>
+          existing.id === profile.id ? profile : existing,
+        )
+      : [...old, profile];
+  });
 };
 
 export const useProfiles = () => {
@@ -29,7 +51,7 @@ export const useUserProfile = () => {
 export const isResolvedProfile = (
   profile?: Profile | null,
 ): profile is Profile =>
-  Boolean(profile && (profile.name !== null || profile.avatar !== null));
+  Boolean(profile && (Boolean(profile.name?.trim()) || profile.avatar !== null));
 
 export const useProfile = (peerId?: string) => {
   const queryClient = useQueryClient();
@@ -74,10 +96,9 @@ export const useUpdateProfile = () => {
         data.name,
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.userProfile,
-      });
+    onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(queryKeys.userProfile, updatedProfile);
+      upsertProfileInCache(queryClient, updatedProfile);
     },
   });
 };

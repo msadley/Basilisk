@@ -79,7 +79,7 @@ export const services = async (
 
   await profileRepository.createIfNotExists({
     id: userPeerId,
-    name: "",
+    name: null,
     avatar: null,
   });
   await privateChatCache.init();
