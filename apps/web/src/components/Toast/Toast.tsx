@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import styles from "./Toast.module.css";
-import { useLayoutStore } from "../../stores/LayoutStore";
 import { AnimatePresence, easeInOut, motion } from "framer-motion";
+import { useEffect } from "react";
+import { useLayoutStore } from "../../stores/LayoutStore";
+import styles from "./Toast.module.css";
 
 const toastVariants = {
   hidden: {
@@ -23,10 +23,7 @@ const toastVariants = {
 };
 
 const Toast = () => {
-  const currentToast = useLayoutStore((state) =>
-    state.toasts.length > 0 ? state.toasts[0] : undefined,
-  );
-  const removeToast = useLayoutStore((state) => state.removeToast);
+  const currentToast = useLayoutStore((state) => state.toasts[0]);
 
   useEffect(() => {
     if (!currentToast) {
@@ -34,13 +31,13 @@ const Toast = () => {
     }
 
     const timer = setTimeout(() => {
-      removeToast(currentToast.id);
-    }, currentToast.duration);
+      useLayoutStore.getState().removeToast(currentToast.id);
+    }, currentToast.duration ?? 3000);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [currentToast, removeToast]);
+  }, [currentToast]);
 
   return (
     <AnimatePresence mode="wait">

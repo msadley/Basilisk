@@ -1,6 +1,3 @@
-import type { Chat } from "@basilisk/core";
-import type { ReactNode } from "react";
-
 type MainViewsFromMap<T extends Record<string, any>> = {
   [K in keyof T]: T[K] extends void ? { type: K } : { type: K; details: T[K] };
 }[keyof T];
@@ -8,7 +5,7 @@ type MainViewsFromMap<T extends Record<string, any>> = {
 interface MainViewMap {
   home: void;
   addChat: void;
-  chat: { chat: Chat };
+  chat: { chatId: string };
 }
 
 export type MainView = MainViewsFromMap<MainViewMap>;
@@ -32,11 +29,6 @@ interface ModalViewMap {
 export type ModalView = ModalViewsFromMap<ModalViewMap>;
 
 export type SidePanelView = SidePanelViewsFromMap<SidePanelViewMap>;
-
-export interface ViewProps {
-  setHeader: (element: ReactNode) => void;
-  setFooter: (element: ReactNode) => void;
-}
 
 export interface ButtonProps {
   onClick: () => void;

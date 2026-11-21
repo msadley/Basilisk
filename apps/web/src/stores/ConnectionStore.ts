@@ -1,46 +1,46 @@
 import { create } from "zustand";
 
 interface ConnectionState {
-  isUserConnected: boolean;
-  connectionStatuses: Record<string, boolean | undefined>;
-  setUserConnectionFalse: () => void;
-  setUserConnectionTrue: () => void;
-  addConnectionListener: (peerId: string) => void;
-  setConnectionFalse: (peerId: string) => void;
-  setConnectionTrue: (peerId: string) => void;
+  peers: Record<string, boolean>;
+  isConnectedToRelay: boolean;
+  setPeers: (peers: Record<string, boolean>) => void;
+  setPeerStatus: (peerId: string, connected: boolean) => void;
+  removePeer: (peerId: string) => void;
+  setConnectedToRelay: (connected: boolean) => void;
 }
 
 export const useConnectionStore = create<ConnectionState>((set) => ({
-  isUserConnected: false,
-  connectionStatuses: {},
+  peers: {},
+  isConnectedToRelay: false,
 
-  setUserConnectionFalse: () => set({ isUserConnected: false }),
-  setUserConnectionTrue: () => set({ isUserConnected: true }),
+  setPeers: (peers) => set({ peers }),
 
-  addConnectionListener: (peerId) => {
-    set((state) => ({
-      connectionStatuses: {
-        ...state.connectionStatuses,
-        [peerId]: undefined,
-      },
-    }));
-  },
+  setPeerStatus: (peerId, connected) =>
+    set((state) => {
+      if (state.peers[peerId] === connected) {
+        return state;
+      }
+      return {
+        peers: {
+          ...state.peers,
+          [peerId]: connected,
+        },
+      };
+    }),
 
-  setConnectionFalse: (peerId) => {
-    set((state) => ({
-      connectionStatuses: {
-        ...state.connectionStatuses,
-        [peerId]: false,
-      },
-    }));
-  },
+  removePeer: (peerId) =>
+    set((state) => {
+      if (!(peerId in state.peers)) {
+        return state;
+      }
+      const { [peerId]: _, ...rest } = state.peers;
+      return { peers: rest };
+    }),
 
-  setConnectionTrue: (peerId) => {
-    set((state) => ({
-      connectionStatuses: {
-        ...state.connectionStatuses,
-        [peerId]: true,
-      },
-    }));
-  },
+  setConnectedToRelay: (connected) =>
+    set((state) =>
+      state.isConnectedToRelay === connected
+        ? state
+        : { isConnectedToRelay: connected },
+    ),
 }));

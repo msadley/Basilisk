@@ -1,24 +1,22 @@
 import { motion } from "framer-motion";
 import styles from "./ButtonArray.module.css";
 
+export type AddChatTab = "private" | "group";
+
 type ButtonArrayProps = {
-  activeButtonIndex: number;
-  setActiveButtonIndex: (index: number) => void;
+  activeTab: AddChatTab;
+  onSelectTab: (tab: AddChatTab) => void;
 };
 
-const ButtonArray = ({
-  activeButtonIndex,
-  setActiveButtonIndex,
-}: ButtonArrayProps) => {
+const ButtonArray = ({ activeTab, onSelectTab }: ButtonArrayProps) => {
   return (
     <div className={styles.header}>
       <motion.button
-        onClick={() => setActiveButtonIndex(0)}
+        onClick={() => onSelectTab("private")}
         className={styles.button}
         animate={{
-          backgroundColor: !activeButtonIndex
-            ? "var(--ctp-crust)"
-            : "var(--ctp-base)",
+          backgroundColor:
+            activeTab === "private" ? "var(--ctp-crust)" : "var(--ctp-base)",
         }}
         transition={{ duration: 0.2 }}
       >
@@ -26,12 +24,11 @@ const ButtonArray = ({
       </motion.button>
 
       <motion.button
-        onClick={() => setActiveButtonIndex(1)}
+        onClick={() => onSelectTab("group")}
         className={styles.button}
         animate={{
-          backgroundColor: activeButtonIndex
-            ? "var(--ctp-crust)"
-            : "var(--ctp-base)",
+          backgroundColor:
+            activeTab === "group" ? "var(--ctp-crust)" : "var(--ctp-base)",
         }}
         transition={{ duration: 0.2 }}
       >

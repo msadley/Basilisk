@@ -1,30 +1,31 @@
-import styles from "./Home.module.css";
-import type { ViewProps } from "../../../../types";
-import { motion } from "framer-motion";
-import { useCallback, useEffect, useState } from "react";
-import { useUserStore } from "../../../../stores/UserStore";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
+import { useState } from "react";
 import { useLayoutStore } from "../../../../stores/LayoutStore";
+import { useUserProfile } from "../../../../stores/ProfileStore";
+import styles from "./Home.module.css";
 
-const Home = ({ setHeader, setFooter }: ViewProps) => {
-  const [idVisible, setIdVisible] = useState<boolean>(false);
-  const profile = useUserStore((state) => state.userProfile);
-  const addToast = useLayoutStore((state) => state.addToast);
+const Home = () => {
+  const [idVisible, setIdVisible] = useState(false);
+  const { data: profile } = useUserProfile();
 
-  const toggleIdVisibility = useCallback(() => {
+  const toggleIdVisibility = () => {
     setIdVisible((prev) => !prev);
-  }, []);
+  };
 
-  const copyIdToClipboard = useCallback(() => {
-    const data = profile?.id ?? "";
-    navigator.clipboard.writeText(data);
-    addToast("ID copiado para a área de transferência", "info");
-  }, [profile, addToast]);
-
-  useEffect(() => {
-    setHeader(<></>);
-    setFooter(<></>);
-  }, [setHeader, setFooter]);
+  const copyIdToClipboard = async () => {
+    if (!profile?.id) return;
+    try {
+      await navigator.clipboard.writeText(profile.id);
+      useLayoutStore
+        .getState()
+        .addToast("ID copiado para a área de transferência", "info");
+    } catch {
+      useLayoutStore
+        .getState()
+        .addToast("Não foi possível copiar o ID", "error");
+    }
+  };
 
   return (
     <motion.div
@@ -36,7 +37,7 @@ const Home = ({ setHeader, setFooter }: ViewProps) => {
     >
       <img src="basilisk.svg" alt="logo" />
       <button className={styles.idButton} onClick={toggleIdVisibility}>
-        {idVisible ? profile?.id : "Mostrar ID"}
+        {idVisible ? (profile?.id ?? "...") : "Mostrar ID"}
       </button>
       <button onClick={copyIdToClipboard} className={styles.copyButton}>
         <Icon icon="mingcute:copy-2-fill" />

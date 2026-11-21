@@ -1,12 +1,13 @@
-import Home from "./views/Home/Home";
-import Chat from "./views/Chat/Chat";
-import AddChat from "./views/AddChat/AddChat";
-import type { ViewProps } from "../../types";
-import styles from "./MainArea.module.css";
-import { useState, type ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import type { ReactNode } from "react";
 import { useLayoutStore } from "../../stores/LayoutStore";
 import Toast from "../Toast/Toast";
+import styles from "./MainArea.module.css";
+import AddChat from "./views/AddChat/AddChat";
+import Chat from "./views/Chat/Chat";
+import ChatHeader from "./views/Chat/ChatHeader";
+import InputBox from "./views/Chat/InputBox/InputBox";
+import Home from "./views/Home/Home";
 
 const headerVariants = {
   hidden: {
@@ -28,45 +29,35 @@ const headerVariants = {
 };
 
 const MainArea = () => {
-  const [header, setHeader] = useState<ReactNode>();
-  const [footer, setFooter] = useState<ReactNode>();
   const view = useLayoutStore((state) => state.mainView);
-  const setView = useLayoutStore((state) => state.setMainView);
 
-  const viewControls: ViewProps = {
-    setHeader,
-    setFooter,
-  };
+  const viewKey =
+    view.type === "chat" ? `chat-${view.details.chatId}` : view.type;
 
-  const body = () => {
-    switch (view.type) {
-      case "home":
-        return <Home key="home" {...viewControls} />;
+  let header: ReactNode = null;
+  let body: ReactNode = null;
+  let footer: ReactNode = null;
 
-      case "chat":
-        return (
-          <Chat
-            key={view.details.chat.id}
-            chat={view.details.chat}
-            {...viewControls}
-          />
-        );
-
-      case "addChat":
-        return <AddChat key="add-chat" {...viewControls} setView={setView} />;
-
-      default:
-        if (header) setHeader(null);
-        if (footer) setFooter(null);
-    }
-  };
+  switch (view.type) {
+    case "home":
+      body = <Home key="home" />;
+      break;
+    case "chat":
+      header = <ChatHeader chatId={view.details.chatId} />;
+      body = <Chat key={view.details.chatId} chatId={view.details.chatId} />;
+      footer = <InputBox chatId={view.details.chatId} />;
+      break;
+    case "addChat":
+      body = <AddChat key="add-chat" />;
+      break;
+  }
 
   return (
     <div className={styles.mainArea}>
       <div className={styles.headerContainer}>
         <AnimatePresence mode="popLayout">
           <motion.div
-            key={view.type}
+            key={viewKey}
             layout
             className={styles.header}
             variants={headerVariants}
@@ -87,12 +78,12 @@ const MainArea = () => {
         }}
       >
         <Toast />
-        <AnimatePresence mode="wait">{body()}</AnimatePresence>
+        <AnimatePresence mode="wait">{body}</AnimatePresence>
       </motion.div>
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={view.type}
+          key={viewKey}
           layout
           className={styles.footer}
           transition={{

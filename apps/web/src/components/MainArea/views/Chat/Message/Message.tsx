@@ -1,59 +1,43 @@
-import styles from "./Message.module.css";
-import type { Chat } from "@basilisk/core";
-import {
-  useMessageStore,
-  type Message,
-} from "../../../../../stores/MessageStore";
-import { AnimatePresence, motion } from "framer-motion";
-import { useUserStore } from "../../../../../stores/UserStore";
-import { memo, useCallback } from "react";
 import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { memo } from "react";
+import type { UiMessage } from "../../../../../stores/MessageStore";
+import styles from "./Message.module.css";
 
 type MessageProps = {
-  message: Message;
-  chat: Chat;
+  message: UiMessage;
+  isOwn: boolean;
+  onResend: (message: UiMessage) => void;
 };
 
-const Message = ({ message, chat }: MessageProps) => {
-  const profile = useUserStore((state) => state.userProfile);
-  const resendMessage = useMessageStore((state) => state.resendMessage);
+const renderContent = (message: UiMessage) => {
+  switch (message.contentType) {
+    case "text":
+      return message.content;
+    case "image":
+      return "[Imagem]";
+    case "file":
+      return "[Arquivo]";
+  }
+};
 
-  const resend = useCallback(async () => {
-    await resendMessage(chat.id, message.uuid);
-  }, [chat.id, message.uuid, resendMessage]);
-
-  const messageClasses = `
-    ${styles.message}
-    ${message.status === "error" ? styles.error : ""}
-  `;
+const Message = ({ message, isOwn, onResend }: MessageProps) => {
+  const status = message.status ?? "ok";
+  const messageClasses = `${styles.message} ${status === "error" ? styles.error : ""}`;
 
   return (
-    <motion.div
+    <div
       className={styles.container}
-      key={message.uuid}
       style={{
-        alignItems: message.from === profile?.id ? "flex-end" : "flex-start",
-        flexDirection: message.from === profile?.id ? "row-reverse" : "row",
+        alignItems: isOwn ? "flex-end" : "flex-start",
+        flexDirection: isOwn ? "row-reverse" : "row",
       }}
-      initial={{
-        opacity: 0,
-        x: (message.from === profile?.id ? 1 : -1) * 20,
-      }}
-      animate={{
-        opacity: 1,
-        x: 0,
-      }}
-      exit={{
-        opacity: 0,
-        x: (message.from === profile?.id ? 1 : -1) * 20,
-      }}
-      transition={{ type: "spring", duration: 0.5 }}
     >
-      <AnimatePresence mode="popLayout" key={message.uuid}>
-        {message.status === "ok" ? undefined : (
+      <AnimatePresence mode="popLayout">
+        {status !== "ok" && (
           <motion.div
             className={styles.statusContainer}
-            key={message.uuid}
+            key="status"
             initial={{
               opacity: 0,
               x: 20,
@@ -70,7 +54,7 @@ const Message = ({ message, chat }: MessageProps) => {
           >
             <Icon
               icon={
-                message.status === "sending"
+                status === "sending"
                   ? "mingcute:loading-3-fill"
                   : "cuida:rotate-left-outline"
               }
@@ -79,12 +63,12 @@ const Message = ({ message, chat }: MessageProps) => {
         )}
       </AnimatePresence>
       <button
-        onClick={message.status === "error" ? () => resend() : undefined}
+        onClick={status === "error" ? () => onResend(message) : undefined}
         className={messageClasses}
       >
-        {message.content}
+        {renderContent(message)}
       </button>
-    </motion.div>
+    </div>
   );
 };
 

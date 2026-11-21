@@ -1,46 +1,53 @@
 import type { Chat } from "@basilisk/core";
-import { create } from "zustand";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workerController } from "../worker/workerController";
+import { queryKeys } from "./keys";
 
-interface ChatState {
-  chats: Chat[];
-  isLoading: boolean;
-  handleChatSpawn: (chat: Chat) => Promise<void>;
-  initialLoad: () => Promise<void>;
-  getChats: () => Promise<void>;
-  createChat: (chat: Chat) => Promise<Chat | undefined>;
-}
+export const useChats = () => {
+  return useQuery({
+    queryKey: queryKeys.chats,
+    queryFn: async (): Promise<Chat[]> => {
+      return workerController.services.chatService.list();
+    },
+  });
+};
 
-export const useChatStore = create<ChatState>((set, get) => ({
-  chats: [],
-  isLoading: true,
+export const useChat = (chatId?: string) => {
+  const queryClient = useQueryClient();
 
-  handleChatSpawn: async (chat) => {
-    set((state) => ({ chats: [...state.chats, chat] }));
-  },
+  return useQuery({
+    queryKey: queryKeys.chat(chatId ?? ""),
+    enabled: Boolean(chatId),
+    queryFn: async (): Promise<Chat | null> => {
+      if (!chatId) return null;
+      return (
+        (await workerController.services.chatService.getById(chatId)) ?? null
+      );
+    },
+    initialData: () => {
+      if (!chatId) return undefined;
+      return queryClient
+        .getQueryData<Chat[]>(queryKeys.chats)
+        ?.find((chat) => chat.id === chatId);
+    },
+  });
+};
 
-  initialLoad: async () => {
-    await get().getChats();
-  },
+export const useCreatePrivateChat = () => {
+  const queryClient = useQueryClient();
 
-  getChats: async () => {
-    set({ isLoading: true });
-    try {
-      const chats = await workerController.getChats();
-      set({ chats, isLoading: false });
-    } catch (e) {
-      console.error("Failed to get chats", e);
-      set({ isLoading: false });
-    }
-  },
-
-  createChat: async (chat) => {
-    try {
-      const newChat = await workerController.createPrivateChat(chat.id);
-      set((state) => ({ chats: [...state.chats, newChat] }));
-      return newChat;
-    } catch (e) {
-      console.error("Failed to create chat", e);
-    }
-  },
-}));
+  return useMutation({
+    mutationKey: ["createPrivateChat"],
+    mutationFn: (peerId: string) =>
+      workerController.services.chatService.createPrivateChat(peerId),
+    onSuccess: (newChat) => {
+      queryClient.setQueryData<Chat[]>(queryKeys.chats, (old) => {
+        if (!old) return [newChat];
+        return old.some((chat) => chat.id === newChat.id)
+          ? old
+          : [...old, newChat];
+      });
+      queryClient.setQueryData<Chat>(queryKeys.chat(newChat.id), newChat);
+    },
+  });
+};

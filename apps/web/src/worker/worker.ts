@@ -6,7 +6,7 @@ import { WorkerEventSink } from "@basilisk/core/src/types";
 
 // Even though the db is initialized here on the worker thread, sqlocal
 // actually spawns a separate thread for only the sqlite worker itself.
-// That means sqlite i/o accesses produce one rpc hop in this architecture.
+// That means sqlite i/o accesses produces one rpc hop in this architecture.
 const { driver, batchDriver } = new SQLocalDrizzle("basilisk.sqlite3");
 const db = drizzle(driver, batchDriver, {
   schema: databaseSchema,

@@ -1,242 +1,234 @@
-import { create } from "zustand";
-import { workerController } from "../worker/workerController";
-import { useUserStore } from "./UserStore";
+import type { Message, Profile } from "@basilisk/core";
+import {
+  type InfiniteData,
+  type QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { v7 as uuidv7 } from "uuid";
-import type { Message as CoreMessage } from "@basilisk/core";
+import { workerController } from "../worker/workerController";
+import { queryKeys } from "./keys";
 
-export type Message = {
-  uuid: string;
+export const MESSAGE_PAGE_SIZE = 30;
+export const INITIAL_FIRST_ITEM_INDEX = 1_000_000;
+
+export type MessageStatus = "sending" | "error" | "ok";
+
+export type UiMessage = Message & {
+  clientId?: string;
+  status?: MessageStatus;
+};
+
+export type MessagePage = {
+  items: UiMessage[];
+  nextCursor: number | undefined;
+};
+
+export type SendMessageVariables = {
   content: string;
-  from: string;
-  chatId: string;
-  status: "sending" | "error" | "ok";
+  retryClientId?: string;
 };
 
-export interface ChatState {
-  messages: Record<string, Message>;
-  ids: string[];
-  page: number;
-  hasMore: boolean;
-  isLoading: boolean;
-}
+let tempIdCounter = -1;
 
-const defaultChatState = (): ChatState => ({
-  messages: {},
-  ids: [],
-  page: 0,
-  hasMore: true,
-  isLoading: false,
-});
+const nextTempMessageId = () => tempIdCounter--;
 
-// Helper to map CoreMessage to Frontend Message
-const mapCoreToFrontendMessage = (msg: CoreMessage): Message => {
-  return {
-    uuid: String(msg.id),
-    content: typeof msg.content === "string" ? msg.content : "",
-    from: msg.senderId,
-    chatId: msg.chatId,
-    status: "ok",
-  };
+export const appendMessageToCache = (
+  client: QueryClient,
+  chatId: string,
+  message: Message,
+) => {
+  const key = queryKeys.messages(chatId);
+  const existing = client.getQueryData<InfiniteData<MessagePage>>(key);
+
+  if (!existing) {
+    client.invalidateQueries({ queryKey: key });
+    return;
+  }
+
+  client.setQueryData<InfiniteData<MessagePage>>(key, (oldData) => {
+    if (!oldData) return oldData;
+
+    const alreadyExists = oldData.pages.some((page) =>
+      page.items.some((item) => item.id === message.id),
+    );
+    if (alreadyExists) return oldData;
+
+    const uiMessage: UiMessage = { ...message, status: "ok" };
+
+    if (oldData.pages.length === 0) {
+      return {
+        ...oldData,
+        pages: [{ items: [uiMessage], nextCursor: undefined }],
+        pageParams: [undefined],
+      };
+    }
+
+    const newPages = [...oldData.pages];
+    newPages[0] = {
+      ...newPages[0],
+      items: [...newPages[0].items, uiMessage],
+    };
+
+    return {
+      ...oldData,
+      pages: newPages,
+    };
+  });
 };
 
-interface MessageStoreState {
-  chats: Record<string, ChatState>;
-  handleMessageReceived: (message: CoreMessage) => Promise<void>;
-  loadMore: (chatId: string) => Promise<void>;
-  sendMessage: (chatId: string, content: string) => Promise<void>;
-  resendMessage: (chatId: string, messageId: string) => Promise<void>;
-}
-
-export const useMessageStore = create<MessageStoreState>((set, get) => {
-  const ensureChatState = (
-    chats: Record<string, ChatState>,
-    chatId: string,
-  ): ChatState => {
-    return chats[chatId] || defaultChatState();
-  };
-
-  return {
-    chats: {},
-
-    handleMessageReceived: async (message) => {
-      const mapped = mapCoreToFrontendMessage(message);
-      const chatId = mapped.chatId.includes("group-")
-        ? mapped.chatId
-        : mapped.from;
-
-      set((state) => {
-        const chats = { ...state.chats };
-        const chat = { ...ensureChatState(chats, chatId) };
-
-        if (!chat.messages[mapped.uuid]) {
-          chat.messages = {
-            ...chat.messages,
-            [mapped.uuid]: mapped,
-          };
-          chat.ids = [...chat.ids, mapped.uuid];
-          chats[chatId] = chat;
-        }
-
-        return { chats };
-      });
-    },
-
-    loadMore: async (chatId) => {
-      const currentChat = ensureChatState(get().chats, chatId);
-      if (!currentChat.hasMore || currentChat.isLoading) {
-        return;
+export const useMessages = (chatId?: string) => {
+  return useInfiniteQuery({
+    queryKey: queryKeys.messages(chatId ?? ""),
+    enabled: Boolean(chatId),
+    initialPageParam: undefined as number | undefined,
+    queryFn: async ({ pageParam }): Promise<MessagePage> => {
+      if (!chatId) {
+        return { items: [], nextCursor: undefined };
       }
 
-      set((state) => {
-        const chats = { ...state.chats };
-        chats[chatId] = {
-          ...ensureChatState(chats, chatId),
-          isLoading: true,
-        };
-        return { chats };
-      });
-
-      try {
-        const currentChatState = ensureChatState(get().chats, chatId);
-        const newMsgs = await workerController.listMessages(
-          chatId,
-          currentChatState.page,
-        );
-
-        set((state) => {
-          const chats = { ...state.chats };
-          const chat = { ...ensureChatState(chats, chatId) };
-
-          const timestamps = new Set(chat.ids);
-
-          const mappedMsgs = newMsgs.map(mapCoreToFrontendMessage);
-          const uniqueNewMsgs = mappedMsgs.filter(
-            (msg) => !timestamps.has(msg.uuid),
-          );
-
-          const newMessages = { ...chat.messages };
-          uniqueNewMsgs.forEach((msg) => {
-            newMessages[msg.uuid] = msg;
-          });
-          chat.messages = newMessages;
-
-          const newIds = uniqueNewMsgs.map((msg) => msg.uuid);
-          chat.ids = [...newIds, ...chat.ids];
-
-          if (newMsgs.length < 20) {
-            chat.hasMore = false;
-          } else {
-            chat.page = chat.page + 1;
-          }
-
-          chat.isLoading = false;
-          chats[chatId] = chat;
-          return { chats };
-        });
-      } catch (e: any) {
-        set((state) => {
-          const chats = { ...state.chats };
-          chats[chatId] = {
-            ...ensureChatState(chats, chatId),
-            isLoading: false,
-          };
-          return { chats };
-        });
-        throw new Error(`Could not load messages: ${e.message}`, e);
-      }
-    },
-
-    sendMessage: async (chatId, content) => {
-      const uuid = uuidv7();
-      const userProfile = useUserStore.getState().userProfile;
-
-      const newMessage: Message = {
-        uuid,
+      const rows = await workerController.services.messageService.list(
         chatId,
+        pageParam,
+      );
+
+      const hasMore = rows.length > MESSAGE_PAGE_SIZE;
+      const pageRows = hasMore ? rows.slice(0, MESSAGE_PAGE_SIZE) : rows;
+      const oldestRow = pageRows[pageRows.length - 1];
+
+      return {
+        items: pageRows
+          .slice()
+          .reverse()
+          .map((msg) => ({ ...msg, status: "ok" as const })),
+        nextCursor: hasMore && oldestRow ? oldestRow.id : undefined,
+      };
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    select: (data) => {
+      const messages = data.pages
+        .slice()
+        .reverse()
+        .flatMap((page) => page.items);
+      const prependedCount = data.pages
+        .slice(1)
+        .reduce((sum, page) => sum + page.items.length, 0);
+
+      return {
+        messages,
+        firstItemIndex: INITIAL_FIRST_ITEM_INDEX - prependedCount,
+      };
+    },
+  });
+};
+
+const updateMessageByClientId = (
+  oldData: InfiniteData<MessagePage> | undefined,
+  clientId: string,
+  updater: (msg: UiMessage) => UiMessage,
+): InfiniteData<MessagePage> | undefined => {
+  if (!oldData) return oldData;
+
+  let changed = false;
+  const newPages = oldData.pages.map((page) => {
+    const idx = page.items.findIndex((item) => item.clientId === clientId);
+    if (idx === -1) return page;
+    changed = true;
+    const nextItems = [...page.items];
+    nextItems[idx] = updater(nextItems[idx]);
+    return { ...page, items: nextItems };
+  });
+
+  return changed ? { ...oldData, pages: newPages } : oldData;
+};
+
+export const useSendMessage = (chatId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["sendMessage", chatId],
+    mutationFn: ({ content }: SendMessageVariables): Promise<Message> =>
+      workerController.services.messageService.send(chatId, content),
+
+    onMutate: async ({ content, retryClientId }) => {
+      const key = queryKeys.messages(chatId);
+      await queryClient.cancelQueries({ queryKey: key });
+
+      const clientId = retryClientId ?? uuidv7();
+
+      if (retryClientId) {
+        queryClient.setQueryData<InfiniteData<MessagePage>>(key, (oldData) =>
+          updateMessageByClientId(oldData, retryClientId, (msg) => ({
+            ...msg,
+            status: "sending",
+          })),
+        );
+        return { clientId };
+      }
+
+      const userProfile = queryClient.getQueryData<Profile>(
+        queryKeys.userProfile,
+      );
+
+      const optimisticMessage: UiMessage = {
+        id: nextTempMessageId(),
+        clientId,
+        chatId,
+        senderId: userProfile?.id ?? "",
+        contentType: "text",
         content,
-        from: userProfile?.id || "",
+        timestamp: new Date(),
+        received: false,
         status: "sending",
       };
 
-      set((state) => {
-        const chats = { ...state.chats };
-        const chat = { ...ensureChatState(chats, chatId) };
+      queryClient.setQueryData<InfiniteData<MessagePage>>(key, (oldData) => {
+        if (!oldData || oldData.pages.length === 0) {
+          return {
+            pages: [{ items: [optimisticMessage], nextCursor: undefined }],
+            pageParams: [undefined],
+          };
+        }
 
-        chat.messages = {
-          ...chat.messages,
-          [uuid]: newMessage,
+        const newPages = [...oldData.pages];
+        newPages[0] = {
+          ...newPages[0],
+          items: [...newPages[0].items, optimisticMessage],
         };
-        chat.ids = [...chat.ids, uuid];
-        chats[chatId] = chat;
 
-        return { chats };
+        return {
+          ...oldData,
+          pages: newPages,
+        };
       });
 
-      try {
-        const packet = {
-          senderId: userProfile?.id || "",
-          chatId,
-          timestamp: new Date(),
-          contentType: "text" as const,
-          content,
-        };
-        await workerController.sendMessage(uuid, packet);
-        set((state) => {
-          const chats = { ...state.chats };
-          const chat = { ...ensureChatState(chats, chatId) };
-
-          if (chat.messages[uuid]) {
-            chat.messages = {
-              ...chat.messages,
-              [uuid]: { ...chat.messages[uuid], status: "ok" },
-            };
-          }
-          chats[chatId] = chat;
-          return { chats };
-        });
-      } catch (e: any) {
-        console.error(`Could not send message to ${chatId}: ${e}`);
-        set((state) => {
-          const chats = { ...state.chats };
-          const chat = { ...ensureChatState(chats, chatId) };
-
-          if (chat.messages[uuid]) {
-            chat.messages = {
-              ...chat.messages,
-              [uuid]: { ...chat.messages[uuid], status: "error" },
-            };
-          }
-          chats[chatId] = chat;
-          return { chats };
-        });
-      }
+      return { clientId };
     },
 
-    resendMessage: async (chatId, messageId) => {
-      const chat = get().chats[chatId];
-      if (!chat) return;
-
-      const message = chat.messages[messageId];
-      if (!message) {
-        console.error(
-          "Impossible case where an unexisting message called its own resend function",
-        );
-        return;
-      }
-
-      set((state) => {
-        const chats = { ...state.chats };
-        const chatCopy = { ...ensureChatState(chats, chatId) };
-        chatCopy.ids = chatCopy.ids.filter((id) => id !== messageId);
-        const newMessages = { ...chatCopy.messages };
-        delete newMessages[messageId];
-        chatCopy.messages = newMessages;
-
-        chats[chatId] = chatCopy;
-        return { chats };
-      });
-
-      await get().sendMessage(chatId, message.content);
+    onSuccess: (savedMessage, _vars, context) => {
+      if (!context?.clientId) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(
+        queryKeys.messages(chatId),
+        (oldData) =>
+          updateMessageByClientId(oldData, context.clientId, () => ({
+            ...savedMessage,
+            clientId: context.clientId,
+            status: "ok",
+          })),
+      );
     },
-  };
-});
+
+    onError: (_err, _vars, context) => {
+      if (!context?.clientId) return;
+      queryClient.setQueryData<InfiniteData<MessagePage>>(
+        queryKeys.messages(chatId),
+        (oldData) =>
+          updateMessageByClientId(oldData, context.clientId, (msg) => ({
+            ...msg,
+            status: "error",
+          })),
+      );
+    },
+  });
+};

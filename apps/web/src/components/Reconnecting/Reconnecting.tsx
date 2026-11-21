@@ -1,12 +1,14 @@
 import { Icon } from "@iconify/react";
-import styles from "./Reconnecting.module.css";
 import { useConnectionStore } from "../../stores/ConnectionStore";
+import styles from "./Reconnecting.module.css";
 
 const Reconnecting = () => {
-  const isUserConnected = useConnectionStore((state) => state.isUserConnected);
+  const isConnectedToRelay = useConnectionStore(
+    (state) => state.isConnectedToRelay,
+  );
 
   return (
-    !isUserConnected && (
+    !isConnectedToRelay && (
       <div className={styles.cover}>
         <div className={styles.iconWrapper}>
           <Icon icon="mingcute:loading-3-fill" />

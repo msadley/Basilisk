@@ -1,9 +1,10 @@
-import { useEffect } from "react";
-import styles from "./InputBox.module.css";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { KeyboardEvent } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import TextareaAutosize from "react-textarea-autosize";
-import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
+import { useSendMessage } from "../../../../../stores/MessageStore";
+import styles from "./InputBox.module.css";
 
 const formSchema = z.object({
   messageText: z.string().trim().nonempty(),
@@ -11,32 +12,26 @@ const formSchema = z.object({
 
 type Inputs = z.infer<typeof formSchema>;
 
-type InputBoxProps = {
-  sendMessage: (message: string) => void;
+export type InputBoxProps = {
+  chatId: string;
 };
 
-const InputBox = ({ sendMessage }: InputBoxProps) => {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { isSubmitSuccessful },
-  } = useForm<Inputs>({
+const InputBox = ({ chatId }: InputBoxProps) => {
+  const { register, handleSubmit, reset } = useForm<Inputs>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       messageText: "",
     },
   });
 
-  const onSubmit: SubmitHandler<Inputs> = async (data) => {
-    sendMessage(data.messageText);
+  const { mutate: sendMessage } = useSendMessage(chatId);
+
+  const onSubmit: SubmitHandler<Inputs> = (data) => {
+    sendMessage({ content: data.messageText });
+    reset();
   };
 
-  useEffect(() => {
-    if (isSubmitSuccessful) reset();
-  }, [isSubmitSuccessful, reset]);
-
-  const handleKeyDown = (e: any) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(onSubmit)();

@@ -1,99 +1,72 @@
-import { useCallback, useEffect, useState, useMemo } from "react";
-import { AnimatePresence } from "framer-motion";
-import type { ViewProps } from "../../../../types";
-import InputBox from "./InputBox/InputBox";
-import styles from "./Chat.module.css";
-import { useProfileStore } from "../../../../stores/ProfileStore";
-import { useMessageStore } from "../../../../stores/MessageStore";
-import Message from "./Message/Message";
-import type { Chat as ChatType, Profile } from "@basilisk/core";
+import { useCallback } from "react";
 import { Virtuoso } from "react-virtuoso";
-import { useLayoutStore } from "../../../../stores/LayoutStore";
+import {
+  INITIAL_FIRST_ITEM_INDEX,
+  type UiMessage,
+  useMessages,
+  useSendMessage,
+} from "../../../../stores/MessageStore";
+import { useUserProfile } from "../../../../stores/ProfileStore";
+import styles from "./Chat.module.css";
 import Header from "./Header/Header";
+import Message from "./Message/Message";
 
-interface ChatProps extends ViewProps {
-  chat: ChatType;
+interface ChatProps {
+  chatId: string;
 }
 
-const Chat = ({ chat, setHeader, setFooter }: ChatProps) => {
-  const addToast = useLayoutStore((state) => state.addToast);
-  const getProfile = useProfileStore((state) => state.getProfile);
-  const loadMoreAction = useMessageStore((state) => state.loadMore);
-  const sendMessageAction = useMessageStore((state) => state.sendMessage);
+const Chat = ({ chatId }: ChatProps) => {
+  const { data: userProfile } = useUserProfile();
+  const {
+    data,
+    isLoading: isMessagesLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMessages(chatId);
+  const { mutate: sendMessage } = useSendMessage(chatId);
 
-  const chatState = useMessageStore(
-    useCallback((state) => state.chats[chat.id], [chat.id]),
-  );
-
-  const messages = useMemo(() => {
-    if (!chatState) return [];
-    return chatState.ids.map((id) => chatState.messages[id]);
-  }, [chatState]);
-
-  const [peerProfile, setPeerProfile] = useState<Profile>();
-  const [peerProfileError] = useState<Error>();
-
-  const loadMore = useCallback(async () => {
-    await loadMoreAction(chat.id);
-    console.log("loading more messages");
-  }, [chat.id, loadMoreAction]);
-
-  const sendTextMessage = useCallback(
-    async (content: string) => {
-      await sendMessageAction(chat.id, content);
-    },
-    [chat.id, sendMessageAction],
-  );
-  useEffect(() => {
-    if ("name" in chat) return;
-
-    const getPeerProfile = async (peerId: string) => {
-      try {
-        const profile = await getProfile(peerId);
-        setPeerProfile(profile);
-      } catch (e: any) {
-        addToast("Usuário offline", "error");
+  const handleResend = useCallback(
+    (msg: UiMessage) => {
+      if (msg.contentType === "text") {
+        sendMessage({ content: msg.content, retryClientId: msg.clientId });
       }
-    };
+    },
+    [sendMessage],
+  );
 
-    getPeerProfile(chat.id);
-  }, [chat.id, getProfile, addToast, chat]);
+  const messages = data?.messages ?? [];
+  const firstItemIndex = data?.firstItemIndex ?? INITIAL_FIRST_ITEM_INDEX;
 
-  useEffect(() => {
-    const headerText = peerProfileError
-      ? peerProfileError.message
-      : (peerProfile?.name ?? chat.id);
-    setHeader(<>{headerText}</>);
-  }, [chat.id, setHeader, peerProfile, peerProfileError]);
-
-  useEffect(() => {
-    loadMore();
-  }, [chat.id, loadMore]);
-
-  useEffect(() => {
-    setFooter(<InputBox sendMessage={sendTextMessage} />);
-    return () => setFooter(undefined);
-  }, [setFooter, sendTextMessage]);
+  if (isMessagesLoading) {
+    return <div className={styles.chat} />;
+  }
 
   return (
     <div className={styles.chat}>
-      <AnimatePresence propagate mode="wait">
-        <Virtuoso
-          className={styles.virtuoso}
-          startReached={loadMore}
-          components={{ Header }}
-          alignToBottom
-          followOutput
-          seamless
-          increaseViewportBy={200}
-          data={messages}
-          itemContent={(_, msg) => (
-            <AnimatePresence>
-              {<Message key={msg.uuid} message={msg} chat={chat} />}
-            </AnimatePresence>
-          )}
-        />
-      </AnimatePresence>
+      <Virtuoso
+        className={styles.virtuoso}
+        firstItemIndex={firstItemIndex}
+        startReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        components={{ Header }}
+        alignToBottom
+        followOutput
+        seamless
+        increaseViewportBy={200}
+        data={messages}
+        computeItemKey={(_, msg) => msg.clientId ?? msg.id}
+        itemContent={(_, msg) => (
+          <Message
+            message={msg}
+            isOwn={msg.senderId === userProfile?.id}
+            onResend={handleResend}
+          />
+        )}
+      />
     </div>
   );
 };

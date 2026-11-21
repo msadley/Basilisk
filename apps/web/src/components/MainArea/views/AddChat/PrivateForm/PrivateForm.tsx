@@ -1,10 +1,11 @@
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { peerIdFromString } from "@libp2p/peer-id";
-import styles from "./PrivateForm.module.css";
-import type { FormProps } from "../AddChat";
-import { z } from "zod";
-import { AnimatePresence, motion } from "framer-motion";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { peerIdFromString } from "@libp2p/peer-id";
+import { AnimatePresence, motion } from "framer-motion";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { z } from "zod";
+import { useCreatePrivateChat } from "../../../../../stores/ChatStore";
+import { useLayoutStore } from "../../../../../stores/LayoutStore";
+import styles from "./PrivateForm.module.css";
 
 const formSchema = z.object({
   peerId: z
@@ -15,7 +16,7 @@ const formSchema = z.object({
         try {
           peerIdFromString(val);
           return true;
-        } catch (e) {
+        } catch {
           return false;
         }
       },
@@ -27,7 +28,9 @@ const formSchema = z.object({
 
 type Inputs = z.infer<typeof formSchema>;
 
-const PrivateForm = ({ createChat, setIsLoading, setView }: FormProps) => {
+const PrivateForm = () => {
+  const { mutateAsync: createPrivateChat, isPending } = useCreatePrivateChat();
+
   const {
     register,
     handleSubmit,
@@ -39,22 +42,19 @@ const PrivateForm = ({ createChat, setIsLoading, setView }: FormProps) => {
   });
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
-    const chat = {
-      id: data.peerId,
-      participants: [data.peerId],
-      type: "private",
-    } as any;
-
-    setIsLoading(true);
     try {
-      const newChat = (await createChat(chat))!;
-      setView({ type: "chat", details: { chat: newChat } });
-    } catch (e: any) {
+      const createdChat = await createPrivateChat(data.peerId);
+      useLayoutStore.getState().setMainView({
+        type: "chat",
+        details: { chatId: createdChat.id },
+      });
+    } catch (e) {
       console.error("Failed to create chat:", e);
       setError("root", { message: "Could not create chat." });
-      setIsLoading(false);
     }
   };
+
+  const errorMessage = errors.peerId?.message ?? errors.root?.message;
 
   return (
     <motion.div
@@ -68,24 +68,25 @@ const PrivateForm = ({ createChat, setIsLoading, setView }: FormProps) => {
       >
         <input
           className={styles.input}
+          disabled={isPending}
           {...register("peerId", { required: true })}
           placeholder="Digite o id do chat"
-        ></input>
-        <button type="submit" className={styles.button}>
-          Enviar
+        />
+        <button type="submit" disabled={isPending} className={styles.button}>
+          {isPending ? "Criando..." : "Enviar"}
         </button>
       </motion.form>
       <AnimatePresence>
-        {errors.peerId && errors.peerId.message && (
+        {errorMessage && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className={styles.error}
-            key={"error-message"}
+            key="error-message"
           >
-            {errors.peerId.message}
+            {errorMessage}
           </motion.div>
         )}
       </AnimatePresence>

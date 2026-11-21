@@ -1,54 +1,99 @@
+import type { Chat, PrivateChat, Profile } from "@basilisk/core";
 import { workerController } from "../worker/workerController";
-import { useChatStore } from "./ChatStore";
-import { useUserStore } from "./UserStore";
-import { useMessageStore } from "./MessageStore";
 import { useConnectionStore } from "./ConnectionStore";
+import { queryKeys } from "./keys";
+import { appendMessageToCache } from "./MessageStore";
+import { isResolvedProfile } from "./ProfileStore";
+import { queryClient } from "./queryClient";
 
-class RootStore {
-  constructor() {
-    workerController.on("node-started", this.loadSequence);
-    workerController.on("message-received", this.messageReceive);
-    workerController.on("chat-spawned", this.spawnChat);
-    workerController.on("relay-lost", this.setIndicatorOff);
-    workerController.on("relay-found", this.setIndicatorOn);
-    workerController.on("peer-found", this.setPeerFound);
-    workerController.on("peer-lost", this.setPeerLost);
+/** Builds a PrivateChat cache entry on demand for a newly started private chat. */
+const buildPrivateChat = (chatId: string): PrivateChat => {
+  const userProfile = queryClient.getQueryData<Profile>(queryKeys.userProfile);
+  return {
+    id: chatId,
+    participants:
+      userProfile && userProfile.id !== chatId
+        ? [chatId, userProfile.id]
+        : [chatId],
+  };
+};
 
-    workerController.init().catch((e) => {
-      console.error("Failed to initialize workerController", e);
+/** Ensures a chat cache entry exists before appending incoming messages. */
+const ensureChatInCache = (chatId: string) => {
+  const existingChats = queryClient.getQueryData<Chat[]>(queryKeys.chats);
+  const cachedFromList = existingChats?.find((chat) => chat.id === chatId);
+  const cachedChat = queryClient.getQueryData<Chat | null>(
+    queryKeys.chat(chatId),
+  );
+
+  if (cachedFromList) {
+    // Replace stale negative cache if useChat queried before the chat existed.
+    if (cachedChat === null) {
+      queryClient.setQueryData<Chat>(queryKeys.chat(chatId), cachedFromList);
+    }
+    return;
+  }
+
+  const chat = cachedChat ?? buildPrivateChat(chatId);
+
+  if (!existingChats) {
+    queryClient.invalidateQueries({ queryKey: queryKeys.chats });
+  } else {
+    queryClient.setQueryData<Chat[]>(queryKeys.chats, (old) => {
+      if (!old) return old;
+      return old.some((existing) => existing.id === chat.id)
+        ? old
+        : [...old, chat];
     });
   }
 
-  loadSequence = async () => {
-    await Promise.all([
-      useUserStore.getState().initialLoad(),
-      useChatStore.getState().initialLoad(),
-    ]);
-  };
+  queryClient.setQueryData<Chat>(queryKeys.chat(chat.id), chat);
+};
 
-  messageReceive = async (event: any) => {
-    await useMessageStore.getState().handleMessageReceived(event.message);
-  };
+class RootStore {
+  private constructor() {
+    workerController.on("message-received", (e) => {
+      const { message } = e.payload;
+      ensureChatInCache(message.chatId);
+      appendMessageToCache(queryClient, message.chatId, message);
+    });
 
-  setIndicatorOff = async () => {
-    useConnectionStore.getState().setUserConnectionFalse();
-  };
+    workerController.on("peer-found", (e) => {
+      const { peerId } = e.payload;
+      useConnectionStore.getState().setPeerStatus(peerId, true);
 
-  setIndicatorOn = async () => {
-    useConnectionStore.getState().setUserConnectionTrue();
-  };
+      const cachedProfile = queryClient.getQueryData<Profile | null>(
+        queryKeys.profile(peerId),
+      );
+      if (!isResolvedProfile(cachedProfile)) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.profile(peerId) });
+      }
+    });
 
-  setPeerFound = async (event: any) => {
-    useConnectionStore.getState().setConnectionTrue(event.peerId);
-  };
+    workerController.on("peer-lost", (e) => {
+      useConnectionStore.getState().setPeerStatus(e.payload.peerId, false);
+    });
 
-  setPeerLost = async (event: any) => {
-    useConnectionStore.getState().setConnectionFalse(event.peerId);
-  };
+    workerController.on("relay-found", () => {
+      useConnectionStore.getState().setConnectedToRelay(true);
+    });
 
-  spawnChat = async (event: any) => {
-    await useChatStore.getState().handleChatSpawn(event.chat);
-  };
+    workerController.on("relay-lost", () => {
+      useConnectionStore.getState().setConnectedToRelay(false);
+    });
+  }
+
+  static async init() {
+    queryClient.setQueryData(
+      queryKeys.userProfile,
+      await workerController.services.profileService.getUserProfile(),
+    );
+    const store = new RootStore();
+    await workerController.init().catch((e) => {
+      console.error("Failed to initialize workerController", e);
+    });
+    return store;
+  }
 }
 
-export const rootStore = new RootStore();
+export const rootStore = RootStore.init();
