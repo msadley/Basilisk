@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "build": "tsc -b",
+    "start": "drizzle-kit push --config=./drizzle.config.ts --force && node dist/index.js",
     "dev": "node dist/index.js"
   },
   "dependencies": {
-    "@abraham/reflection": "^0.13.0",
     "@basilisk/core": "workspace:*",
     "@libsql/client": "^0.17.4",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.2",
     "mitt": "^3.0.1"
   },
