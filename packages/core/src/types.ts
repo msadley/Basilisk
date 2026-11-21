@@ -1,4 +1,5 @@
-import type { SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
+import type { BatchItem, BatchResponse } from "drizzle-orm/batch";
+import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import * as schema from "./database/databaseSchema.js";
 import { type Message } from "./model/Message.js";
 import { Profile } from "./model/Profile.js";
@@ -22,4 +23,8 @@ export interface WorkerEventSink {
   emit(event: PushEvent): void;
 }
 
-export type AppDatabase = SqliteRemoteDatabase<typeof schema>;
+export type AppDatabase = BaseSQLiteDatabase<"async", any, typeof schema> & {
+  batch<U extends BatchItem<"sqlite">, T extends Readonly<[U, ...U[]]>>(
+    batch: T,
+  ): Promise<BatchResponse<T>>;
+};

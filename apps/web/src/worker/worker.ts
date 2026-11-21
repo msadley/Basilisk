@@ -1,8 +1,11 @@
 import * as Comlink from "comlink";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import { SQLocalDrizzle } from "sqlocal/drizzle";
-import { services, databaseSchema } from "@basilisk/core";
-import { WorkerEventSink } from "@basilisk/core/src/types";
+import {
+  services,
+  databaseSchema,
+  type WorkerEventSink,
+} from "@basilisk/core";
 
 // Even though the db is initialized here on the worker thread, sqlocal
 // actually spawns a separate thread for only the sqlite worker itself.

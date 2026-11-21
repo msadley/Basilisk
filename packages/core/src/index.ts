@@ -96,4 +96,4 @@ export const services = async (
 };
 
 // miscellaneous
-export type { PushEvent } from "./types.js";
+export type { AppDatabase, PushEvent, WorkerEventSink } from "./types.js";
