@@ -23,6 +23,7 @@ export type UiMessage = Message & {
 export type MessagePage = {
   items: UiMessage[];
   nextCursor: number | undefined;
+  isOptimisticOnly?: boolean;
 };
 
 export type SendMessageVariables = {
@@ -34,6 +35,15 @@ let tempIdCounter = -1;
 
 const nextTempMessageId = () => tempIdCounter--;
 
+const hasOptimisticOnlyPage = (
+  data: InfiniteData<MessagePage> | undefined,
+): boolean => Boolean(data?.pages.some((page) => page.isOptimisticOnly));
+
+const hasLoadedHistory = (
+  data: InfiniteData<MessagePage> | undefined,
+): boolean =>
+  Boolean(data && data.pages.length > 0 && !hasOptimisticOnlyPage(data));
+
 export const appendMessageToCache = (
   client: QueryClient,
   chatId: string,
@@ -42,13 +52,15 @@ export const appendMessageToCache = (
   const key = queryKeys.messages(chatId);
   const existing = client.getQueryData<InfiniteData<MessagePage>>(key);
 
-  if (!existing) {
-    client.invalidateQueries({ queryKey: key });
+  if (!existing || existing.pages.length === 0) {
+    void client.invalidateQueries({ queryKey: key });
     return;
   }
 
+  const needsHistoryReload = hasOptimisticOnlyPage(existing);
+
   client.setQueryData<InfiniteData<MessagePage>>(key, (oldData) => {
-    if (!oldData) return oldData;
+    if (!oldData || oldData.pages.length === 0) return oldData;
 
     const alreadyExists = oldData.pages.some((page) =>
       page.items.some((item) => item.id === message.id),
@@ -56,14 +68,6 @@ export const appendMessageToCache = (
     if (alreadyExists) return oldData;
 
     const uiMessage: UiMessage = { ...message, status: "ok" };
-
-    if (oldData.pages.length === 0) {
-      return {
-        ...oldData,
-        pages: [{ items: [uiMessage], nextCursor: undefined }],
-        pageParams: [undefined],
-      };
-    }
 
     const newPages = [...oldData.pages];
     newPages[0] = {
@@ -76,6 +80,10 @@ export const appendMessageToCache = (
       pages: newPages,
     };
   });
+
+  if (needsHistoryReload) {
+    void client.invalidateQueries({ queryKey: key });
+  }
 };
 
 export const useMessages = (chatId?: string) => {
@@ -155,6 +163,9 @@ export const useSendMessage = (chatId: string) => {
       const key = queryKeys.messages(chatId);
       await queryClient.cancelQueries({ queryKey: key });
 
+      const existingData =
+        queryClient.getQueryData<InfiniteData<MessagePage>>(key);
+      const hadExistingData = hasLoadedHistory(existingData);
       const clientId = retryClientId ?? uuidv7();
 
       if (retryClientId) {
@@ -164,7 +175,7 @@ export const useSendMessage = (chatId: string) => {
             status: "sending",
           })),
         );
-        return { clientId };
+        return { clientId, hadExistingData };
       }
 
       const userProfile = queryClient.getQueryData<Profile>(
@@ -186,7 +197,13 @@ export const useSendMessage = (chatId: string) => {
       queryClient.setQueryData<InfiniteData<MessagePage>>(key, (oldData) => {
         if (!oldData || oldData.pages.length === 0) {
           return {
-            pages: [{ items: [optimisticMessage], nextCursor: undefined }],
+            pages: [
+              {
+                items: [optimisticMessage],
+                nextCursor: undefined,
+                isOptimisticOnly: true,
+              },
+            ],
             pageParams: [undefined],
           };
         }
@@ -203,20 +220,28 @@ export const useSendMessage = (chatId: string) => {
         };
       });
 
-      return { clientId };
+      return { clientId, hadExistingData };
     },
 
     onSuccess: (savedMessage, _vars, context) => {
       if (!context?.clientId) return;
-      queryClient.setQueryData<InfiniteData<MessagePage>>(
-        queryKeys.messages(chatId),
-        (oldData) =>
-          updateMessageByClientId(oldData, context.clientId, () => ({
-            ...savedMessage,
-            clientId: context.clientId,
-            status: "ok",
-          })),
-      );
+      const key = queryKeys.messages(chatId);
+      let needsHistoryReload = !context.hadExistingData;
+
+      queryClient.setQueryData<InfiniteData<MessagePage>>(key, (oldData) => {
+        if (!hasLoadedHistory(oldData)) {
+          needsHistoryReload = true;
+        }
+        return updateMessageByClientId(oldData, context.clientId, () => ({
+          ...savedMessage,
+          clientId: context.clientId,
+          status: "ok",
+        }));
+      });
+
+      if (needsHistoryReload) {
+        void queryClient.invalidateQueries({ queryKey: key });
+      }
     },
 
     onError: (_err, _vars, context) => {
