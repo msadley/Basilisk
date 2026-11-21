@@ -18,16 +18,24 @@ export class PrivateChatService {
     return this.privateChatRepository.list();
   }
 
-  async createPrivateChat(peerId: string): Promise<PrivateChat> {
-    try {
-      this.privateChatRepository.getById(peerId);
-      throw new Error("Chat already exists");
-    } catch {
-      this.privateChatCache.add(peerId);
-      return this.privateChatRepository.save({
-        id: peerId,
-        participants: [peerId, (await this.profileService.getUserProfile()).id],
-      });
+  async create(peerId: string): Promise<PrivateChat> {
+    const userProfile = await this.profileService.getUserProfile();
+    if (peerId === userProfile.id) {
+      throw new Error("Cannot create a private chat with yourself");
     }
+
+    const existingChat = await this.privateChatRepository.getById(peerId);
+    if (existingChat) {
+      throw new Error("Chat already exists");
+    }
+
+    await this.profileService.ensureProfile(peerId);
+
+    const savedChat = await this.privateChatRepository.save({
+      id: peerId,
+      participants: [peerId, userProfile.id],
+    });
+    this.privateChatCache.add(peerId);
+    return savedChat;
   }
 }

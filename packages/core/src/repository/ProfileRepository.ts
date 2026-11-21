@@ -14,6 +14,17 @@ export class ProfileRepository {
       .get();
   }
 
+  async list(): Promise<Profile[]> {
+    return this.database.select().from(schema.profiles);
+  }
+
+  async createIfNotExists(profile: Profile): Promise<void> {
+    await this.database
+      .insert(schema.profiles)
+      .values(profile)
+      .onConflictDoNothing({ target: schema.profiles.id });
+  }
+
   async save(profile: Profile) {
     const [result] = await this.database.transaction(async (tx) => {
       return await tx

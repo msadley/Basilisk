@@ -19,9 +19,22 @@ export class ChatService {
     const privateChat = await this.privateChatService.getById(chatId);
     return privateChat;
   }
+
   async list() {
     const groupChats = await this.groupChatService.list();
     const privateChats = await this.privateChatService.list();
     return [...groupChats, ...privateChats];
+  }
+
+  async createGroupChat(
+    name: string,
+    participants: string[],
+    image: Uint8Array | null,
+  ) {
+    return this.groupChatService.create(name, participants, image);
+  }
+
+  async createPrivateChat(peerId: string) {
+    return this.privateChatService.create(peerId);
   }
 }

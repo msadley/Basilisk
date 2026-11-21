@@ -44,15 +44,20 @@ export const services = async (
 
   const privateKey = await identityService.getPrivateKey();
   const nodeCore = await NodeCore.init(relayAddress, privateKey);
+  const userPeerId = nodeCore.getPeerId().toString();
 
+  const nodeService = new NodeService(nodeCore);
   const groupChatService = new GroupChatService(groupChatRepository);
-  const profileService = new ProfileService(profileRepository);
+  const profileService = new ProfileService(
+    profileRepository,
+    nodeService,
+    userPeerId,
+  );
   const privateChatService = new PrivateChatService(
     privateChatRepository,
     profileService,
     privateChatCache,
   );
-  const nodeService = new NodeService(nodeCore);
   const chatService = new ChatService(groupChatService, privateChatService);
   const messageService = new MessageService(
     messageRepository,
@@ -69,8 +74,14 @@ export const services = async (
     eventSink,
   );
 
+  await profileRepository.createIfNotExists({
+    id: userPeerId,
+    name: "",
+    avatar: null,
+  });
+  await privateChatCache.init();
+
   nodeOrchestrator.registerHandlers();
-  await nodeCore.start();
 
   return {
     messageService,
@@ -82,4 +93,4 @@ export const services = async (
 };
 
 // miscellaneous
-export { PushEvent } from "./types.js";
+export type { PushEvent } from "./types.js";

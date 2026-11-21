@@ -12,7 +12,7 @@ export class GroupChatService {
     return this.groupChatRepository.list();
   }
 
-  async createGroupChat(
+  async create(
     name: string,
     participants: string[],
     image: Uint8Array | null,

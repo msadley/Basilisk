@@ -7,7 +7,7 @@ import type {
   PrivateKey,
   StreamHandler,
 } from "@libp2p/interface";
-import { multiaddr, type Multiaddr } from "@multiformats/multiaddr";
+import { CODE_P2P, multiaddr, type Multiaddr } from "@multiformats/multiaddr";
 import { createLibp2p, type Libp2p } from "libp2p";
 
 export class NodeCore {
@@ -39,6 +39,19 @@ export class NodeCore {
 
   async stop() {
     return this.libp2p.stop();
+  }
+
+  getRelayPeerId(): string {
+    const peerId = this.relayMultiaddress
+      .getComponents()
+      .findLast((c) => c.code === CODE_P2P)?.value;
+
+    if (!peerId)
+      throw new Error(
+        `Relay multiaddress "${this.relayMultiaddress.toString()}" does not contain a /p2p peer ID`,
+      );
+
+    return peerId;
   }
 
   async pingRelay(): Promise<number> {

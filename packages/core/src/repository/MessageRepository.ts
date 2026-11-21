@@ -1,25 +1,39 @@
 import { messageSchema, type Message } from "../model/Message.js";
 import * as schema from "../database/databaseSchema.js";
-import { eq } from "drizzle-orm";
+import { and, eq, lt, desc } from "drizzle-orm";
 import type { MessagePacket } from "../model/MessagePacket.js";
 import type { AppDatabase } from "../types.js";
 
 export class MessageRepository {
   constructor(private database: AppDatabase) {}
 
-  async list(chatId: string, limit: number, page: number): Promise<Message[]> {
+  async list(
+    chatId: string,
+    cursor?: number,
+    limit: number = 30,
+  ): Promise<Message[]> {
     const result = await this.database
       .select()
       .from(schema.messages)
-      .where(eq(schema.messages.chatId, chatId))
-      .limit(limit)
-      .offset(page * limit);
+      .where(
+        cursor !== undefined
+          ? and(
+              eq(schema.messages.chatId, chatId),
+              lt(schema.messages.id, cursor),
+            )
+          : eq(schema.messages.chatId, chatId),
+      )
+      .orderBy(desc(schema.messages.id))
+      .limit(limit + 1);
     return result.map((row) => {
       return messageSchema.assert(row);
     });
   }
 
-  async save(messagePacket: MessagePacket): Promise<Message> {
+  async save(
+    messagePacket: MessagePacket,
+    received: boolean = false,
+  ): Promise<Message> {
     const [row] = await this.database
       .insert(schema.messages)
       .values({
@@ -30,6 +44,7 @@ export class MessageRepository {
         timestamp: messagePacket.timestamp
           ? new Date(messagePacket.timestamp)
           : new Date(),
+        received,
       })
       .returning();
 

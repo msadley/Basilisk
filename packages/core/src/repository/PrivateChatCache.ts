@@ -9,6 +9,7 @@ export class PrivateChatCache {
 
   async init() {
     if (this.isInitialized || this.isLoading) return;
+    this.isLoading = true;
 
     try {
       const peers = await this.privateChatRepository.list();

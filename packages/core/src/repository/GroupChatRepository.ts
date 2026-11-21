@@ -31,6 +31,7 @@ export class GroupChatRepository {
 
   async list(): Promise<GroupChat[]> {
     const result = await this.database.query.chats.findMany({
+      where: eq(schema.chats.isGroup, true),
       with: {
         chatParticipants: {
           columns: {
