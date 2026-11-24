@@ -6,6 +6,6 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../../packages/core" }
+    { "path": "../../packages/libp2p" }
   ]
 }

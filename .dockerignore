@@ -1,0 +1,42 @@
+# Version control & CI
+.git
+.gitignore
+.github
+
+# Dependencies & caches
+**/node_modules
+.pnpm-store
+
+# Build outputs (always compiled cleanly inside Docker)
+**/dist
+**/*.tsbuildinfo
+
+# Local databases & runtime data (never leak local DBs / identity seeds)
+*.db
+*.db-shm
+*.db-wal
+**/*.db
+**/*.db-shm
+**/*.db-wal
+data/
+cache/
+
+# Environment files & secrets
+.env
+.env.*
+!.env.example
+
+# Exclude apps/web source while keeping its package.json so pnpm --frozen-lockfile workspace importers match pnpm-lock.yaml
+apps/web/**
+!apps/web/package.json
+
+# Docs, assets, editor & misc files
+assets
+README.md
+Dockerfile
+docker-compose.yaml
+.vscode
+.DS_Store
+scratch.md
+ecosystem.config.js
+previewConfig.json

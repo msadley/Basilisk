@@ -7,6 +7,9 @@ services:
       network: host
     container_name: basilisk_relay
     restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "4001:4001"
       - "127.0.0.1:4002:4002"
@@ -24,6 +27,9 @@ services:
       target: test
     container_name: basilisk_test
     restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "4001:4001"
       - "127.0.0.1:4002:4002"
